@@ -97,10 +97,15 @@ export default function SignupPage() {
           color: "#f59e0b",
         },
       };
+      
       if (!(window as any).Razorpay) {
-        alert("Razorpay not loaded. Refresh and try again.");
-        setLoading(false);
-        return;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        if (!(window as any).Razorpay) {
+          alert("Payment system not ready. Please refresh.");
+          setLoading(false);
+          return;
+        }
       }
 
       const rzp = new (window as any).Razorpay(options);
@@ -139,7 +144,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-slate-50">
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
       />
 
       <nav className="sticky top-0 z-10 h-16 border-b border-gray-200 bg-white shadow-sm">
