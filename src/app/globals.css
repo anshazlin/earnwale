@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improve rendering */
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

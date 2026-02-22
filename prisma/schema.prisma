@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  name               String
+  email              String   @unique
+  mobile             String
+  state              String
+  dob                String
+  password           String
+  plan               String
+  referralCode       String   @unique
+  referredBy         String?
+  earnings           Int      @default(0)
+  totalEarned        Int      @default(0)
+  referralCount      Int      @default(0)
+  hasReceivedReward  Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  transactions       Transaction[]
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  amount    Int
+  fromUser  String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+model Withdrawal {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Int
+  status    String   @default("pending") // pending | approved | rejected | paid
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
