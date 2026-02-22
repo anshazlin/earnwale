@@ -40,7 +40,7 @@ export async function POST() {
       );
     }
 
-    await prisma.withdrawRequest.create({
+    await prisma.withdrawal.create({
       data: {
         userId: user.id,
         amount: user.earnings,
