@@ -8,24 +8,25 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(uuid())
-  name               String
-  email              String   @unique
-  mobile             String
-  state              String
-  dob                String
-  password           String
-  plan               String
-  referralCode       String   @unique
-  referredBy         String?
-  earnings           Int      @default(0)
-  totalEarned        Int      @default(0)
-  referralCount      Int      @default(0)
-  hasReceivedReward  Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  mobile            String
+  state             String
+  dob               String
+  password          String
+  plan              String
+  referralCode      String   @unique
+  referredBy        String?
+  earnings          Int      @default(0)
+  totalEarned       Int      @default(0)
+  referralCount     Int      @default(0)
+  hasReceivedReward Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  transactions       Transaction[]
+  transactions Transaction[]
+  Withdrawal   Withdrawal[]
 }
 
 model Transaction {
@@ -38,6 +39,7 @@ model Transaction {
 
   user User @relation(fields: [userId], references: [id])
 }
+
 model Withdrawal {
   id        String   @id @default(uuid())
   userId    String
