@@ -42,18 +42,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Prevent replay attack (duplicate payment processing)
-      const existingPayment = await prisma.user.findFirst({
-        where: { paymentId: razorpay_payment_id },
-      });
-
-      if (existingPayment) {
-        return NextResponse.json(
-          { error: "Payment already processed" },
-          { status: 400 }
-        );
-      }
-
     // 🚫 Prevent duplicate user
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -95,7 +83,6 @@ export async function POST(req: Request) {
             plan,
             referralCode: myReferralCode,
             referredBy: referralCode || null,
-            paymentId: razorpay_payment_id,
             earnings: 0,
             totalEarned: 0,
             hasReceivedReward: false,
