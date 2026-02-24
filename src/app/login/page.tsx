@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("LOGIN CLICKED");
     e.preventDefault();
     setError("");
     if (!email.trim()) {
@@ -31,14 +32,18 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
-
+      
       if (!res.ok) {
         setError(data.error || "Login failed");
         setLoading(false);
         return;
       }
 
-      window.location.href = "/dashboard";
+      // Ensure cookie is set before redirect
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
+
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
