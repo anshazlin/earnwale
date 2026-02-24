@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"; // adjust if different
+import bcrypt from "bcryptjs";
 
 const COOKIE_NAME = "auth_token";
-const MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
 export async function POST(req: Request) {
   try {
@@ -28,9 +27,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const validPassword = await bcrypt.compare(password, user.password);
+    const isValid = await bcrypt.compare(password, user.password);
 
-    if (!validPassword) {
+    if (!isValid) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign(
-      { userId: user.id },
+      { userId: user.id,email: user.email },
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
@@ -49,13 +48,16 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: MAX_AGE,
       path: "/",
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return response;
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Login failed" },
+      { status: 500 }
+    );
   }
 }
