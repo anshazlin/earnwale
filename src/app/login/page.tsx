@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("FETCH STARTING");
     console.log("LOGIN CLICKED");
     e.preventDefault();
     setError("");
