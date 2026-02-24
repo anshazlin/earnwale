@@ -42,6 +42,18 @@ export async function POST(req: Request) {
       );
     }
 
+    // Prevent replay attack (duplicate payment processing)
+      const existingPayment = await prisma.user.findFirst({
+        where: { paymentId: razorpay_payment_id },
+      });
+
+      if (existingPayment) {
+        return NextResponse.json(
+          { error: "Payment already processed" },
+          { status: 400 }
+        );
+      }
+
     // 🚫 Prevent duplicate user
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -57,9 +69,8 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const myReferralCode = nanoid(8);
 
-    // 🎯 Transaction-safe DB operations
     const newUser = await prisma.$transaction(
-      async (tx: Prisma.TransactionClient) => {
+        async (tx: Prisma.TransactionClient) => {
         let referrer = null;
 
         if (referralCode) {
@@ -72,12 +83,10 @@ export async function POST(req: Request) {
           }
         }
 
-        // 🎁 Calculate reward
         let rewardAmount = 0;
         if (plan === "300") rewardAmount = 250;
         if (plan === "500") rewardAmount = 450;
 
-        // 👤 Create user
         const createdUser = await tx.user.create({
           data: {
             name,
@@ -85,18 +94,21 @@ export async function POST(req: Request) {
             password: hashedPassword,
             plan,
             referralCode: myReferralCode,
+            referredBy: referralCode || null,
+            paymentId: razorpay_payment_id,
             earnings: 0,
             totalEarned: 0,
+            hasReceivedReward: false,
           },
         });
 
-        // 💰 Reward referrer
         if (referrer && rewardAmount > 0) {
           await tx.user.update({
             where: { id: referrer.id },
             data: {
               earnings: { increment: rewardAmount },
               totalEarned: { increment: rewardAmount },
+              referralCount: { increment: 1 },
             },
           });
 
@@ -104,7 +116,15 @@ export async function POST(req: Request) {
             data: {
               userId: referrer.id,
               amount: rewardAmount,
-              type: "REFERRAL_REWARD",
+              type: "CREDIT",
+              fromUser: createdUser.id,
+            },
+          });
+
+          await tx.user.update({
+            where: { id: createdUser.id },
+            data: {
+              hasReceivedReward: true,
             },
           });
         }
