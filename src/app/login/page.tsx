@@ -33,17 +33,14 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
-      
-      if (!res.ok) {
-        setError(data.error || "Login failed");
-        setLoading(false);
-        return;
-      }
 
-      // Ensure cookie is set before redirect
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 100);
+    if (!res.ok) {
+      setError(data.error || "Login failed");
+      setLoading(false);
+    return;
+    }
+
+window.location.href = "/dashboard";
 
     } catch {
       setError("Something went wrong. Please try again.");
