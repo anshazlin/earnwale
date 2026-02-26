@@ -55,10 +55,31 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const myReferralCode = nanoid(8);
+
+        async function generateUniqueReferralCode(tx: Prisma.TransactionClient) {
+        let isUnique = false;
+        let referralCode = "";
+
+        while (!isUnique) {
+          const random = Math.floor(10000 + Math.random() * 90000);
+          referralCode = `ERW${random}`;
+
+          const existing = await tx.user.findUnique({
+            where: { referralCode },
+          });
+
+          if (!existing) {
+            isUnique = true;
+          }
+        }
+
+        return referralCode;
+      }
 
     const newUser = await prisma.$transaction(
         async (tx: Prisma.TransactionClient) => {
+          const myReferralCode = await
+        generateUniqueReferralCode(tx);
         let referrer = null;
 
         if (referralCode) {
