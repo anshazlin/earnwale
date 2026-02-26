@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 const COOKIE_NAME = "auth_token";
+const MIN_WITHDRAWAL = 500;
 
 export async function POST(req: Request) {
   try {
@@ -21,12 +23,11 @@ export async function POST(req: Request) {
     }
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-
     const { amount } = await req.json();
 
-    if (!amount || amount <= 0) {
+    if (!amount || amount < MIN_WITHDRAWAL) {
       return NextResponse.json(
-        { error: "Invalid withdrawal amount" },
+        { error: `Minimum withdrawal is ₹${MIN_WITHDRAWAL}` },
         { status: 400 }
       );
     }
@@ -46,8 +47,7 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.$transaction(async (tx) => {
-      // Deduct from wallet
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -55,7 +55,6 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create withdrawal request
       await tx.withdrawal.create({
         data: {
           userId: user.id,
@@ -64,7 +63,6 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create debit transaction
       await tx.transaction.create({
         data: {
           userId: user.id,

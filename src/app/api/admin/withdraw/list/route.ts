@@ -22,12 +22,9 @@ export async function GET(req: Request) {
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
 
-    const admin = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-    });
-
-    if (!admin || admin.email !== process.env.ADMIN_EMAIL) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    // 🔐 Only admin allowed
+    if (decoded.email !== process.env.ADMIN_EMAIL) {
+      return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
 
     const withdrawals = await prisma.withdrawal.findMany({
@@ -37,12 +34,13 @@ export async function GET(req: Request) {
           select: {
             name: true,
             email: true,
+            earnings: true,
           },
         },
       },
     });
 
-    return NextResponse.json(withdrawals);
+    return NextResponse.json({ withdrawals });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to fetch withdrawals" },

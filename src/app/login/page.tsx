@@ -24,28 +24,35 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // 🔥 ADD THIS LINE
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
+   try {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ email: email.trim(), password }),
+  });
 
-      const data = await res.json();
+  console.log("STATUS:", res.status);
 
-    if (!res.ok) {
-      setError(data.error || "Login failed");
-      setLoading(false);
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    console.log("No JSON body");
+  }
+
+  if (!res.ok) {
+    setError(data?.error || "Login failed");
+    setLoading(false);
     return;
-    }
+  }
 
-window.location.href = "/dashboard";
-
-    } catch {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
-    }
+  window.location.href = "/dashboard";
+} catch (err) {
+  console.log("FETCH ERROR:", err);
+  setError("Something went wrong");
+  setLoading(false);
+}
   };
 
   const inputBase =

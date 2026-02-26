@@ -49,8 +49,26 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate unique referral code
-    const newReferralCode = nanoid(8);
+    async function generateUniqueReferralCode() {
+  let isUnique = false;
+  let referralCode = "";
+
+  while (!isUnique) {
+    const random = Math.floor(10000 + Math.random() * 90000);
+    referralCode = `ERW${random}`;
+
+    const existing = await prisma.user.findUnique({
+      where: { referralCode },
+    });
+
+    if (!existing) {
+      isUnique = true;
+    }
+  }
+
+  return referralCode;
+}
+    const newReferralCode = await generateUniqueReferralCode();
 
     // Create user
     const user = await prisma.user.create({
