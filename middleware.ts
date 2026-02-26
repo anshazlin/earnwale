@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
 
 const COOKIE_NAME = "auth_token";
 
@@ -23,20 +22,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  try {
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-
-    // 🔐 Extra protection for admin route
-    if (pathname.startsWith("/admin")) {
-      if (decoded.email !== process.env.ADMIN_EMAIL) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
-    }
-
-    return NextResponse.next();
-  } catch {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
+  return NextResponse.next();
 }
 
 export const config = {
