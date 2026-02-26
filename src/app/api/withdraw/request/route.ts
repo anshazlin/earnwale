@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 const COOKIE_NAME = "auth_token";
 const MIN_WITHDRAWAL = 500;
 
 export async function POST(req: Request) {
   try {
+    // 🔐 Extract token
     const cookie = req.headers.get("cookie");
     if (!cookie) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,15 +24,8 @@ export async function POST(req: Request) {
     }
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const { amount } = await req.json();
 
-    if (!amount || amount < MIN_WITHDRAWAL) {
-      return NextResponse.json(
-        { error: `Minimum withdrawal is ₹${MIN_WITHDRAWAL}` },
-        { status: 400 }
-      );
-    }
-
+    // 👤 Find user
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
     });
@@ -40,14 +34,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (user.earnings < amount) {
+    const amount = user.earnings;
+
+    // 💰 Minimum withdrawal check
+    if (!amount || amount < MIN_WITHDRAWAL) {
       return NextResponse.json(
-        { error: "Insufficient balance" },
+        { error: `Minimum withdrawal is ₹${MIN_WITHDRAWAL}` },
         { status: 400 }
       );
     }
 
+    // 🚫 Prevent multiple pending withdrawals
+    const existingPending = await prisma.withdrawal.findFirst({
+      where: {
+        userId: user.id,
+        status: "pending",
+      },
+    });
+
+    if (existingPending) {
+      return NextResponse.json(
+        { error: "You already have a pending withdrawal request" },
+        { status: 400 }
+      );
+    }
+
+    // 🔄 Atomic transaction
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // 1️⃣ Deduct earnings
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -55,6 +69,7 @@ export async function POST(req: Request) {
         },
       });
 
+      // 2️⃣ Create withdrawal record
       await tx.withdrawal.create({
         data: {
           userId: user.id,
@@ -63,6 +78,7 @@ export async function POST(req: Request) {
         },
       });
 
+      // 3️⃣ Create transaction log (NO description)
       await tx.transaction.create({
         data: {
           userId: user.id,
@@ -74,6 +90,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error(error);
     return NextResponse.json(
       { error: error.message || "Withdrawal failed" },
       { status: 500 }
