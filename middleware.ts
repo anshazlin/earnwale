@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwtVerify } from "jose";
 
 const COOKIE_NAME = "auth_token";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const protectedRoutes = ["/dashboard", "/admin"];
@@ -22,7 +23,15 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  return NextResponse.next();
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+
+    await jwtVerify(token, secret);
+
+    return NextResponse.next();
+  } catch (error) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 }
 
 export const config = {
