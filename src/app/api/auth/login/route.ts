@@ -36,11 +36,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = jwt.sign(
-      { userId: user.id,email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
+    if (!process.env.JWT_SECRET) {
+  console.error("JWT_SECRET missing");
+  return NextResponse.json(
+    { error: "Server config error" },
+    { status: 500 }
+  );
+}
+
+const token = jwt.sign(
+  { userId: user.id, email: user.email },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
 
     const response = NextResponse.json({ success: true });
 
