@@ -26,7 +26,6 @@ model User {
   state  String?
   dob    String?
 
-  // 💳 Payout Details
   upiId        String?
   bankName     String?
   accountNumber String?
