@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
 
 const COOKIE_NAME = "auth_token";
 
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
 
-    // 🔐 Check admin
+    // ✅ Admin check
     if (decoded.email !== process.env.ADMIN_EMAIL) {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
@@ -39,53 +38,70 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Withdrawal not found" }, { status: 404 });
     }
 
-    if (withdrawal.status !== "pending" && action !== "paid") {
-      return NextResponse.json(
-        { error: "Already processed" },
-        { status: 400 }
-      );
-    }
+    await prisma.$transaction(async (tx) => {
 
-    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // ✅ APPROVE
       if (action === "approve") {
+        if (withdrawal.status !== "pending") {
+          throw new Error("Only pending withdrawals can be approved");
+        }
+
         await tx.withdrawal.update({
           where: { id: withdrawalId },
           data: { status: "approved" },
         });
       }
+      
+      if (!confirm("Have you sent the money to the user?")) return;
 
+      // ✅ MARK AS PAID (Real deduction happens here)
       if (action === "paid") {
+        if (withdrawal.status !== "approved") {
+          throw new Error("Only approved withdrawals can be marked paid");
+        }
+
+        // Deduct user earnings
+        await tx.user.update({
+          where: { id: withdrawal.userId },
+          data: {
+            earnings: {
+              decrement: withdrawal.amount,
+            },
+          },
+        });
+
+        // Update withdrawal status
         await tx.withdrawal.update({
           where: { id: withdrawalId },
           data: { status: "paid" },
         });
-      }
 
-      if (action === "reject") {
-        // refund user balance
-        await tx.user.update({
-          where: { id: withdrawal.userId },
+        // Create DEBIT transaction record
+        await tx.transaction.create({
           data: {
-            earnings: { increment: withdrawal.amount },
+            userId: withdrawal.userId,
+            amount: withdrawal.amount,
+            type: "DEBIT",
           },
         });
+      }
+
+      // ✅ REJECT (refund only if already deducted earlier)
+      if (action === "reject") {
+        if (withdrawal.status !== "pending") {
+          throw new Error("Only pending withdrawals can be rejected");
+        }
 
         await tx.withdrawal.update({
           where: { id: withdrawalId },
           data: { status: "rejected" },
         });
-
-        await tx.transaction.create({
-          data: {
-            userId: withdrawal.userId,
-            amount: withdrawal.amount,
-            type: "CREDIT",
-          },
-        });
       }
+
     });
 
     return NextResponse.json({ success: true });
+
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Update failed" },
