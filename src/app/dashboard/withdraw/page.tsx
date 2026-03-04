@@ -104,19 +104,29 @@ export default function WithdrawPage() {
 
   const formatStatus = (value: WithdrawStatus | undefined) => {
     const v = (value ?? "").toString().toLowerCase();
+
     if (v === "approved") return "Approved";
+    if (v === "paid") return "Paid";
     if (v === "rejected") return "Rejected";
-    return "Pending";
+
+   return "Pending";
   };
 
   const statusStyles = (value: WithdrawStatus | undefined) => {
     const v = (value ?? "").toString().toLowerCase();
+
     if (v === "approved") {
+      return "bg-blue-50 text-blue-700 ring-blue-100";
+    }
+
+    if (v === "paid") {
       return "bg-emerald-50 text-emerald-700 ring-emerald-100";
     }
+
     if (v === "rejected") {
       return "bg-rose-50 text-rose-700 ring-rose-100";
     }
+
     return "bg-amber-50 text-amber-700 ring-amber-100";
   };
 
