@@ -51,24 +51,12 @@ export async function POST(req: Request) {
           data: { status: "approved" },
         });
       }
-      
-      if (!confirm("Have you sent the money to the user?")) return;
 
       // ✅ MARK AS PAID (Real deduction happens here)
       if (action === "paid") {
         if (withdrawal.status !== "approved") {
           throw new Error("Only approved withdrawals can be marked paid");
         }
-
-        // Deduct user earnings
-        await tx.user.update({
-          where: { id: withdrawal.userId },
-          data: {
-            earnings: {
-              decrement: withdrawal.amount,
-            },
-          },
-        });
 
         // Update withdrawal status
         await tx.withdrawal.update({
