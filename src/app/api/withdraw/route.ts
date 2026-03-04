@@ -6,8 +6,9 @@ const COOKIE_NAME = "auth_token";
 
 export async function GET(req: Request) {
   try {
-    // 🔐 Extract token
+
     const cookie = req.headers.get("cookie");
+
     if (!cookie) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -23,18 +24,19 @@ export async function GET(req: Request) {
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
 
-    // 👤 Find user
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
+      select: {
+        earnings: true,
+      },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 📤 Get withdrawal history only
     const withdrawals = await prisma.withdrawal.findMany({
-      where: { userId: user.id },
+      where: { userId: decoded.userId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -44,9 +46,12 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json(withdrawals);
+    return NextResponse.json({
+      balance: user.earnings,
+      withdrawals,
+    });
+
   } catch (error: any) {
-    console.error(error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch withdrawals" },
       { status: 500 }

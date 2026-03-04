@@ -9,6 +9,7 @@ const MAX_WITHDRAWAL = 5000;
 export async function POST(req: Request) {
   try {
     const cookie = req.headers.get("cookie");
+
     if (!cookie) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -34,7 +35,6 @@ export async function POST(req: Request) {
 
     const amount = user.earnings;
 
-    // 🔐 Must have payout details
     if (!user.upiId && !user.accountNumber) {
       return NextResponse.json(
         { error: "Please add payout details first" },
@@ -42,7 +42,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Minimum check
     if (!amount || amount < MIN_WITHDRAWAL) {
       return NextResponse.json(
         { error: `Minimum withdrawal is ₹${MIN_WITHDRAWAL}` },
@@ -50,7 +49,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Maximum check
     if (amount > MAX_WITHDRAWAL) {
       return NextResponse.json(
         { error: `Maximum withdrawal per request is ₹${MAX_WITHDRAWAL}` },
@@ -58,7 +56,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Prevent pending
     const existingPending = await prisma.withdrawal.findFirst({
       where: {
         userId: user.id,
@@ -73,7 +70,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 24 hour rule
     const lastWithdrawal = await prisma.withdrawal.findFirst({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -82,6 +78,7 @@ export async function POST(req: Request) {
     if (lastWithdrawal) {
       const diff =
         Date.now() - new Date(lastWithdrawal.createdAt).getTime();
+
       const hours = diff / (1000 * 60 * 60);
 
       if (hours < 24) {
@@ -92,11 +89,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // ✅ ONLY create withdrawal (NO deduction here)
     await prisma.withdrawal.create({
       data: {
         userId: user.id,
-        amount,
+        amount: amount,
         status: "pending",
       },
     });
