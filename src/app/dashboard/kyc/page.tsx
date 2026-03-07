@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { WithdrawSection } from "../_components/withdraw-section";
 
 export default function KycPage() {
   const [form, setForm] = useState({
@@ -93,13 +94,13 @@ export default function KycPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
-          KYC & Payout
+          KYC & Withdraw
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Update your details for payouts.
+          Update your payout details and request withdrawals.
         </p>
       </div>
 
@@ -169,6 +170,8 @@ export default function KycPage() {
           Payouts are processed manually within 48 hours.
         </p>
       </form>
+
+      <WithdrawSection />
     </div>
   );
 }
