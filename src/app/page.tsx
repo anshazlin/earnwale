@@ -88,13 +88,13 @@ export default function HomePage() {
           </p>
           <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:max-w-4xl lg:mx-auto">
             <div className="rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-md sm:p-8">
-              <div className="relative mb-5 overflow-hidden rounded-xl border border-amber-100 bg-black">
+              <div className="mb-5">
                 <Image
-                  src="/images/scholars-protocol.png"
+                  src="/images/scholar.jpg"
                   alt="The Scholar's Protocol course cover"
                   width={600}
                   height={380}
-                  className="h-40 w-full object-cover sm:h-48"
+                  className="w-full h-64 object-cover rounded-xl"
                   priority
                 />
               </div>
@@ -122,13 +122,13 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="rounded-2xl border-2 border-amber-400 bg-white p-6 shadow-lg ring-2 ring-amber-200 sm:p-8">
-              <div className="relative mb-5 overflow-hidden rounded-xl border border-amber-100 bg-black">
+              <div className="mb-5">
                 <Image
-                  src="/images/capital-compounder.png"
+                  src="/images/capital.jpg"
                   alt="The Capital Compounder course cover"
                   width={600}
                   height={380}
-                  className="h-40 w-full object-cover sm:h-48"
+                  className="w-full h-64 object-cover rounded-xl"
                   priority
                 />
               </div>

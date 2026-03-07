@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Script from "next/script";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SignupPage() {
   const [form, setForm] = useState({
@@ -124,15 +125,17 @@ export default function SignupPage() {
   const products = [
     {
       id: "300",
-      title: "Earnwale eBook – Starter",
-      description: "Learn referral strategy and start earning.",
+      title: "The Scholar's Protocol",
+      description: "Advanced Cognitive Strategies for High-Performance Learning",
       price: "₹300",
+      image: "/images/scholar.jpg",
     },
     {
       id: "500",
-      title: "Earnwale eBook – Pro",
-      description: "Learn referral strategy and start earning.",
+      title: "The Capital Compounder",
+      description: "Advanced Financial Engineering for the Modern Student",
       price: "₹500",
+      image: "/images/capital.jpg",
     },
   ];
 
@@ -186,41 +189,63 @@ export default function SignupPage() {
           mounted ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-6xl flex-col lg:flex-row">
-          {/* Left: form card – compact, everything in one scrollable area */}
-          <div className="flex-1 overflow-y-auto p-4 lg:flex lg:items-start lg:justify-center lg:p-6">
-            <div className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white p-4 shadow-md sm:p-6">
-              {/* Product choice – compact row */}
-              <div className="mb-4 grid grid-cols-2 gap-3">
-                {products.map((product) => {
-                  const selected = form.plan === product.id;
-                  return (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => setForm({ ...form, plan: product.id })}
-                      className={`rounded-xl border bg-white p-3 text-left shadow-sm transition-all hover:scale-[1.01] hover:shadow sm:p-4 ${
-                        selected
-                          ? "border-amber-500 shadow-md shadow-amber-500/15"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <h3 className="text-sm font-semibold text-gray-900 sm:text-base">
-                        {product.title}
-                      </h3>
-                      <p className="mt-0.5 text-xs text-gray-500">{product.description}</p>
-                      <p className="mt-2 text-lg font-bold text-gray-900">{product.price}</p>
-                    </button>
-                  );
-                })}
-              </div>
+        <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center px-4 py-10 sm:px-6 lg:px-8">
+          <div className="w-full max-w-2xl">
+            {/* Selected Plan Card */}
+            <div className="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+                Selected Plan
+              </p>
 
-              {/* Selected package – inside card */}
-              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2">
-                <p className="text-xs font-medium text-gray-600">Your Selected Package</p>
-                <p className="text-base font-semibold text-gray-900">{selectedPrice}</p>
-              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-[200px,1fr] sm:items-center">
+                <Image
+                  src={selectedProduct.image}
+                  alt={selectedProduct.title}
+                  width={800}
+                  height={500}
+                  className="w-full h-64 object-cover rounded-xl"
+                  priority
+                />
 
+                <div>
+                  <h1 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
+                    {selectedProduct.title}
+                  </h1>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {selectedProduct.description}
+                  </p>
+                  <p className="mt-4 text-3xl font-bold text-gray-900">
+                    {selectedProduct.price}
+                  </p>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {products.map((product) => {
+                      const selected = form.plan === product.id;
+                      return (
+                        <button
+                          key={product.id}
+                          type="button"
+                          onClick={() => setForm({ ...form, plan: product.id })}
+                          className={`rounded-xl border px-3 py-2 text-left text-sm font-semibold transition-colors ${
+                            selected
+                              ? "border-amber-500 bg-amber-50 text-amber-800"
+                              : "border-gray-200 bg-white text-gray-800 hover:bg-gray-50"
+                          }`}
+                        >
+                          {product.price}
+                          <span className="mt-0.5 block text-xs font-medium text-gray-500">
+                            {product.id === "300" ? "Starter" : "Pro"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Create Account Form */}
+            <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
               <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
                 Create Account
               </h2>
@@ -368,25 +393,6 @@ export default function SignupPage() {
                   "Enroll Now"
                 )}
               </button>
-            </div>
-          </div>
-
-          {/* Right: course / illustration – course appears here */}
-          <div className="hidden min-h-[320px] flex-shrink-0 flex-col justify-center bg-gradient-to-br from-amber-100 to-orange-100 p-6 lg:flex lg:w-[42%] lg:min-h-[calc(100vh-3.5rem)] lg:p-8">
-            <div className="mx-auto w-full max-w-sm">
-              <div className="rounded-2xl border border-amber-200/60 bg-white/80 p-6 shadow-sm">
-                <p className="text-xs font-medium uppercase tracking-wider text-amber-700/80">
-                  Your course
-                </p>
-                <h3 className="mt-1 text-xl font-semibold text-gray-900">
-                  {selectedProduct.title}
-                </h3>
-                <p className="mt-2 text-sm text-gray-600">{selectedProduct.description}</p>
-                <p className="mt-4 text-2xl font-bold text-gray-900">{selectedProduct.price}</p>
-              </div>
-              <div className="mt-6 flex aspect-video items-center justify-center rounded-2xl border border-amber-200/40 bg-white/60">
-                <span className="text-sm font-medium text-amber-800/50">Course preview</span>
-              </div>
             </div>
           </div>
         </div>

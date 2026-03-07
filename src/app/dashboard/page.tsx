@@ -67,17 +67,25 @@ export default function DashboardPage() {
       .finally(() => setWalletLoading(false));
   }, [user]);
 
- const shareReferral = () => {
-  if (!user?.referralCode) return;
+  const handleCopyReferral = async () => {
+    if (!user?.referralCode) return;
+    try {
+      const link = `${window.location.origin}/signup?ref=${user.referralCode}`;
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // no-op
+    }
+  };
 
-    const message =
-      `Join Earnwale and earn money by referring friends!\n\n` +
-      `Signup using my referral code: ${user.referralCode}\n\n` +
-      `https://earnwale.vercel.app/signup?ref=${user.referralCode}`;
-
-    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-
-    window.open(url, "_blank");
+  const handleWithdrawRequest = async () => {
+    const res = await fetch("/api/withdraw/request", {
+      method: "POST",
+      credentials: "include",
+    });
+    const data = await res.json();
+    alert(data.success ? "Withdrawal requested!" : data.error);
   };
 
   const formatAmount = (n?: number) =>
@@ -101,64 +109,68 @@ export default function DashboardPage() {
       {/* Page Title */}
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
-          Dashboard
+          Partner Dashboard
         </h1>
-        <p className="mt-1 text-gray-500">
-          Welcome back, {user.name}.
-        </p>
+        <p className="mt-1 text-gray-500">Welcome back, {user.name}.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Top row */}
+      <div className="grid gap-6 sm:grid-cols-2">
         <Card title="Name">{user.name}</Card>
-
         <Card title="Selected Plan">₹{user.plan}</Card>
+      </div>
 
-        <Card title="Referral Code">
-          <div className="flex items-center gap-2">
-            <code className="flex-1 font-mono text-lg font-semibold">
-              {user.referralCode}
-            </code>
-           <button
-              onClick={shareReferral}
-              className="mt-2 bg-green-500 text-white px-4 py-2 rounded-lg"
-            >
-              Share on WhatsApp
-            </button>
-          </div>
-
-          {user.earnings >= 500 && (
-            <button
-              onClick={async () => {
-                const res = await fetch("/api/withdraw/request", {
-                  method: "POST",
-                  credentials: "include",
-                });
-                const data = await res.json();
-                alert(data.success ? "Withdrawal requested!" : data.error);
-              }}
-              className="mt-4 w-full rounded-xl bg-amber-500 px-4 py-2 font-semibold text-white hover:bg-amber-600"
-            >
-              Request Withdrawal
-            </button>
-          )}
-        </Card>
-
+      {/* Second row */}
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Card title="Current Earnings">
-          <span className="text-amber-700 font-semibold">
+          <span className="font-semibold text-amber-700">
             {formatAmount(user.earnings)}
           </span>
         </Card>
-
         <Card title="Total Earned">
-          <span className="text-amber-700 font-semibold">
+          <span className="font-semibold text-amber-700">
             {formatAmount(user.totalEarned)}
           </span>
         </Card>
+        <Card title="Referral Count">{user.referralCount ?? 0}</Card>
+      </div>
 
-        <Card title="Referral Count">
-          {user.referralCount ?? 0}
-        </Card>
+      {/* Partner link */}
+      <div className="mt-6">
+        <div className="rounded-2xl border border-amber-100 bg-white p-6 shadow-sm">
+          <p className="text-sm font-medium text-gray-500">Partner Link</p>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <code className="w-full overflow-x-auto rounded-xl border border-amber-100 bg-amber-50/40 px-4 py-3 font-mono text-sm font-semibold text-gray-900 sm:flex-1">
+              {`${typeof window !== "undefined" ? window.location.origin : ""}/signup?ref=${user.referralCode}`}
+            </code>
+            <button
+              type="button"
+              onClick={handleCopyReferral}
+              className="inline-flex items-center justify-center rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-50"
+            >
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            Copy and share when needed. Your tracking is applied automatically.
+          </p>
+        </div>
+      </div>
+
+      {/* Withdraw */}
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={handleWithdrawRequest}
+          disabled={user.earnings < 500}
+          className="w-full rounded-2xl bg-amber-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Request Withdrawal
+        </button>
+        <p className="mt-2 text-xs text-gray-500">
+          Minimum withdrawal amount is ₹500. Requests are reviewed before
+          processing.
+        </p>
       </div>
 
       {/* Transactions */}

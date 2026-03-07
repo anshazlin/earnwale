@@ -20,7 +20,7 @@ const SCHOLAR = {
     "Strategic study planning",
     "High-performance learning habits",
   ],
-  image: "/images/scholars-protocol.png",
+  image: "/images/scholar.jpg",
   download: "/api/download?file=scholar",
 };
 
@@ -35,7 +35,7 @@ const CAPITAL = {
     "Risk & reward structure",
     "Wealth-building psychology",
   ],
-  image: "/images/capital-compounder.png",
+  image: "/images/capital.jpg",
   download: "/api/download?file=capital",
 };
 
@@ -56,21 +56,23 @@ function CourseCard({
 }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-900 sm:aspect-[2/1]">
+      <div className="p-6 pb-0 sm:p-7 sm:pb-0">
         <Image
           src={image}
           alt={title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
+          width={1200}
+          height={720}
+          className="w-full h-64 object-cover rounded-xl"
+          priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        <span className="absolute right-3 top-3 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-          Lifetime Digital Access
-        </span>
       </div>
 
       <div className="flex flex-1 flex-col p-6 sm:p-7">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+            Lifetime Digital Access
+          </span>
+        </div>
         <h2 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
           {title}
         </h2>
