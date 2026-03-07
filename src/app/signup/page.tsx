@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,6 +30,15 @@ const referralFromUrl = searchParams.get("ref");
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+  if (referralFromUrl) {
+    setForm((prev) => ({
+      ...prev,
+      referralCode: referralFromUrl,
+    }));
+  }
+}, [referralFromUrl]);
 
   const handleChange = (e: any) => {
       setForm({ ...form, [e.target.name]: e.target.value });
