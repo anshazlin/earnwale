@@ -4,8 +4,11 @@ import { useState, useEffect } from "react";
 import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 export default function SignupPage() {
+  const searchParams = useSearchParams();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -17,14 +20,31 @@ export default function SignupPage() {
     plan: "300",
   });
 
+  const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [refundAgreed, setRefundAgreed] = useState(false);
+  const [referralLocked, setReferralLocked] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const refFromUrl = searchParams?.get("ref") ?? "";
+    if (refFromUrl) {
+      setReferralCode((current) => current || refFromUrl);
+      setReferralLocked(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      referralCode,
+    }));
+  }, [referralCode]);
 
   const handleChange = (e: any) => {
       setForm({ ...form, [e.target.name]: e.target.value });
@@ -39,12 +59,14 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
+    const payload = { ...form, referralCode };
+
       const res = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -74,7 +96,7 @@ export default function SignupPage() {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                formData: form,
+                formData: payload,
               }),
             });
 
@@ -340,8 +362,12 @@ export default function SignupPage() {
                     id="referralCode"
                     name="referralCode"
                     placeholder="Referral Code (Optional)"
-                    value={form.referralCode}
-                    onChange={handleChange}
+                    value={referralCode}
+                    onChange={(e) => {
+                      if (referralLocked) return;
+                      setReferralCode(e.target.value);
+                    }}
+                    readOnly={referralLocked}
                     className={inputBase}
                   />
                 </div>

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
@@ -17,7 +16,6 @@ export async function POST(req: Request) {
       plan,
     } = body;
 
-    // Basic validation
     if (!name || !email || !password || !plan) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -34,7 +32,6 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -46,31 +43,56 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    async function generateUniqueReferralCode() {
-  let isUnique = false;
-  let referralCode = "";
+    // 🔐 Validate Referral Code
+    let referrerUser = null;
 
-  while (!isUnique) {
-    const random = Math.floor(10000 + Math.random() * 90000);
-    referralCode = `ERW${random}`;
+    if (referralCode) {
+      referrerUser = await prisma.user.findUnique({
+        where: { referralCode },
+      });
 
-    const existing = await prisma.user.findUnique({
-      where: { referralCode },
-    });
+      if (!referrerUser) {
+        return NextResponse.json(
+          { error: "Invalid referral code" },
+          { status: 400 }
+        );
+      }
 
-    if (!existing) {
-      isUnique = true;
+      // Prevent self referral
+      if (referrerUser.email === normalizedEmail) {
+        return NextResponse.json(
+          { error: "Self-referral not allowed" },
+          { status: 400 }
+        );
+      }
     }
-  }
 
-  return referralCode;
-}
+    // Generate Unique Referral Code
+    async function generateUniqueReferralCode() {
+      let isUnique = false;
+      let code = "";
+
+      while (!isUnique) {
+        const random = Math.floor(10000 + Math.random() * 90000);
+        code = `ERW${random}`;
+
+        const existing = await prisma.user.findUnique({
+          where: { referralCode: code },
+        });
+
+        if (!existing) {
+          isUnique = true;
+        }
+      }
+
+      return code;
+    }
+
     const newReferralCode = await generateUniqueReferralCode();
 
-    // Create user
+    // Create User
     const user = await prisma.user.create({
       data: {
         name,
@@ -81,9 +103,21 @@ export async function POST(req: Request) {
         password: hashedPassword,
         plan,
         referralCode: newReferralCode,
-        referredBy: referralCode || null,
+        referredBy: referrerUser ? referrerUser.id : null,
       },
     });
+
+    // Increment referral count
+    if (referrerUser) {
+      await prisma.user.update({
+        where: { id: referrerUser.id },
+        data: {
+          referralCount: {
+            increment: 1,
+          },
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
