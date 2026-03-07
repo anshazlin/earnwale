@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const faqs = [
   {
@@ -52,31 +53,26 @@ export default function HomePage() {
 
       {/* 2. Hero */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20 lg:py-24">
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-              Earn by Referring. Simple.
-            </h1>
-            <p className="mt-4 text-lg text-gray-600">
-              Buy our digital course once. Share your referral code. Earn on every successful referral.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/signup"
-                className="inline-flex rounded-xl bg-amber-500 px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:bg-amber-600"
-              >
-                Start Earning Now
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex rounded-xl border-2 border-gray-300 px-6 py-3 text-base font-semibold text-gray-700 transition-colors hover:border-amber-500 hover:text-amber-600"
-              >
-                Login
-              </Link>
-            </div>
-          </div>
-          <div className="flex justify-center lg:justify-end">
-            <div className="h-64 w-64 rounded-2xl bg-gradient-to-br from-amber-200 to-amber-400 shadow-lg sm:h-80 sm:w-80 lg:h-96 lg:w-96" />
+        <div className="flex flex-col items-center text-center">
+          <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+            Earn by Referring. Simple.
+          </h1>
+          <p className="mt-4 max-w-2xl text-lg text-gray-600">
+            Buy our digital course once. Share your referral code. Earn on every successful referral.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/signup"
+              className="inline-flex rounded-xl bg-amber-500 px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:bg-amber-600"
+            >
+              Start Earning Now
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex rounded-xl border-2 border-gray-300 px-6 py-3 text-base font-semibold text-gray-700 transition-colors hover:border-amber-500 hover:text-amber-600"
+            >
+              Login
+            </Link>
           </div>
         </div>
       </section>
@@ -88,22 +84,34 @@ export default function HomePage() {
             Choose Your Plan
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-center text-gray-600">
-            One-time purchase. Lifetime access. Earn on every referral.
+            One-time purchase. Lifetime access to premium learning content.
           </p>
           <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:max-w-4xl lg:mx-auto">
             <div className="rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-md sm:p-8">
+              <div className="relative mb-5 overflow-hidden rounded-xl border border-amber-100 bg-black">
+                <Image
+                  src="/images/scholars-protocol.png"
+                  alt="The Scholar's Protocol course cover"
+                  width={600}
+                  height={380}
+                  className="h-40 w-full object-cover sm:h-48"
+                  priority
+                />
+              </div>
               <h3 className="text-xl font-semibold text-gray-900">Starter Plan</h3>
               <p className="mt-2 text-3xl font-bold text-gray-900">₹300</p>
-              <p className="mt-1 text-sm text-amber-700 font-medium">Earn ₹250 per referral</p>
+              <p className="mt-1 text-sm font-medium text-amber-700">
+                Core foundations for focused, high-performance learning.
+              </p>
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2 text-gray-700">
                   <span className="text-amber-500">✔</span> Instant access to ebook
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
-                  <span className="text-amber-500">✔</span> Personal referral code
+                  <span className="text-amber-500">✔</span> Structured, step-by-step learning roadmap
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
-                  <span className="text-amber-500">✔</span> Lifetime access
+                  <span className="text-amber-500">✔</span> Lifetime access and updates
                 </li>
               </ul>
               <Link
@@ -114,19 +122,31 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="rounded-2xl border-2 border-amber-400 bg-white p-6 shadow-lg ring-2 ring-amber-200 sm:p-8">
+              <div className="relative mb-5 overflow-hidden rounded-xl border border-amber-100 bg-black">
+                <Image
+                  src="/images/capital-compounder.png"
+                  alt="The Capital Compounder course cover"
+                  width={600}
+                  height={380}
+                  className="h-40 w-full object-cover sm:h-48"
+                  priority
+                />
+              </div>
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Popular</p>
               <h3 className="text-xl font-semibold text-gray-900">Pro Plan</h3>
               <p className="mt-2 text-3xl font-bold text-gray-900">₹500</p>
-              <p className="mt-1 text-sm text-amber-700 font-medium">Earn ₹450 per referral</p>
+              <p className="mt-1 text-sm font-medium text-amber-700">
+                Advanced systems for mastering money and decision-making.
+              </p>
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2 text-gray-700">
-                  <span className="text-amber-500">✔</span> Instant access to ebook
+                  <span className="text-amber-500">✔</span> Everything in Starter, plus advanced modules
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
-                  <span className="text-amber-500">✔</span> Personal referral code
+                  <span className="text-amber-500">✔</span> Practical frameworks and implementation guides
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
-                  <span className="text-amber-500">✔</span> Lifetime access
+                  <span className="text-amber-500">✔</span> Lifetime access and updates
                 </li>
               </ul>
               <Link
