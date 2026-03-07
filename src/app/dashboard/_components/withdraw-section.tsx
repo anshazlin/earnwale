@@ -180,26 +180,24 @@ export function WithdrawSection() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
-            Withdraw
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Request payouts from your available balance.
-          </p>
-        </div>
+    <div className="space-y-6 sm:space-y-8">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl md:text-3xl">
+          Withdraw
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Request payouts from your available balance.
+        </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr),minmax(0,3fr)]">
-        <section className="rounded-2xl border border-amber-100 bg-white p-6 shadow-sm">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr),minmax(0,3fr)]">
+        <section className="w-full rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-gray-600">
                 Available balance
               </p>
-              <p className="mt-2 text-2xl font-semibold text-amber-700">
+              <p className="mt-2 text-xl font-semibold text-amber-700 sm:text-2xl">
                 {formatAmount(user.earnings)}
               </p>
             </div>
@@ -219,7 +217,7 @@ export function WithdrawSection() {
             type="button"
             onClick={handleWithdraw}
             disabled={!canWithdraw || submitting}
-            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-4"
           >
             {submitting ? "Submitting request…" : "Request Withdraw"}
           </button>
@@ -232,16 +230,14 @@ export function WithdrawSection() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-amber-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">
-                Withdraw history
-              </h2>
-              <p className="mt-1 text-xs text-gray-500">
-                Track the status of your recent withdrawal requests.
-              </p>
-            </div>
+        <section className="w-full rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">
+              Withdraw history
+            </h2>
+            <p className="mt-1 text-xs text-gray-500">
+              Track the status of your recent withdrawal requests.
+            </p>
           </div>
 
           <div className="mt-4 overflow-hidden rounded-xl border border-amber-50">
@@ -255,44 +251,78 @@ export function WithdrawSection() {
                 No withdrawals yet.
               </div>
             ) : (
-              <div className="max-h-[420px] overflow-y-auto bg-amber-50/20">
-                <table className="min-w-full text-left text-xs">
-                  <thead className="bg-amber-50/60 text-[11px] uppercase tracking-wide text-gray-500">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Amount</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-amber-50 bg-white">
-                    {history.map((w, index) => (
-                      <tr key={w.id ?? index} className="align-middle">
-                        <td className="px-4 py-3 text-gray-900">
+              <>
+                {/* Mobile: stacked cards */}
+                <div className="space-y-3 md:hidden">
+                  {history.map((w, index) => (
+                    <div
+                      key={w.id ?? index}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-100 bg-white p-4"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
                           {formatAmount(
                             typeof w.amount === "number"
                               ? w.amount
                               : Number(w.amount),
                           )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${statusStyles(
-                              w.status,
-                            )}`}
-                          >
-                            {formatStatus(w.status)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        </p>
+                        <p className="text-xs text-gray-500">
                           {w.createdAt
                             ? new Date(w.createdAt).toLocaleDateString()
                             : "—"}
-                        </td>
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${statusStyles(
+                          w.status,
+                        )}`}
+                      >
+                        {formatStatus(w.status)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop: table */}
+                <div className="max-h-[420px] overflow-y-auto bg-amber-50/20 hidden md:block">
+                  <table className="min-w-full text-left text-xs">
+                    <thead className="bg-amber-50/60 text-[11px] uppercase tracking-wide text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Amount</th>
+                        <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium">Date</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-amber-50 bg-white">
+                      {history.map((w, index) => (
+                        <tr key={w.id ?? index} className="align-middle">
+                          <td className="px-4 py-3 text-gray-900">
+                            {formatAmount(
+                              typeof w.amount === "number"
+                                ? w.amount
+                                : Number(w.amount),
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${statusStyles(
+                                w.status,
+                              )}`}
+                            >
+                              {formatStatus(w.status)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-500">
+                            {w.createdAt
+                              ? new Date(w.createdAt).toLocaleDateString()
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </section>

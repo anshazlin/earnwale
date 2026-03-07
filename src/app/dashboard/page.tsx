@@ -121,21 +121,21 @@ export default function DashboardPage() {
   return (
     <>
       {/* Page Title */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl md:text-3xl">
           Partner Dashboard
         </h1>
-        <p className="mt-1 text-gray-500">Welcome back, {user.name}.</p>
+        <p className="mt-1 text-sm text-gray-500 sm:text-base">Welcome back, {user.name}.</p>
       </div>
 
       {/* Top row */}
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <Card title="Name">{user.name}</Card>
         <Card title="Selected Plan">₹{user.plan}</Card>
       </div>
 
-      {/* Second row */}
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Second row - stats */}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
         <Card title="Current Earnings">
           <span className="font-semibold text-amber-700">
             {formatAmount(user.earnings)}
@@ -149,9 +149,9 @@ export default function DashboardPage() {
         <Card title="Referral Count">{user.referralCount ?? 0}</Card>
       </div>
 
-      {/* Referral section */}
+      {/* Referral section: input full width, Copy below on mobile; Copy + Share stacked */}
       <div className="mt-6">
-        <div className="mx-auto max-w-lg rounded-2xl border border-amber-100 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-base font-semibold text-gray-900">
             Your Referral Link
           </h2>
@@ -160,41 +160,40 @@ export default function DashboardPage() {
             automatically.
           </p>
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="w-full overflow-hidden rounded-xl border border-amber-100 bg-amber-50/40 px-3 py-2.5 text-xs font-mono text-gray-900 min-w-0 sm:px-4 sm:text-sm">
+              <div className="truncate">{referralLink}</div>
+            </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex-1 overflow-hidden rounded-xl border border-amber-100 bg-amber-50/40 px-4 py-2.5 text-xs font-mono text-gray-900 sm:text-sm">
-                <div className="truncate">{referralLink}</div>
-              </div>
               <button
                 type="button"
                 onClick={handleCopyReferral}
-                className="inline-flex items-center justify-center rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-50 sm:text-sm"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-50 sm:w-auto"
               >
-                {copied ? "Copied" : "Copy"}
+                {copied ? "Copied" : "Copy link"}
+              </button>
+              <button
+                type="button"
+                onClick={handleShareReferral}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:w-auto"
+              >
+                Share Link
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={handleShareReferral}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600"
-            >
-              Share Link
-            </button>
           </div>
         </div>
       </div>
 
       {/* Transactions */}
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-gray-900">
+      <section className="mt-8 sm:mt-10">
+        <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">
           Recent Transactions
         </h2>
         <p className="mt-1 text-sm text-gray-500">
           Your latest wallet activity.
         </p>
 
-        <div className="mt-4 rounded-2xl border border-amber-100 bg-white shadow-sm overflow-hidden">
+        <div className="mt-4 overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm">
           {walletLoading ? (
             <div className="flex items-center justify-center gap-2 py-10 text-gray-500">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
@@ -209,7 +208,7 @@ export default function DashboardPage() {
               {transactions.map((tx, i) => (
                 <li
                   key={tx.id ?? i}
-                  className="flex items-center justify-between px-6 py-4"
+                  className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4"
                 >
                   <div>
                     <p className="font-medium text-gray-900">
@@ -242,9 +241,9 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-amber-100 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
       <p className="text-sm font-medium text-gray-500">{title}</p>
-      <div className="mt-2 text-lg font-semibold text-gray-900">
+      <div className="mt-2 text-base font-semibold text-gray-900 sm:text-lg">
         {children}
       </div>
     </div>

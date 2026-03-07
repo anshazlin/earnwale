@@ -55,19 +55,19 @@ function CourseCard({
   download: string;
 }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="p-6 pb-0 sm:p-7 sm:pb-0">
+    <article className="flex w-full flex-col overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm transition-shadow hover:shadow-md">
+      <div className="p-4 pb-0 sm:p-6 sm:pb-0">
         <Image
           src={image}
           alt={title}
           width={1200}
           height={720}
-          className="w-full h-64 object-cover rounded-xl"
+          className="h-48 w-full rounded-xl object-cover"
           priority
         />
       </div>
 
-      <div className="flex flex-1 flex-col p-6 sm:p-7">
+      <div className="flex flex-1 flex-col p-4 sm:p-6 md:p-7">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
             Lifetime Digital Access
@@ -108,7 +108,7 @@ function CourseCard({
             href={download}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:py-4"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -161,9 +161,9 @@ export default function MyCoursesPage() {
   const plan = Number(user?.plan);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 sm:space-y-10">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+        <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl md:text-3xl">
           My Courses
         </h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -172,14 +172,14 @@ export default function MyCoursesPage() {
       </div>
 
       {!plan ? (
-        <div className="rounded-2xl border border-amber-100 bg-white p-10 shadow-sm sm:p-12">
-          <p className="text-center text-gray-600">
+        <div className="rounded-2xl border border-amber-100 bg-white p-8 shadow-sm sm:p-10 md:p-12">
+          <p className="text-center text-sm text-gray-600 sm:text-base">
             No courses purchased yet.
           </p>
         </div>
       ) : (
         <div
-          className={`grid gap-8 sm:gap-10 ${plan === 300 ? "max-w-2xl" : "sm:grid-cols-2 lg:gap-10"}`}
+          className={`grid grid-cols-1 gap-6 sm:gap-8 ${plan === 300 ? "max-w-2xl" : "md:grid-cols-2 md:gap-10"}`}
         >
           {/* Scholar's Protocol - 300 & 500 users */}
           {(plan === 300 || plan === 500) && (
