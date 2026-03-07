@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const amount = user.earnings;
+    const amount = Math.min(user.earnings, MAX_WITHDRAWAL);
 
     if (!user.upiId && !user.accountNumber) {
       return NextResponse.json(
