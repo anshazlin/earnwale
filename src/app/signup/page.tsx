@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,10 +7,11 @@ import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-export const dynamic = "force-dynamic";
 
 export default function SignupPage() {
+
   const searchParams = useSearchParams();
+const referralFromUrl = searchParams.get("ref");
 
   const [form, setForm] = useState({
     name: "",
@@ -21,31 +24,14 @@ export default function SignupPage() {
     plan: "300",
   });
 
-  const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [refundAgreed, setRefundAgreed] = useState(false);
-  const [referralLocked, setReferralLocked] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    const refFromUrl = searchParams?.get("ref") ?? "";
-    if (refFromUrl) {
-      setReferralCode((current) => current || refFromUrl);
-      setReferralLocked(true);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      referralCode,
-    }));
-  }, [referralCode]);
 
   const handleChange = (e: any) => {
       setForm({ ...form, [e.target.name]: e.target.value });
@@ -60,14 +46,12 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-    const payload = { ...form, referralCode };
-
       const res = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(form),
       });
 
       const data = await res.json();
@@ -97,7 +81,7 @@ export default function SignupPage() {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                formData: payload,
+                formData: form,
               }),
             });
 
@@ -167,25 +151,40 @@ export default function SignupPage() {
   const canSubmit = termsAgreed && refundAgreed;
 
   return (
-    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50">
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
       />
 
-      <nav className="sticky top-0 z-10 h-14 border-b border-gray-200 bg-white shadow-sm sm:h-16">
-        <div className="mx-auto flex h-14 max-w-screen-md items-center justify-between gap-2 px-4 sm:h-16 sm:px-6">
+      <nav className="sticky top-0 z-10 h-16 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link href="/" className="text-base font-semibold text-gray-900">
             Earnwale
           </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/" className="hidden text-sm text-gray-600 transition-colors hover:text-gray-900 sm:inline">
+          <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+            <Link href="/" className="text-sm text-gray-600 transition-colors hover:text-gray-900">
               Home
             </Link>
-            <Link href="/login" className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 sm:px-4">
-              Enroll
+            <Link href="/courses" className="text-sm text-gray-600 transition-colors hover:text-gray-900">
+              Courses
             </Link>
-            <Link href="/login" className="rounded-lg border border-amber-500 px-3 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 sm:px-4">
+            <Link href="/about" className="text-sm text-gray-600 transition-colors hover:text-gray-900">
+              About Us
+            </Link>
+            <Link href="/contact" className="text-sm text-gray-600 transition-colors hover:text-gray-900">
+              Contact Us
+            </Link>
+            <Link
+              href="/login"
+              className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600"
+            >
+              Enroll Now
+            </Link>
+            <Link
+              href="/login"
+              className="rounded-lg border border-amber-500 px-4 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50"
+            >
               Login
             </Link>
           </div>
@@ -197,67 +196,69 @@ export default function SignupPage() {
           mounted ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="mx-auto min-h-[calc(100vh-3.5rem)] max-w-screen-md px-4 py-6 sm:min-h-[calc(100vh-4rem)] sm:py-8">
-          {/* Single column: Selected Plan Card */}
-          <div className="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
-              Selected Plan
-            </p>
+        <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center px-4 py-10 sm:px-6 lg:px-8">
+          <div className="w-full max-w-2xl">
+            {/* Selected Plan Card */}
+            <div className="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+                Selected Plan
+              </p>
 
-            <div className="mt-4 flex flex-col gap-4 sm:grid sm:grid-cols-[200px,1fr] sm:items-center">
-              <Image
-                src={selectedProduct.image}
-                alt={selectedProduct.title}
-                width={800}
-                height={500}
-                className="w-full h-auto rounded-xl object-cover sm:h-48"
-                priority
-              />
+              <div className="mt-4 grid gap-4 sm:grid-cols-[200px,1fr] sm:items-center">
+                <Image
+                  src={selectedProduct.image}
+                  alt={selectedProduct.title}
+                  width={800}
+                  height={500}
+                  className="w-full h-64 object-cover rounded-xl"
+                  priority
+                />
 
-              <div className="min-w-0">
-                <h1 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
-                  {selectedProduct.title}
-                </h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  {selectedProduct.description}
-                </p>
-                <p className="mt-4 text-2xl font-bold text-gray-900 sm:text-3xl">
-                  {selectedProduct.price}
-                </p>
+                <div>
+                  <h1 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
+                    {selectedProduct.title}
+                  </h1>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {selectedProduct.description}
+                  </p>
+                  <p className="mt-4 text-3xl font-bold text-gray-900">
+                    {selectedProduct.price}
+                  </p>
 
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  {products.map((product) => {
-                    const selected = form.plan === product.id;
-                    return (
-                      <button
-                        key={product.id}
-                        type="button"
-                        onClick={() => setForm({ ...form, plan: product.id })}
-                        className={`rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-colors sm:py-2 ${
-                          selected
-                            ? "border-amber-500 bg-amber-50 text-amber-800"
-                            : "border-gray-200 bg-white text-gray-800 hover:bg-gray-50"
-                        }`}
-                      >
-                        {product.price}
-                        <span className="mt-0.5 block text-xs font-medium text-gray-500">
-                          {product.id === "300" ? "Starter" : "Pro"}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {products.map((product) => {
+                      const selected = form.plan === product.id;
+                      return (
+                        <button
+                          key={product.id}
+                          type="button"
+                          onClick={() => setForm({ ...form, plan: product.id })}
+                          className={`rounded-xl border px-3 py-2 text-left text-sm font-semibold transition-colors ${
+                            selected
+                              ? "border-amber-500 bg-amber-50 text-amber-800"
+                              : "border-gray-200 bg-white text-gray-800 hover:bg-gray-50"
+                          }`}
+                        >
+                          {product.price}
+                          <span className="mt-0.5 block text-xs font-medium text-gray-500">
+                            {product.id === "300" ? "Starter" : "Pro"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Create Account Form - single column, space-y-4 */}
-          <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 sm:text-lg">
-              Create Account
-            </h2>
+            {/* Create Account Form */}
+            <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">
+                Create Account
+              </h2>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Form – tighter spacing, two columns on sm+ where it helps */}
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label htmlFor="name" className="mb-1 block text-xs font-medium text-gray-700">
                     Full Name
@@ -346,12 +347,8 @@ export default function SignupPage() {
                     id="referralCode"
                     name="referralCode"
                     placeholder="Referral Code (Optional)"
-                    value={referralCode}
-                    onChange={(e) => {
-                      if (referralLocked) return;
-                      setReferralCode(e.target.value);
-                    }}
-                    readOnly={referralLocked}
+                    value={form.referralCode}
+                    onChange={handleChange}
                     className={inputBase}
                   />
                 </div>
@@ -392,7 +389,7 @@ export default function SignupPage() {
               <button
                 onClick={handlePayment}
                 disabled={loading || !canSubmit}
-                className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-amber-500/30 transition-all hover:from-amber-600 hover:to-amber-700 disabled:cursor-not-allowed disabled:opacity-70 sm:py-4"
+                className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-amber-500/30 transition-all hover:from-amber-600 hover:to-amber-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? (
                   <span className="inline-flex items-center justify-center gap-2">
