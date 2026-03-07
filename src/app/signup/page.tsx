@@ -333,7 +333,7 @@ export default function SignupPage() {
                   />
                   <span className="text-xs text-gray-700">
                     I agree with{" "}
-                    <a href="/terms" className="font-medium text-amber-600 underline hover:no-underline">
+                    <a href="/terms-and-conditions" className="font-medium text-amber-600 underline hover:no-underline">
                       Terms & Conditions
                     </a>
                   </span>

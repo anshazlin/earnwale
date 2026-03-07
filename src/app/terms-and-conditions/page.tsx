@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 export default function TermsAndConditionsPage() {
   return (
     <LegalLayout title="Terms & Conditions">
-      <p className="text-sm text-gray-500">Last Updated: March 2026</p>
       <p className="mt-4">
         Welcome to Earnwale. These Terms & Conditions (&quot;Terms&quot;) govern your access to and use of the Earnwale website, products, services, courses, and referral program.
       </p>
