@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type WithdrawalStatus = "pending" | "approved" | "paid" | "rejected" | string;
 
@@ -27,10 +27,10 @@ type ActionState = {
 function StatusBadge({ status }: { status: WithdrawalStatus }) {
   const s = (status ?? "").toString().toLowerCase();
   const styles: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-800",
-    approved: "bg-blue-100 text-blue-800",
-    paid: "bg-emerald-100 text-emerald-800",
-    rejected: "bg-red-100 text-red-800",
+    pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-100",
+    approved: "bg-blue-50 text-blue-700 ring-1 ring-blue-100",
+    paid: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
+    rejected: "bg-red-50 text-red-700 ring-1 ring-red-100",
   };
   const label =
     s === "approved"
@@ -56,6 +56,10 @@ export default function AdminWithdrawPage() {
   const [actionState, setActionState] = useState<ActionState | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "pending" | "approved" | "paid" | "rejected"
+  >("all");
+  const [emailFilter, setEmailFilter] = useState("");
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -97,7 +101,7 @@ export default function AdminWithdrawPage() {
 
   const handleAction = async (
     withdrawalId: string,
-    action: "approve" | "reject" | "paid"
+    action: "approve" | "reject" | "paid",
   ) => {
     setActionState({ id: withdrawalId, action });
     setError(null);
@@ -147,15 +151,71 @@ export default function AdminWithdrawPage() {
     typeof n === "number" ? `₹${n.toLocaleString()}` : "₹0";
 
   const formatDate = (d: string) =>
-    d ? new Date(d).toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
+    d
+      ? new Date(d).toLocaleDateString(undefined, {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
 
   const isActionLoading = (id: string) =>
     actionState?.id === id && !!actionState?.action;
+
+  const pendingCount = useMemo(
+    () =>
+      withdrawals.filter(
+        (w) => (w.status ?? "").toString().toLowerCase() === "pending",
+      ).length,
+    [withdrawals],
+  );
+
+  const pendingAmount = useMemo(
+    () =>
+      withdrawals
+        .filter(
+          (w) => (w.status ?? "").toString().toLowerCase() === "pending",
+        )
+        .reduce((sum, w) => sum + (w.amount ?? 0), 0),
+    [withdrawals],
+  );
+
+  const paidAmount = useMemo(
+    () =>
+      withdrawals
+        .filter((w) => (w.status ?? "").toString().toLowerCase() === "paid")
+        .reduce((sum, w) => sum + (w.amount ?? 0), 0),
+    [withdrawals],
+  );
+
+  const rejectedAmount = useMemo(
+    () =>
+      withdrawals
+        .filter(
+          (w) => (w.status ?? "").toString().toLowerCase() === "rejected",
+        )
+        .reduce((sum, w) => sum + (w.amount ?? 0), 0),
+    [withdrawals],
+  );
+
+  const filteredWithdrawals = useMemo(() => {
+    const status = statusFilter.toLowerCase();
+    const email = emailFilter.trim().toLowerCase();
+
+    return withdrawals.filter((w) => {
+      const wStatus = (w.status ?? "").toString().toLowerCase();
+      const matchesStatus = status === "all" || wStatus === status;
+      const matchesEmail =
+        email.length === 0 ||
+        (w.user?.email ?? "").toLowerCase().includes(email);
+      return matchesStatus && matchesEmail;
+    });
+  }, [withdrawals, statusFilter, emailFilter]);
+
+  const handleClearFilters = () => {
+    setStatusFilter("all");
+    setEmailFilter("");
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -177,19 +237,113 @@ export default function AdminWithdrawPage() {
           </a>
         </div>
 
+        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Total Pending Requests
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
+              {pendingCount}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Total Pending Amount
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
+              {formatAmount(pendingAmount)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Total Paid Amount
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
+              {formatAmount(paidAmount)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Total Rejected Amount
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
+              {formatAmount(rejectedAmount)}
+            </p>
+          </div>
+        </section>
+
         {successMessage && (
-          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
             {successMessage}
           </div>
         )}
 
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
             {error}
           </div>
         )}
 
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="mb-4 rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="status"
+                  className="text-xs font-medium uppercase tracking-wide text-slate-500"
+                >
+                  Status
+                </label>
+                <select
+                  id="status"
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(
+                      e.target.value as
+                        | "all"
+                        | "pending"
+                        | "approved"
+                        | "paid"
+                        | "rejected",
+                    )
+                  }
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="all">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="paid">Paid</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+              <div className="flex flex-1 items-center gap-2">
+                <label
+                  htmlFor="email"
+                  className="text-xs font-medium uppercase tracking-wide text-slate-500"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="text"
+                  value={emailFilter}
+                  onChange={(e) => setEmailFilter(e.target.value)}
+                  placeholder="Filter by email"
+                  className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+            >
+              Clear filters
+            </button>
+          </div>
+        </section>
+
+        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
           {loading ? (
             <div className="flex min-h-[320px] items-center justify-center">
               <div className="flex flex-col items-center gap-3">
@@ -222,13 +376,22 @@ export default function AdminWithdrawPage() {
                 review.
               </p>
             </div>
+          ) : filteredWithdrawals.length === 0 ? (
+            <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+              <p className="text-sm font-medium text-gray-700">
+                No withdrawals match your filters
+              </p>
+              <p className="max-w-sm text-xs text-gray-500">
+                Try changing the status or email filter, or clear all filters.
+              </p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      User
+                      User Name
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                       Email
@@ -240,19 +403,10 @@ export default function AdminWithdrawPage() {
                       UPI ID
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Bank
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Account
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      IFSC
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                       Status
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Date
+                      Requested Date
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">
                       Actions
@@ -260,7 +414,7 @@ export default function AdminWithdrawPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
-                  {withdrawals.map((w) => {
+                  {filteredWithdrawals.map((w) => {
                     const status = (w.status ?? "").toString().toLowerCase();
                     const isPending = status === "pending";
                     const isApproved = status === "approved";
@@ -284,15 +438,6 @@ export default function AdminWithdrawPage() {
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
                           {w.user?.upiId ?? "—"}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                          {w.user?.bankName ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 font-mono text-sm text-gray-600">
-                          {w.user?.accountNumber ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 font-mono text-sm text-gray-600">
-                          {w.user?.ifscCode ?? "—"}
-                        </td>
                         <td className="whitespace-nowrap px-4 py-3">
                           <StatusBadge status={w.status} />
                         </td>
@@ -310,7 +455,7 @@ export default function AdminWithdrawPage() {
                                       handleAction(w.id, "approve")
                                     }
                                     disabled={loadingThis}
-                                    className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+                                    className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-60"
                                   >
                                     {loadingThis &&
                                     actionState?.action === "approve"
@@ -339,7 +484,7 @@ export default function AdminWithdrawPage() {
                                     handleAction(w.id, "paid")
                                   }
                                   disabled={loadingThis}
-                                  className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-60"
+                                  className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
                                 >
                                   {loadingThis && actionState?.action === "paid"
                                     ? "…"
@@ -365,3 +510,4 @@ export default function AdminWithdrawPage() {
     </div>
   );
 }
+
