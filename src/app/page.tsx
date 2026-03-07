@@ -274,7 +274,10 @@ export default function HomePage() {
               <p className="text-sm font-semibold text-gray-900">Policy</p>
               <ul className="mt-3 space-y-2">
                 <li>
-                  <Link href="/terms" className="text-sm text-gray-600 hover:text-amber-600">Terms & Conditions</Link>
+                  <Link href="/terms-and-conditions" className="text-sm text-gray-600 hover:text-amber-600">Terms & Conditions</Link>
+                </li>
+                <li>
+                  <Link href="/privacy-policy" className="text-sm text-gray-600 hover:text-amber-600">Privacy Policy</Link>
                 </li>
                 <li>
                   <Link href="/refund-policy" className="text-sm text-gray-600 hover:text-amber-600">Refund Policy</Link>

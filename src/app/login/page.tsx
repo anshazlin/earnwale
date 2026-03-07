@@ -47,7 +47,7 @@ export default function LoginPage() {
     return;
   }
 
-  window.location.href = "/dashboard";
+  window.location.href = "/dashboard/my-courses";
 } catch (err) {
   console.log("FETCH ERROR:", err);
   setError("Something went wrong");

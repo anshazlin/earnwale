@@ -57,11 +57,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { upiId, bankName, accountNumber, ifscCode } = await req.json();
+    const { name, upiId, bankName, accountNumber, ifscCode } = await req.json();
 
     await prisma.user.update({
       where: { id: userId },
       data: {
+        ...(typeof name === "string" && name.trim() ? { name: name.trim() } : {}),
         upiId: upiId || null,
         bankName: bankName || null,
         accountNumber: accountNumber || null,

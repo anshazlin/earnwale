@@ -14,12 +14,12 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { name: "Overview", href: "/dashboard" },
-  { name: "Wallet", href: "/dashboard/wallet" },
-  { name: "Withdraw", href: "/dashboard/withdraw" },
-  { name: "Referrals", href: "/dashboard/referrals" },
-  { name: "Profile", href: "/dashboard/profile" },
-  { name: "Settings", href: "/dashboard/settings" },
+  { name: "My Courses", href: "/dashboard/my-courses" },
+  { name: "My Profile", href: "/dashboard/profile" },
+  { name: "Partner Dashboard", href: "/dashboard" },
+  { name: "KYC & Payout", href: "/dashboard/kyc" },
+  { name: "Referral Policy", href: "/dashboard/referral-policy" },
+  { name: "Support", href: "/dashboard/support" },
 ];
 
 function classNames(...values: Array<string | false | null | undefined>) {
@@ -27,12 +27,12 @@ function classNames(...values: Array<string | false | null | undefined>) {
 }
 
 function getSectionTitle(pathname: string) {
-  const item =
-    NAV_ITEMS.find((nav) => nav.href === pathname) ??
-    NAV_ITEMS.find((nav) =>
-      pathname.startsWith(nav.href === "/dashboard" ? "/dashboard" : `${nav.href}`),
-    );
-  return item?.name ?? "Dashboard";
+  const exact = NAV_ITEMS.find((nav) => nav.href === pathname);
+  if (exact) return exact.name;
+  const nested = NAV_ITEMS.find(
+    (nav) => nav.href !== "/dashboard" && pathname.startsWith(nav.href),
+  );
+  return nested?.name ?? "Earnwale";
 }
 
 export default function DashboardShell({ children }: DashboardShellProps) {
