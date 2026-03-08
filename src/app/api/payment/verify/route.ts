@@ -3,7 +3,6 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "auth_token";
@@ -56,7 +55,7 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-        async function generateUniqueReferralCode(tx: Prisma.TransactionClient) {
+        async function generateUniqueReferralCode(tx: any) {
         let isUnique = false;
         let referralCode = "";
 
@@ -77,9 +76,9 @@ export async function POST(req: Request) {
       }
 
     const newUser = await prisma.$transaction(
-        async (tx: Prisma.TransactionClient) => {
+        async (tx: any) => {
           const myReferralCode = await
-        generateUniqueReferralCode(tx);
+          generateUniqueReferralCode(tx);
         let referrer = null;
 
         if (referralCode) {
