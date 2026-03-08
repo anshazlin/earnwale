@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       receipt: "receipt_" + Date.now(),
     });
 
+    console.log("KEY ID:", process.env.RAZORPAY_KEY_ID);
     return NextResponse.json(order);
   } catch (error) {
     return NextResponse.json(
