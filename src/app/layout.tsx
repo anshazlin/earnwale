@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,7 +12,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export const metadata: Metadata = {
   title: "Earnwale",
   description: "Earn money by referring friends on Earnwale.",
   openGraph: {
@@ -39,9 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased overflow-x-hidden`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased overflow-x-hidden bg-slate-50`}>
         {children}
       </body>
     </html>

@@ -83,7 +83,7 @@ export default function KycPage() {
   };
 
   const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20";
+    "w-full max-w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 box-border";
 
   if (fetchLoading) {
     return (
@@ -94,9 +94,9 @@ export default function KycPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+        <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">
           KYC & Withdraw
         </h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -106,7 +106,7 @@ export default function KycPage() {
 
       <form
         onSubmit={handleSave}
-        className="space-y-6 rounded-2xl border border-amber-100 bg-white p-6 shadow-sm"
+        className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
       >
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">

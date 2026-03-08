@@ -219,7 +219,7 @@ export default function AdminWithdrawPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-screen-md px-4 py-6">
         <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">

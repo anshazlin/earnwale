@@ -56,31 +56,23 @@ export default function LoginPage() {
   };
 
   const inputBase =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20";
+    "w-full max-w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 box-border";
 
   return (
-    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
-      <nav className="sticky top-0 z-10 h-14 border-b border-gray-200 bg-white shadow-sm sm:h-16">
-        <div className="mx-auto flex h-14 max-w-screen-md items-center justify-between gap-2 px-4 sm:h-16 sm:px-6">
+    <div className="min-h-screen overflow-x-hidden">
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4">
           <Link href="/" className="text-base font-semibold text-gray-900">
             Earnwale
           </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/" className="hidden text-sm text-gray-600 transition-colors hover:text-gray-900 sm:inline">
-              Home
-            </Link>
-            <Link href="/signup" className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 sm:px-4">
-              Enroll
-            </Link>
-            <Link href="/login" className="rounded-lg border border-amber-500 px-3 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 sm:px-4">
-              Login
-            </Link>
-          </div>
+          <Link href="/signup" className="rounded-lg border border-amber-500 px-3 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50">
+            Enroll
+          </Link>
         </div>
-      </nav>
+      </header>
 
-      <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-screen-md items-center justify-center px-4 py-6 sm:min-h-[calc(100vh-4rem)] sm:py-12">
-        <div className="w-full rounded-2xl border border-gray-200 bg-white p-5 shadow-md sm:p-8">
+      <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-screen-md items-center justify-center px-4 py-6">
+        <div className="w-full max-w-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">
             Welcome back
           </h1>
@@ -132,7 +124,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 text-base font-semibold text-white shadow-md shadow-amber-500/30 transition-all duration-200 hover:from-amber-600 hover:to-amber-700 disabled:cursor-not-allowed disabled:opacity-70 sm:py-4"
+              className="w-full max-w-full rounded-xl bg-amber-500 px-4 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? (
                 <span className="inline-flex items-center justify-center gap-2">

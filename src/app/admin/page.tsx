@@ -202,7 +202,7 @@ export default function AdminDashboardPage() {
 
       <div className="flex-1 md:pl-64">
         <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8">
+          <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4 sm:h-16">
             <div>
               <h1 className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
                 Admin Dashboard
@@ -214,7 +214,7 @@ export default function AdminDashboardPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <main className="mx-auto w-full max-w-screen-md px-4 py-6">
           <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Total Users" value={null} />
             <StatCard label="Total Earnings" value={formatCurrency(null)} />

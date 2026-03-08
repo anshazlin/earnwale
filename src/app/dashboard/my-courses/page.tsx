@@ -62,7 +62,7 @@ function CourseCard({
           alt={title}
           width={1200}
           height={720}
-          className="h-48 w-full rounded-xl object-cover"
+          className="h-48 w-full max-w-full rounded-xl object-cover"
           priority
         />
       </div>

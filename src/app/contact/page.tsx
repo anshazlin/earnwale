@@ -36,43 +36,43 @@ export default function ContactPage() {
   };
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: 20 }}>
-      <h1 style={{ marginBottom: 8 }}>Contact Us</h1>
-      <p style={{ marginTop: 0, marginBottom: 20 }}>Have a question or feedback? Send us a message and we'll reply as soon as we can.</p>
+    <main className="mx-auto w-full max-w-screen-md px-4 py-6">
+      <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl mb-2">Contact Us</h1>
+      <p className="text-sm text-gray-600 mb-4">Have a question or feedback? Send us a message and we&apos;ll reply as soon as we can.</p>
 
-      <form onSubmit={handleSubmit} aria-live="polite" style={{ display: "grid", gap: 12 }}>
-        <label style={{ display: "grid" }}>
-          <span style={{ fontSize: 14, marginBottom: 6 }}>Name</span>
+      <form onSubmit={handleSubmit} aria-live="polite" className="space-y-4">
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-gray-700">Name</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             placeholder="Your name"
-            style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
+            className="w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 box-border"
           />
         </label>
 
-        <label style={{ display: "grid" }}>
-          <span style={{ fontSize: 14, marginBottom: 6 }}>Email</span>
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-gray-700">Email</span>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="you@example.com"
-            style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
+            className="w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 box-border"
           />
         </label>
 
-        <label style={{ display: "grid" }}>
-          <span style={{ fontSize: 14, marginBottom: 6 }}>Message</span>
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-gray-700">Message</span>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            rows={6}
+            rows={5}
             required
             placeholder="Tell us what's on your mind"
-            style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }}
+            className="w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 box-border"
           />
         </label>
 
@@ -80,14 +80,14 @@ export default function ContactPage() {
           <button
             type="submit"
             disabled={status === "loading"}
-            style={{ padding: "10px 16px", borderRadius: 6, cursor: status === "loading" ? "not-allowed" : "pointer" }}
+            className="w-full max-w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {status === "loading" ? "Sending..." : "Send Message"}
+            {status === "loading" ? "Sending…" : "Send Message"}
           </button>
         </div>
 
-        {status === "success" && <p style={{ color: "green" }}>Message sent — thanks! We will get back to you soon.</p>}
-        {status === "error" && <p style={{ color: "red" }}>{error || "Failed to send message."}</p>}
+        {status === "success" && <p className="text-sm text-green-600">Message sent — thanks! We will get back to you soon.</p>}
+        {status === "error" && <p className="text-sm text-red-600">{error || "Failed to send message."}</p>}
       </form>
     </main>
   );

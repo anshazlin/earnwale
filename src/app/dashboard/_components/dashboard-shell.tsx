@@ -100,7 +100,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
         <div className="flex min-h-screen flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-amber-100 bg-white/80 backdrop-blur">
-            <div className="flex h-14 items-center justify-between px-4 sm:h-16 sm:px-6">
+            <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4 sm:h-16">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -131,8 +131,8 @@ export default function DashboardShell({ children }: DashboardShellProps) {
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
-            <div className="mx-auto max-w-screen-md">{children}</div>
+          <main className="flex-1">
+            <div className="mx-auto w-full max-w-screen-md px-4 py-6">{children}</div>
           </main>
         </div>
       </div>

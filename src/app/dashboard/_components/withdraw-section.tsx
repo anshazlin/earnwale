@@ -284,8 +284,8 @@ export function WithdrawSection() {
                   ))}
                 </div>
                 {/* Desktop: table */}
-                <div className="max-h-[420px] overflow-y-auto bg-amber-50/20 hidden md:block">
-                  <table className="min-w-full text-left text-xs">
+                <div className="max-h-[420px] overflow-x-auto overflow-y-auto bg-amber-50/20 hidden md:block">
+                  <table className="w-full text-left text-xs">
                     <thead className="bg-amber-50/60 text-[11px] uppercase tracking-wide text-gray-500">
                       <tr>
                         <th className="px-4 py-3 font-medium">Amount</th>

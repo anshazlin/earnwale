@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Prevent horizontal scroll and zoom issues */
+html,
+body {
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
