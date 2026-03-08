@@ -59,6 +59,7 @@ export default function SignupContent() {
       });
 
       const data = await res.json();
+      console.log("ORDER RESPONSE:", data);
 
       if (!res.ok) {
         alert("Failed to create order");
