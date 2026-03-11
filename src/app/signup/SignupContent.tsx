@@ -127,8 +127,8 @@ export default function SignupContent() {
     "w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 box-border";
 
   const products = [
-    { id: "300", title: "The Scholar's Protocol", description: "Advanced Cognitive Strategies for High-Performance Learning", price: "₹300", image: "/images/scholar.jpg" },
-    { id: "500", title: "The Capital Compounder", description: "Advanced Financial Engineering for the Modern Student", price: "₹500", image: "/images/capital.jpg" },
+    { id: "300", title: "The Scholar's Protocol", description: "Advanced Cognitive Strategies for High-Performance Learning", price: "₹300", image: "/public/scholar.jpg" },
+    { id: "500", title: "The Capital Compounder", description: "Advanced Financial Engineering for the Modern Student", price: "₹500", image: "/public/capital.jpg" },
   ];
 
   const selectedProduct = products.find((p) => p.id === form.plan) ?? products[0];
