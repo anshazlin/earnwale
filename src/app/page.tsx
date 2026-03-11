@@ -198,31 +198,10 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Earn Rewards</h3>
+              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Potential knowledge</h3>
               <p className="mt-2 text-sm text-gray-600">
-                Get paid for every successful referral. Track earnings in your dashboard.
+                Enjoy our platform andlearn everything you need to know.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Earnings Example */}
-      <section className="border-t border-amber-50 bg-amber-50/30 py-6 sm:py-10">
-        <div className="w-full max-w-full">
-          <h2 className="text-center text-xl font-bold text-gray-900 sm:text-2xl">
-            Your Earning Potential
-          </h2>
-          <div className="mt-6 w-full max-w-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-4 shadow-sm">
-                <span className="text-gray-700">Refer 5 people (₹300 plan)</span>
-                <span className="font-bold text-amber-700">Earn ₹1,250</span>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-4 shadow-sm">
-                <span className="text-gray-700">Refer 10 people (₹500 plan)</span>
-                <span className="font-bold text-amber-700">Earn ₹4,500</span>
-              </div>
             </div>
           </div>
         </div>
