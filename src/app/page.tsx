@@ -7,11 +7,11 @@ import Image from "next/image";
 const faqs = [
   {
     q: "Is this legal?",
-    a: "Yes. Earnwale operates within applicable laws. Referral rewards are paid for genuine course referrals as per our terms.",
+    a: "Yes. Earnwale provides digital educational content. Referral rewards are optional promotional incentives as described in our terms.",
   },
   {
     q: "When do I get paid?",
-    a: "Earnings are credited to your account when a referred user completes purchase. Payouts are processed as per our policy.",
+    a: "Earnings from referrals are credited only after a successful course purchase. Payments are processed as per our payout policy.",
   },
   {
     q: "Is there refund?",
@@ -38,6 +38,15 @@ export default function HomePage() {
             <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
               Home
             </Link>
+            <Link href="/about" className="text-sm text-gray-600 hover:text-gray-900">
+              About
+            </Link>
+            <Link href="/courses" className="text-sm text-gray-600 hover:text-gray-900">
+              Courses
+            </Link>
+            <Link href="/contact" className="text-sm text-gray-600 hover:text-gray-900">
+              Contact
+            </Link>
             <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">
               Login
             </Link>
@@ -57,17 +66,17 @@ export default function HomePage() {
         <div className="w-full max-w-full">
           <div className="flex flex-col items-center text-center">
             <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl md:text-3xl lg:text-4xl">
-              Earn by Referring. Simple.
+              Master College Success & Smart Money Skills
             </h1>
             <p className="mt-3 max-w-xl text-sm text-gray-600 sm:text-base">
-              Buy our digital course once. Share your referral code. Earn on every successful referral.
+              Access premium digital learning resources designed to help students improve academic performance, build confidence, and develop practical financial knowledge.
             </p>
             <div className="mt-6 flex w-full max-w-sm flex-col gap-3 sm:mx-auto sm:max-w-none sm:flex-row sm:justify-center">
               <Link
                 href="/signup"
                 className="inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-base font-semibold text-white shadow-md transition-colors hover:bg-amber-600 sm:w-auto sm:px-6"
               >
-                Start Earning Now
+                Enroll Now
               </Link>
               <Link
                 href="/login"
@@ -167,7 +176,7 @@ export default function HomePage() {
       <section className="py-6 sm:py-10">
         <div className="w-full max-w-full">
           <h2 className="text-center text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl">
-            How Earnwale Works
+            How It Works
           </h2>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -187,9 +196,9 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
               </div>
-              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Share Referral Code</h3>
+              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Share With Friends (Optional)</h3>
               <p className="mt-2 text-sm text-gray-600">
-                Share your unique code with friends. They sign up and purchase using it.
+                Students who find value in the course may optionally share it with friends and receive promotional rewards.
               </p>
             </div>
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -198,9 +207,9 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Potential knowledge</h3>
+              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Apply What You Learn</h3>
               <p className="mt-2 text-sm text-gray-600">
-                Enjoy our platform andlearn everything you need to know.
+                Use structured frameworks and actionable insights from the course to improve academic performance and financial decision-making.
               </p>
             </div>
           </div>
@@ -258,7 +267,7 @@ export default function HomePage() {
             <div>
               <p className="text-base font-semibold text-gray-900">Earnwale</p>
               <p className="mt-2 text-sm text-gray-600">
-                Buy once. Refer unlimited. Earn on every successful referral with our digital course.
+                Digital educational resources designed for ambitious students. Learn once, apply for life.
               </p>
             </div>
             <div>

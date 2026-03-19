@@ -1,24 +1,25 @@
-"use client";
+\"use client\";
 
-import { useState, useEffect } from "react";
-import Script from "next/script";
-import Link from "next/link";
-import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import type React from \"react\";
+import { useState, useEffect } from \"react\";
+import Script from \"next/script\";
+import Link from \"next/link\";
+import Image from \"next/image\";
+import { useSearchParams } from \"next/navigation\";
 
 export default function SignupContent() {
   const searchParams = useSearchParams();
   const referralFromUrl = searchParams.get("ref");
 
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    mobile: "",
-    state: "",
-    dob: "",
-    password: "",
-    referralCode: "",
-    plan: "300",
+    name: \"\",
+    email: \"\",
+    mobile: \"\",
+    state: \"\",
+    dob: \"\",
+    password: \"\",
+    referralCode: \"\",
+    plan: \"300\",
   });
 
   const [loading, setLoading] = useState(false);
@@ -52,14 +53,13 @@ export default function SignupContent() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/payment/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(\"/api/payment/create-order\", {
+        method: \"POST\",
+        headers: { \"Content-Type\": \"application/json\" },
         body: JSON.stringify(form),
       });
 
       const data = await res.json();
-      console.log("ORDER RESPONSE:", data);
 
       if (!res.ok) {
         alert("Failed to create order");
@@ -70,15 +70,15 @@ export default function SignupContent() {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.amount,
-        currency: "INR",
-        name: "Earnwale",
-        description: "Course Purchase",
+        currency: \"INR\",
+        name: \"Earnwale Learning\",
+        description: \"Digital Course Enrollment\",
         order_id: data.id,
         handler: async function (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) {
           try {
-            const verifyRes = await fetch("/api/payment/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+            const verifyRes = await fetch(\"/api/payment/verify\", {
+              method: \"POST\",
+              headers: { \"Content-Type\": \"application/json\" },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -97,8 +97,8 @@ export default function SignupContent() {
 
             window.location.href = "/login";
           } catch (error) {
-            console.error("Verification error:", error);
-            alert("Something went wrong during verification.");
+            console.error(\"Verification error:\", error);
+            alert(\"Something went wrong during verification.\");
           }
         },
         theme: { color: "#f59e0b" },
@@ -107,7 +107,7 @@ export default function SignupContent() {
       if (!(window as unknown as { Razorpay?: unknown }).Razorpay) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         if (!(window as unknown as { Razorpay?: unknown }).Razorpay) {
-          alert("Payment system not ready. Please refresh.");
+          alert(\"Payment system not ready. Please refresh.\");
           setLoading(false);
           return;
         }
@@ -116,8 +116,8 @@ export default function SignupContent() {
       const rzp = new (window as unknown as { Razorpay: new (o: unknown) => { open: () => void } }).Razorpay(options);
       rzp.open();
     } catch (error) {
-      console.error("Payment error:", error);
-      alert("Payment failed.");
+      console.error(\"Payment error:\", error);
+      alert(\"Payment failed.\");
     }
 
     setLoading(false);
@@ -127,42 +127,64 @@ export default function SignupContent() {
     "w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 box-border";
 
   const products = [
-    { id: "300", title: "The Scholar's Protocol", description: "Advanced Cognitive Strategies for High-Performance Learning", price: "₹300", image: "/public/scholar.jpg" },
-    { id: "500", title: "The Capital Compounder", description: "Advanced Financial Engineering for the Modern Student", price: "₹500", image: "/public/capital.jpg" },
+    {
+      id: \"300\",
+      title: \"The Scholar's Protocol\",
+      description: \"Structured curriculum focused on deep learning, study systems, and long-term skill development.\",
+      price: \"₹300\",
+      image: \"/scholar.jpg\",
+    },
+    {
+      id: \"500\",
+      title: \"The Capital Compounder\",
+      description: \"Educational program on financial concepts, risk awareness, and decision-making. No earnings or returns are promised.\",
+      price: \"₹500\",
+      image: \"/capital.jpg\",
+    },
   ];
 
   const selectedProduct = products.find((p) => p.id === form.plan) ?? products[0];
   const canSubmit = termsAgreed && refundAgreed;
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+    <div className=\"min-h-screen overflow-x-hidden bg-gray-50\">
+      <Script src=\"https://checkout.razorpay.com/v1/checkout.js\" strategy=\"afterInteractive\" />
 
-      {/* Header: Earnwale (left) + Login (right) only */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4">
-          <Link href="/" className="text-base font-semibold text-gray-900">
+      {/* Header: brand + login */}
+      <header className=\"sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur\">
+        <div className=\"mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4\">
+          <Link href=\"/\" className=\"text-base font-semibold text-gray-900\">
             Earnwale
           </Link>
           <Link
-            href="/login"
-            className="rounded-lg border border-amber-500 px-3 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50"
+            href=\"/login\"
+            className=\"rounded-lg border border-amber-500 px-3 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50\"
           >
             Login
           </Link>
         </div>
       </header>
 
-      <div className={mounted ? "opacity-100" : "opacity-0"}>
-        <div className="mx-auto w-full max-w-screen-md px-4 py-6">
-          {/* Selected Plan - single column, no large image on mobile */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+      <div className={mounted ? \"opacity-100\" : \"opacity-0\"}>
+        <div className=\"mx-auto w-full max-w-screen-md px-4 py-6\">
+          <p className=\"text-xs font-medium uppercase tracking-wider text-amber-700\">
+            Digital Course Enrollment
+          </p>
+          <h1 className=\"mt-2 text-xl font-semibold text-gray-900\">
+            Learn, practice, and build skills &mdash; not a get-rich scheme.
+          </h1>
+          <p className=\"mt-1 text-sm text-gray-600\">
+            Earnwale provides educational content only. We do not offer investment advice, income guarantees, or promises of returns.
+          </p>
+
+          {/* Selected Plan */}
+          <div className=\"mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm\">
+            <p className=\"text-xs font-semibold uppercase tracking-wider text-amber-700\">
               Selected Plan
             </p>
 
             <div className="mt-4 flex flex-col gap-4">
-              <div className="hidden w-full max-w-full sm:block">
+              <div className=\"hidden w-full max-w-full sm:block\">
                 <Image
                   src={selectedProduct.image}
                   alt={selectedProduct.title}
@@ -173,18 +195,18 @@ export default function SignupContent() {
                 />
               </div>
 
-              <div className="min-w-0">
-                <h1 className="text-xl font-semibold text-gray-900">
+              <div className=\"min-w-0\">
+                <h2 className=\"text-xl font-semibold text-gray-900\">
                   {selectedProduct.title}
-                </h1>
-                <p className="mt-1 text-sm text-gray-600">
+                </h2>
+                <p className=\"mt-1 text-sm text-gray-600\">
                   {selectedProduct.description}
                 </p>
-                <p className="mt-4 text-2xl font-bold text-gray-900">
+                <p className=\"mt-4 text-2xl font-bold text-gray-900\">
                   {selectedProduct.price}
                 </p>
 
-                <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className=\"mt-4 grid grid-cols-2 gap-3\">
                   {products.map((product) => {
                     const selected = form.plan === product.id;
                     return (
@@ -194,13 +216,13 @@ export default function SignupContent() {
                         onClick={() => setForm({ ...form, plan: product.id })}
                         className={`rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-colors ${
                           selected
-                            ? "border-amber-500 bg-amber-50 text-amber-800"
-                            : "border-gray-200 bg-white text-gray-800 hover:bg-gray-50"
+                            ? \"border-amber-500 bg-amber-50 text-amber-800\"
+                            : \"border-gray-200 bg-white text-gray-800 hover:bg-gray-50\"
                         }`}
                       >
                         {product.price}
-                        <span className="mt-0.5 block text-xs font-medium text-gray-500">
-                          {product.id === "300" ? "Starter" : "Pro"}
+                        <span className=\"mt-0.5 block text-xs font-medium text-gray-500\">
+                          {product.id === \"300\" ? \"Core\" : \"Extended\"}
                         </span>
                       </button>
                     );
@@ -210,101 +232,101 @@ export default function SignupContent() {
             </div>
           </div>
 
-          {/* Create Account Form - single column, space-y-4 */}
-          <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-base font-semibold text-gray-900">
-              Create Account
+          {/* Create Account Form */}
+          <div className=\"mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm\">
+            <h2 className=\"mb-4 text-base font-semibold text-gray-900\">
+              Create your learning account
             </h2>
 
-            <div className="space-y-4">
+            <div className=\"space-y-4\">
               <div>
-                <label htmlFor="name" className="mb-1 block text-xs font-medium text-gray-700">
+                <label htmlFor=\"name\" className=\"mb-1 block text-xs font-medium text-gray-700\">
                   Full Name
                 </label>
                 <input
-                  id="name"
-                  name="name"
-                  placeholder="Full Name"
+                  id=\"name\"
+                  name=\"name\"
+                  placeholder=\"Full Name\"
                   value={form.name}
                   onChange={handleChange}
                   className={inputBase}
                 />
               </div>
               <div>
-                <label htmlFor="email" className="mb-1 block text-xs font-medium text-gray-700">
+                <label htmlFor=\"email\" className=\"mb-1 block text-xs font-medium text-gray-700\">
                   Email
                 </label>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Email"
+                  id=\"email\"
+                  name=\"email\"
+                  type=\"email\"
+                  placeholder=\"Email\"
                   value={form.email}
                   onChange={handleChange}
                   className={inputBase}
                 />
               </div>
               <div>
-                <label htmlFor="mobile" className="mb-1 block text-xs font-medium text-gray-700">
+                <label htmlFor=\"mobile\" className=\"mb-1 block text-xs font-medium text-gray-700\">
                   Mobile Number
                 </label>
                 <input
-                  id="mobile"
-                  name="mobile"
-                  placeholder="Mobile Number"
+                  id=\"mobile\"
+                  name=\"mobile\"
+                  placeholder=\"Mobile Number\"
                   value={form.mobile}
                   onChange={handleChange}
                   className={inputBase}
                 />
               </div>
               <div>
-                <label htmlFor="state" className="mb-1 block text-xs font-medium text-gray-700">
+                <label htmlFor=\"state\" className=\"mb-1 block text-xs font-medium text-gray-700\">
                   State
                 </label>
                 <input
-                  id="state"
-                  name="state"
-                  placeholder="State"
+                  id=\"state\"
+                  name=\"state\"
+                  placeholder=\"State\"
                   value={form.state}
                   onChange={handleChange}
                   className={inputBase}
                 />
               </div>
               <div>
-                <label htmlFor="dob" className="mb-1 block text-xs font-medium text-gray-700">
+                <label htmlFor=\"dob\" className=\"mb-1 block text-xs font-medium text-gray-700\">
                   Date of birth
                 </label>
                 <input
-                  id="dob"
-                  name="dob"
-                  type="date"
+                  id=\"dob\"
+                  name=\"dob\"
+                  type=\"date\"
                   value={form.dob}
                   onChange={handleChange}
                   className={inputBase}
                 />
               </div>
               <div>
-                <label htmlFor="password" className="mb-1 block text-xs font-medium text-gray-700">
+                <label htmlFor=\"password\" className=\"mb-1 block text-xs font-medium text-gray-700\">
                   Password
                 </label>
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Password"
+                  id=\"password\"
+                  name=\"password\"
+                  type=\"password\"
+                  placeholder=\"Password\"
                   value={form.password}
                   onChange={handleChange}
                   className={inputBase}
                 />
               </div>
               <div>
-                <label htmlFor="referralCode" className="mb-1 block text-xs font-medium text-gray-700">
-                  Referral code <span className="text-gray-400">(optional)</span>
+                <label htmlFor=\"referralCode\" className=\"mb-1 block text-xs font-medium text-gray-700\">
+                  Referral code <span className=\"text-gray-400\">(optional)</span>
                 </label>
                 <input
-                  id="referralCode"
-                  name="referralCode"
-                  placeholder="Referral Code (Optional)"
+                  id=\"referralCode\"
+                  name=\"referralCode\"
+                  placeholder=\"Referral Code (Optional)\"
                   value={form.referralCode}
                   onChange={handleChange}
                   className={inputBase}
@@ -312,31 +334,31 @@ export default function SignupContent() {
               </div>
             </div>
 
-            <div className="mt-4 space-y-3 rounded-xl border border-gray-100 bg-gray-50/50 p-3">
-              <label className="flex cursor-pointer items-start gap-2">
+            <div className=\"mt-4 space-y-3 rounded-xl border border-gray-100 bg-gray-50/50 p-3\">
+              <label className=\"flex cursor-pointer items-start gap-2\">
                 <input
-                  type="checkbox"
+                  type=\"checkbox\"
                   checked={termsAgreed}
                   onChange={(e) => setTermsAgreed(e.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                  className=\"mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-amber-500 focus:ring-amber-500\"
                 />
-                <span className="text-xs text-gray-700">
+                <span className=\"text-xs text-gray-700\">
                   I agree with{" "}
-                  <a href="/terms-and-conditions" className="font-medium text-amber-600 underline hover:no-underline">
+                  <a href=\"/terms-and-conditions\" className=\"font-medium text-amber-600 underline hover:no-underline\">
                     Terms & Conditions
                   </a>
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-2">
+              <label className=\"flex cursor-pointer items-start gap-2\">
                 <input
-                  type="checkbox"
+                  type=\"checkbox\"
                   checked={refundAgreed}
                   onChange={(e) => setRefundAgreed(e.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                  className=\"mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-amber-500 focus:ring-amber-500\"
                 />
-                <span className="text-xs text-gray-700">
+                <span className=\"text-xs text-gray-700\">
                   I have read the{" "}
-                  <a href="/refund-policy" className="font-medium text-amber-600 underline hover:no-underline">
+                  <a href=\"/refund-policy\" className=\"font-medium text-amber-600 underline hover:no-underline\">
                     Refund Policy
                   </a>
                 </span>
@@ -346,17 +368,22 @@ export default function SignupContent() {
             <button
               onClick={handlePayment}
               disabled={loading || !canSubmit}
-              className="mt-4 w-full max-w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
+              className=\"mt-4 w-full max-w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-70\"
             >
               {loading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span className=\"inline-flex items-center justify-center gap-2\">
+                  <span className=\"h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent\" />
                   Processing…
                 </span>
               ) : (
-                "Enroll Now"
+                \"Complete Secure Payment\"
               )}
             </button>
+
+            <p className=\"mt-2 text-[11px] leading-relaxed text-gray-500\">
+              This is a one-time digital course purchase. Access is granted immediately after successful payment. Referral rewards, if applicable, are
+              promotional incentives and not guaranteed income.
+            </p>
           </div>
         </div>
       </div>
