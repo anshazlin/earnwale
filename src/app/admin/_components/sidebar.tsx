@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 type NavItem = {
   label: string;
@@ -15,11 +16,24 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "Transactions", href: "/admin/transactions" },
 ];
 
-export function AdminSidebar() {
+type AdminSidebarProps = {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+};
+
+export function AdminSidebar({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) {
   const pathname = usePathname();
 
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname, setSidebarOpen]);
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-slate-200 bg-white/95 px-5 py-6 shadow-sm backdrop-blur md:flex md:flex-col">
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-slate-200 bg-white/95 px-5 py-6 shadow-sm backdrop-blur ${
+        sidebarOpen ? "flex flex-col" : "hidden md:flex md:flex-col"
+      }`}
+    >
       <div className="mb-8 flex items-center gap-2">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
           <span className="text-sm font-semibold">EA</span>
@@ -42,6 +56,7 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setSidebarOpen(false)}
               className={`group flex items-center justify-between rounded-xl px-3 py-2.5 font-medium transition-colors ${
                 active
                   ? "bg-indigo-50 text-indigo-700"

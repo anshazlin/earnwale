@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminSidebar } from "../_components/sidebar";
-
 type AdminTransaction = {
   id: string;
   type: string;
@@ -135,10 +133,7 @@ export default function AdminTransactionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 md:flex">
-      <AdminSidebar />
-
-      <div className="flex-1 md:pl-64">
+    <>
         <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4 sm:h-16">
             <div>
@@ -277,8 +272,7 @@ export default function AdminTransactionsPage() {
             </div>
           </section>
         </main>
-      </div>
-    </div>
+    </>
   );
 }
 

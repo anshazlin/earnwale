@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
+import SiteNavbar from "@/app/components/SiteNavbar";
 import { useSearchParams } from "next/navigation";
 
 type RazorpaySuccessResponse = {
@@ -158,20 +159,7 @@ export default function SignupContent() {
     <div className="min-h-screen overflow-x-hidden bg-gray-50">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
 
-      {/* Header: brand + login */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4">
-          <Link href="/" className="text-base font-semibold text-gray-900">
-            Earnwale
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-lg border border-amber-500 px-3 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50"
-          >
-            Login
-          </Link>
-        </div>
-      </header>
+      <SiteNavbar />
 
       <div className={mounted ? "opacity-100" : "opacity-0"}>
         <div className="mx-auto w-full max-w-screen-md px-4 py-6">

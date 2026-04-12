@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import SiteNavbar from "@/app/components/SiteNavbar";
 
 const faqs = [
   {
@@ -26,39 +27,17 @@ const faqs = [
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#courses") return;
+    requestAnimationFrame(() => {
+      document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
+    });
+  }, []);
+
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* 1. Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-amber-100 bg-white/95 shadow-sm backdrop-blur-sm">
-        <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4 sm:h-16">
-          <Link href="/" className="text-base font-semibold text-gray-900 sm:text-lg">
-            Earnwale
-          </Link>
-          <div className="flex items-center gap-3 sm:gap-6">
-            <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
-              Home
-            </Link>
-            <Link href="/about" className="text-sm text-gray-600 hover:text-gray-900">
-              About
-            </Link>
-            <Link href="/courses" className="text-sm text-gray-600 hover:text-gray-900">
-              Courses
-            </Link>
-            <Link href="/contact" className="text-sm text-gray-600 hover:text-gray-900">
-              Contact
-            </Link>
-            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4"
-            >
-              Join Now
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <SiteNavbar />
 
       {/* 2. Hero */}
       <div className="mx-auto w-full max-w-screen-md px-4 py-6">
@@ -90,7 +69,7 @@ export default function HomePage() {
       </section>
 
       {/* 3. Plans */}
-      <section className="border-t border-amber-50 bg-amber-50/30 py-6 sm:py-10">
+      <section id="courses" className="scroll-mt-16 border-t border-amber-50 bg-amber-50/30 py-6 sm:py-10">
         <div className="w-full max-w-full">
           <h2 className="text-center text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl">
             Choose Your Plan

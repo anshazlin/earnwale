@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -17,11 +17,6 @@ type Withdrawal = {
     accountNumber?: string | null;
     ifscCode?: string | null;
   };
-};
-
-type ActionState = {
-  id: string;
-  action: "approve" | "reject" | "paid";
 };
 
 function StatusBadge({ status }: { status: WithdrawalStatus }) {
@@ -53,8 +48,7 @@ function StatusBadge({ status }: { status: WithdrawalStatus }) {
 export default function AdminWithdrawPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionState, setActionState] = useState<ActionState | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchList = useCallback(async () => {
@@ -95,20 +89,17 @@ export default function AdminWithdrawPage() {
     fetchList();
   }, [fetchList]);
 
-  const handleAction = async (
-    withdrawalId: string,
-    action: "approve" | "reject" | "paid"
-  ) => {
-    setActionState({ id: withdrawalId, action });
+  const updateStatus = async (id: string, status: "Paid" | "Rejected") => {
+    setUpdatingId(id);
     setError(null);
-    setSuccessMessage(null);
-
     try {
-      const res = await fetch("/api/admin/withdraw/update", {
+      const res = await fetch("/api/admin/withdrawal/update", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
-        body: JSON.stringify({ withdrawalId, action }),
+        body: JSON.stringify({ id, status }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -128,18 +119,12 @@ export default function AdminWithdrawPage() {
         return;
       }
 
-      const labels: Record<string, string> = {
-        approve: "Withdrawal approved",
-        reject: "Withdrawal rejected",
-        paid: "Marked as paid",
-      };
-      setSuccessMessage(labels[action] ?? "Done");
-      await fetchList();
+      window.location.reload();
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
     } finally {
-      setActionState(null);
+      setUpdatingId(null);
     }
   };
 
@@ -154,12 +139,8 @@ export default function AdminWithdrawPage() {
       })
     : "—";
 
-  const isActionLoading = (id: string) =>
-    actionState?.id === id && !!actionState?.action;
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
@@ -176,12 +157,6 @@ export default function AdminWithdrawPage() {
             ← Back to Dashboard
           </a>
         </div>
-
-        {successMessage && (
-          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-            {successMessage}
-          </div>
-        )}
 
         {error && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
@@ -224,7 +199,7 @@ export default function AdminWithdrawPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
+              <table className="min-w-[600px] w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
@@ -263,9 +238,7 @@ export default function AdminWithdrawPage() {
                   {withdrawals.map((w) => {
                     const status = (w.status ?? "").toString().toLowerCase();
                     const isPending = status === "pending";
-                    const isApproved = status === "approved";
-                    const showActions = isPending || isApproved;
-                    const loadingThis = isActionLoading(w.id);
+                    const busy = updatingId === w.id;
 
                     return (
                       <tr
@@ -300,58 +273,34 @@ export default function AdminWithdrawPage() {
                           {formatDate(w.createdAt)}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right">
-                          {showActions ? (
-                            <div className="flex flex-wrap justify-end gap-2">
-                              {isPending && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleAction(w.id, "approve")
-                                    }
-                                    disabled={loadingThis}
-                                    className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
-                                  >
-                                    {loadingThis &&
-                                    actionState?.action === "approve"
-                                      ? "…"
-                                      : "Approve"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleAction(w.id, "reject")
-                                    }
-                                    disabled={loadingThis}
-                                    className="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-60"
-                                  >
-                                    {loadingThis &&
-                                    actionState?.action === "reject"
-                                      ? "…"
-                                      : "Reject"}
-                                  </button>
-                                </>
-                              )}
-                              {isApproved && (
+                          <div className="flex justify-end gap-2">
+                            {isPending ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => updateStatus(w.id, "Paid")}
+                                  disabled={busy}
+                                  className="rounded-lg bg-green-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
+                                >
+                                  {busy ? "…" : "Approve"}
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    handleAction(w.id, "paid")
+                                    updateStatus(w.id, "Rejected")
                                   }
-                                  disabled={loadingThis}
-                                  className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-60"
+                                  disabled={busy}
+                                  className="rounded-lg bg-red-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
                                 >
-                                  {loadingThis && actionState?.action === "paid"
-                                    ? "…"
-                                    : "Mark as Paid"}
+                                  {busy ? "…" : "Reject"}
                                 </button>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400">
-                              No actions
-                            </span>
-                          )}
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-400">
+                                No actions
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -361,7 +310,6 @@ export default function AdminWithdrawPage() {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

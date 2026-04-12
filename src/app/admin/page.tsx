@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminSidebar } from "./_components/sidebar";
 
 type WithdrawalStatus = "pending" | "approved" | "paid" | "rejected" | string;
 
@@ -15,13 +14,6 @@ type Withdrawal = {
     email: string;
   };
 };
-
-type ActionKind = "approve" | "reject" | "paid";
-
-type ActionState = {
-  id: string;
-  action: ActionKind;
-} | null;
 
 type StatCardProps = {
   label: string;
@@ -78,8 +70,7 @@ function StatCard({ label, value }: StatCardProps) {
 export default function AdminDashboardPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionState, setActionState] = useState<ActionState>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchWithdrawals = useCallback(async () => {
@@ -121,12 +112,6 @@ export default function AdminDashboardPage() {
     fetchWithdrawals();
   }, [fetchWithdrawals]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 2500);
-    return () => window.clearTimeout(id);
-  }, [toast]);
-
   const pendingCount = useMemo(
     () =>
       withdrawals.filter(
@@ -145,18 +130,17 @@ export default function AdminDashboardPage() {
     [withdrawals],
   );
 
-  const handleAction = async (id: string, action: ActionKind) => {
-    setActionState({ id, action });
+  const updateStatus = async (id: string, status: "Paid" | "Rejected") => {
+    setUpdatingId(id);
     setError(null);
-
     try {
-      const res = await fetch("/api/admin/withdraw/update", {
+      const res = await fetch("/api/admin/withdrawal/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ withdrawalId: id, action }),
+        body: JSON.stringify({ id, status }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -171,36 +155,22 @@ export default function AdminDashboardPage() {
         return;
       }
 
-      if (!res.ok || !data?.success) {
+      if (!res.ok) {
         setError(data?.error ?? "Action failed. Please try again.");
         return;
       }
 
-      const message =
-        action === "approve"
-          ? "Withdrawal approved"
-          : action === "reject"
-            ? "Withdrawal rejected"
-            : "Marked as paid";
-
-      setToast(message);
-      await fetchWithdrawals();
+      window.location.reload();
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
     } finally {
-      setActionState(null);
+      setUpdatingId(null);
     }
   };
 
-  const isActionLoading = (id: string, action: ActionKind) =>
-    actionState?.id === id && actionState.action === action;
-
   return (
-    <div className="min-h-screen bg-slate-50 md:flex">
-      <AdminSidebar />
-
-      <div className="flex-1 md:pl-64">
+    <>
         <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4 sm:h-16">
             <div>
@@ -232,7 +202,7 @@ export default function AdminDashboardPage() {
                   Recent withdrawal requests
                 </h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Approve, reject, or mark payouts as paid.
+                  Approve or reject pending withdrawal requests.
                 </p>
               </div>
             </div>
@@ -264,7 +234,7 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+                <table className="min-w-[600px] w-full divide-y divide-slate-100 text-left text-sm">
                   <thead className="bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     <tr>
                       <th className="px-4 py-3 sm:px-6">User</th>
@@ -283,7 +253,7 @@ export default function AdminDashboardPage() {
                         .toString()
                         .toLowerCase();
                       const isPending = status === "pending";
-                      const isApproved = status === "approved";
+                      const busy = updatingId === w.id;
 
                       return (
                         <tr
@@ -308,62 +278,36 @@ export default function AdminDashboardPage() {
                               : "—"}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-right sm:px-6">
-                            {isPending || isApproved ? (
-                              <div className="flex flex-wrap justify-end gap-2">
-                                {isPending && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleAction(w.id, "approve")
-                                      }
-                                      disabled={isActionLoading(
-                                        w.id,
-                                        "approve",
-                                      )}
-                                      className="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
-                                    >
-                                      {isActionLoading(w.id, "approve")
-                                        ? "Approving…"
-                                        : "Approve"}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleAction(w.id, "reject")
-                                      }
-                                      disabled={isActionLoading(
-                                        w.id,
-                                        "reject",
-                                      )}
-                                      className="inline-flex items-center rounded-full bg-red-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-60"
-                                    >
-                                      {isActionLoading(w.id, "reject")
-                                        ? "Rejecting…"
-                                        : "Reject"}
-                                    </button>
-                                  </>
-                                )}
-                                {isApproved && (
+                            <div className="flex justify-end gap-2">
+                              {isPending ? (
+                                <>
                                   <button
                                     type="button"
                                     onClick={() =>
-                                      handleAction(w.id, "paid")
+                                      updateStatus(w.id, "Paid")
                                     }
-                                    disabled={isActionLoading(w.id, "paid")}
-                                    className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-60"
+                                    disabled={busy}
+                                    className="rounded-lg bg-green-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
                                   >
-                                    {isActionLoading(w.id, "paid")
-                                      ? "Marking…"
-                                      : "Mark as Paid"}
+                                    {busy ? "…" : "Approve"}
                                   </button>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-slate-400">
-                                No actions
-                              </span>
-                            )}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateStatus(w.id, "Rejected")
+                                    }
+                                    disabled={busy}
+                                    className="rounded-lg bg-red-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
+                                  >
+                                    {busy ? "…" : "Reject"}
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-gray-400">
+                                  No actions
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -374,13 +318,6 @@ export default function AdminDashboardPage() {
             )}
           </section>
         </main>
-      </div>
-
-      {toast && (
-        <div className="fixed bottom-4 right-4 z-40 max-w-xs rounded-xl border border-emerald-100 bg-white px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg">
-          {toast}
-        </div>
-      )}
-    </div>
+    </>
   );
 }
