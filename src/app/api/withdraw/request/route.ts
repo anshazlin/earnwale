@@ -33,7 +33,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (user.earnings < MIN_WITHDRAWAL) {
+      return NextResponse.json(
+        { error: `Insufficient balance (minimum withdrawal is ₹${MIN_WITHDRAWAL})` },
+        { status: 400 },
+      );
+    }
+
     const amount = Math.min(user.earnings, MAX_WITHDRAWAL);
+
+    if (user.earnings < amount) {
+      return NextResponse.json(
+        { error: "Insufficient balance for this withdrawal" },
+        { status: 400 },
+      );
+    }
 
     if (!user.upiId && !user.accountNumber) {
       return NextResponse.json(
@@ -59,7 +73,7 @@ export async function POST(req: Request) {
     const existingPending = await prisma.withdrawal.findFirst({
       where: {
         userId: user.id,
-        status: "pending",
+        status: { in: ["pending", "approved"] },
       },
     });
 

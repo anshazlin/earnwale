@@ -9,7 +9,7 @@ type User = {
   earnings: number;
 };
 
-type WithdrawStatus = "pending" | "approved" | "rejected" | string;
+type WithdrawStatus = "pending" | "paid" | "rejected" | "approved" | string;
 
 type Withdraw = {
   id?: string;
@@ -94,9 +94,22 @@ export function WithdrawSection() {
     };
   }, [fetchUser, fetchHistory]);
 
+  const hasOpenWithdrawal = useMemo(
+    () =>
+      history.some((w) => {
+        const s = (w.status ?? "").toString().toLowerCase();
+        return s === "pending" || s === "approved";
+      }),
+    [history],
+  );
+
   const canWithdraw = useMemo(
-    () => !!user && typeof user.earnings === "number" && user.earnings >= 500,
-    [user],
+    () =>
+      !!user &&
+      typeof user.earnings === "number" &&
+      user.earnings >= 450 &&
+      !hasOpenWithdrawal,
+    [user, hasOpenWithdrawal],
   );
 
   const formatAmount = (n: number | undefined) =>
@@ -105,19 +118,13 @@ export function WithdrawSection() {
   const formatStatus = (value: WithdrawStatus | undefined) => {
     const v = (value ?? "").toString().toLowerCase();
 
-    if (v === "approved") return "Approved";
     if (v === "paid") return "Paid";
     if (v === "rejected") return "Rejected";
-
     return "Pending";
   };
 
   const statusStyles = (value: WithdrawStatus | undefined) => {
     const v = (value ?? "").toString().toLowerCase();
-
-    if (v === "approved") {
-      return "bg-blue-50 text-blue-700 ring-blue-100";
-    }
 
     if (v === "paid") {
       return "bg-emerald-50 text-emerald-700 ring-emerald-100";
@@ -224,8 +231,9 @@ export function WithdrawSection() {
 
           {!canWithdraw && (
             <p className="mt-2 text-xs text-gray-500">
-              You need at least ₹450 in available balance to request a
-              withdrawal.
+              {hasOpenWithdrawal
+                ? "You already have a withdrawal in progress. Wait until it is paid or rejected before requesting again."
+                : "You need at least ₹450 in available balance to request a withdrawal."}
             </p>
           )}
         </section>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type WithdrawalStatus = "pending" | "approved" | "paid" | "rejected" | string;
+type WithdrawalStatus = "pending" | "paid" | "rejected" | "approved" | string;
 
 type Withdrawal = {
   id: string;
@@ -28,22 +28,18 @@ function formatCurrency(value: number | null | undefined) {
 function StatusBadge({ status }: { status: WithdrawalStatus }) {
   const normalized = (status ?? "").toString().toLowerCase();
   const label =
-    normalized === "approved"
-      ? "Approved"
-      : normalized === "paid"
-        ? "Paid"
-        : normalized === "rejected"
-          ? "Rejected"
-          : "Pending";
+    normalized === "paid"
+      ? "Paid"
+      : normalized === "rejected"
+        ? "Rejected"
+        : "Pending";
 
   const color =
-    normalized === "approved"
-      ? "bg-blue-100 text-blue-800 ring-blue-100"
-      : normalized === "paid"
-        ? "bg-emerald-100 text-emerald-800 ring-emerald-100"
-        : normalized === "rejected"
-          ? "bg-red-100 text-red-800 ring-red-100"
-          : "bg-amber-100 text-amber-800 ring-amber-100";
+    normalized === "paid"
+      ? "bg-emerald-100 text-emerald-800 ring-emerald-100"
+      : normalized === "rejected"
+        ? "bg-red-100 text-red-800 ring-red-100"
+        : "bg-amber-100 text-amber-800 ring-amber-100";
 
   return (
     <span
@@ -114,9 +110,10 @@ export default function AdminDashboardPage() {
 
   const pendingCount = useMemo(
     () =>
-      withdrawals.filter(
-        (w) => (w.status ?? "").toString().toLowerCase() === "pending",
-      ).length,
+      withdrawals.filter((w) => {
+        const s = (w.status ?? "").toString().toLowerCase();
+        return s === "pending" || s === "approved";
+      }).length,
     [withdrawals],
   );
 
@@ -202,7 +199,7 @@ export default function AdminDashboardPage() {
                   Recent withdrawal requests
                 </h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Approve or reject pending withdrawal requests.
+                  Mark paid or reject withdrawal requests (balance deducts on paid).
                 </p>
               </div>
             </div>
@@ -252,7 +249,8 @@ export default function AdminDashboardPage() {
                       const status = (w.status ?? "")
                         .toString()
                         .toLowerCase();
-                      const isPending = status === "pending";
+                      const isPending =
+                        status === "pending" || status === "approved";
                       const busy = updatingId === w.id;
 
                       return (
@@ -289,7 +287,7 @@ export default function AdminDashboardPage() {
                                     disabled={busy}
                                     className="rounded-lg bg-green-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
                                   >
-                                    {busy ? "…" : "Approve"}
+                                    {busy ? "…" : "Mark paid"}
                                   </button>
                                   <button
                                     type="button"

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type WithdrawalStatus = "pending" | "approved" | "paid" | "rejected" | string;
+type WithdrawalStatus = "pending" | "paid" | "rejected" | "approved" | string;
 
 type Withdrawal = {
   id: string;
@@ -23,18 +23,15 @@ function StatusBadge({ status }: { status: WithdrawalStatus }) {
   const s = (status ?? "").toString().toLowerCase();
   const styles: Record<string, string> = {
     pending: "bg-amber-100 text-amber-800",
-    approved: "bg-blue-100 text-blue-800",
     paid: "bg-emerald-100 text-emerald-800",
     rejected: "bg-red-100 text-red-800",
   };
   const label =
-    s === "approved"
-      ? "Approved"
+    s === "paid"
+      ? "Paid"
       : s === "rejected"
         ? "Rejected"
-        : s === "paid"
-          ? "Paid"
-          : "Pending";
+        : "Pending";
 
   return (
     <span
@@ -237,7 +234,8 @@ export default function AdminWithdrawPage() {
                 <tbody className="divide-y divide-slate-200 bg-white">
                   {withdrawals.map((w) => {
                     const status = (w.status ?? "").toString().toLowerCase();
-                    const isPending = status === "pending";
+                    const isPending =
+                      status === "pending" || status === "approved";
                     const busy = updatingId === w.id;
 
                     return (
@@ -282,7 +280,7 @@ export default function AdminWithdrawPage() {
                                   disabled={busy}
                                   className="rounded-lg bg-green-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
                                 >
-                                  {busy ? "…" : "Approve"}
+                                  {busy ? "…" : "Mark paid"}
                                 </button>
                                 <button
                                   type="button"
