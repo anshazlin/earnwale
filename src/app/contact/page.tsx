@@ -1,6 +1,5 @@
 "use client";
 
-import { SiteNavbar } from "@/components/SiteNavbar";
 import React, { useState } from "react";
 
 export default function ContactPage() {
@@ -37,9 +36,7 @@ export default function ContactPage() {
   };
 
   return (
-    <>
-      <SiteNavbar />
-      <main className="mx-auto w-full max-w-screen-md px-4 py-6">
+    <main className="mx-auto w-full max-w-screen-md px-4 py-6">
       <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl mb-2">Contact Us</h1>
       <p className="text-sm text-gray-600 mb-4">Have a question or feedback? Send us a message and we&apos;ll reply as soon as we can.</p>
 
@@ -93,6 +90,5 @@ export default function ContactPage() {
         {status === "error" && <p className="text-sm text-red-600">{error || "Failed to send message."}</p>}
       </form>
     </main>
-    </>
   );
 }
