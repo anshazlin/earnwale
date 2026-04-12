@@ -3,8 +3,8 @@ import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "auth_token";
-const MIN_WITHDRAWAL = 500;
-const MAX_WITHDRAWAL = 5000;
+const MIN_WITHDRAWAL = 450;
+const MAX_WITHDRAWAL = 4500;
 
 export async function POST(req: Request) {
   try {

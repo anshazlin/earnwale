@@ -224,7 +224,7 @@ export function WithdrawSection() {
 
           {!canWithdraw && (
             <p className="mt-2 text-xs text-gray-500">
-              You need at least ₹500 in available balance to request a
+              You need at least ₹450 in available balance to request a
               withdrawal.
             </p>
           )}

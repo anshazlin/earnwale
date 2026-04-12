@@ -1,5 +1,6 @@
 "use client";
 
+import { SiteNavbar } from "@/components/SiteNavbar";
 import { useState, useEffect, useCallback } from "react";
 
 type User = {
@@ -103,21 +104,26 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-screen-md px-3 sm:px-4">
-        <div className="flex items-center justify-center py-16">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-            <p className="text-xs text-gray-500 sm:text-sm">Loading dashboard…</p>
+      <>
+        <SiteNavbar />
+        <div className="mx-auto max-w-screen-md px-3 sm:px-4">
+          <div className="flex items-center justify-center py-16">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+              <p className="text-xs text-gray-500 sm:text-sm">Loading dashboard…</p>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-screen-md px-3 sm:px-4">
+    <>
+      <SiteNavbar />
+      <div className="mx-auto max-w-screen-md px-3 sm:px-4">
       <div className="space-y-3">
         {/* Header */}
         <div>
@@ -227,6 +233,7 @@ export default function DashboardPage() {
         </section>
       </div>
     </div>
+    </>
   );
 }
 
