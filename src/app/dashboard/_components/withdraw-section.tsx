@@ -205,7 +205,7 @@ export function WithdrawSection() {
 
           <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
             Minimum withdraw amount is{" "}
-            <span className="font-semibold">₹500</span>. Requests are reviewed
+            <span className="font-semibold">450</span>. Requests are reviewed
             by our team before being processed.
           </p>
 
