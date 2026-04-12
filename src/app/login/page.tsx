@@ -1,5 +1,6 @@
 "use client";
 
+import { SiteNavbar } from "@/components/SiteNavbar";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -60,16 +61,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4">
-          <Link href="/" className="text-base font-semibold text-gray-900">
-            Earnwale
-          </Link>
-          <Link href="/signup" className="rounded-lg border border-amber-500 px-3 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50">
-            Enroll
-          </Link>
-        </div>
-      </header>
+      <SiteNavbar />
 
       <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-screen-md items-center justify-center px-4 py-6">
         <div className="w-full max-w-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
