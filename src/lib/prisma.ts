@@ -62,7 +62,7 @@ async function accessToken() {
 
 function baseUrl() {
   const { projectId } = config();
-  return `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+  return `https://firestore.googleapis.com/v1/projects/${projectId}/databases/earnwale/documents`;
 }
 
 async function firestore(path: string, init: RequestInit = {}) {
