@@ -93,7 +93,7 @@ export async function POST(req: Request) {
       throw new Error("Unable to generate referral code");
     }
 
-    const newUser = await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: any) => {
       const duplicatePayment = await tx.transaction.findUnique({ where: { id: paymentRecordId } });
       if (duplicatePayment) throw new Error("Payment already processed");
 
