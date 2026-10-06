@@ -98,7 +98,16 @@ export default function SignupContent() {
               return;
             }
 
-            window.location.href = "/login";
+            try {
+              const { signInWithEmailAndPassword, sendEmailVerification, signOut } = await import("firebase/auth");
+              const { firebaseAuth } = await import("@/lib/firebase-client");
+              const credential = await signInWithEmailAndPassword(firebaseAuth, form.email.trim().toLowerCase(), form.password);
+              if (!credential.user.emailVerified) await sendEmailVerification(credential.user);
+              await signOut(firebaseAuth);
+            } catch (authError) {
+              console.error("Verification email setup failed:", authError);
+            }
+            window.location.href = "/login?verify=1";
           } catch (error) {
             console.error("Verification error:", error);
             alert("Something went wrong during verification.");
