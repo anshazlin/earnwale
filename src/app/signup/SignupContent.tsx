@@ -19,11 +19,7 @@ export default function SignupContent() {
   const referralFromUrl = searchParams.get("ref");
 
   const [form, setForm] = useState({
-    name: "",
     email: "",
-    mobile: "",
-    state: "",
-    dob: "",
     password: "",
     referralCode: "",
     plan: "300",
@@ -52,7 +48,7 @@ export default function SignupContent() {
   };
 
   const handlePayment = async () => {
-    if (!form.name || !form.email || !form.password) {
+    if (!form.email || !form.password) {
       alert("Fill all required fields");
       return;
     }
@@ -236,19 +232,6 @@ export default function SignupContent() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="name" className="mb-1 block text-xs font-medium text-gray-700">
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  placeholder="Full Name"
-                  value={form.name}
-                  onChange={handleChange}
-                  className={inputBase}
-                />
-              </div>
-              <div>
                 <label htmlFor="email" className="mb-1 block text-xs font-medium text-gray-700">
                   Email
                 </label>
@@ -258,45 +241,6 @@ export default function SignupContent() {
                   type="email"
                   placeholder="Email"
                   value={form.email}
-                  onChange={handleChange}
-                  className={inputBase}
-                />
-              </div>
-              <div>
-                <label htmlFor="mobile" className="mb-1 block text-xs font-medium text-gray-700">
-                  Mobile Number
-                </label>
-                <input
-                  id="mobile"
-                  name="mobile"
-                  placeholder="Mobile Number"
-                  value={form.mobile}
-                  onChange={handleChange}
-                  className={inputBase}
-                />
-              </div>
-              <div>
-                <label htmlFor="state" className="mb-1 block text-xs font-medium text-gray-700">
-                  State
-                </label>
-                <input
-                  id="state"
-                  name="state"
-                  placeholder="State"
-                  value={form.state}
-                  onChange={handleChange}
-                  className={inputBase}
-                />
-              </div>
-              <div>
-                <label htmlFor="dob" className="mb-1 block text-xs font-medium text-gray-700">
-                  Date of birth
-                </label>
-                <input
-                  id="dob"
-                  name="dob"
-                  type="date"
-                  value={form.dob}
                   onChange={handleChange}
                   className={inputBase}
                 />
