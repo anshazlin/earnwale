@@ -448,6 +448,16 @@ function model(collection: CollectionName) {
       await commitWrites([{ type: "update", collection, id, data }]);
       return data;
     },
+
+    delete: async (args: any) => {
+      const id = args.where?.id;
+      if (!id) throw new Error("Firebase compatibility layer requires delete by id");
+
+      await firestore(`/${collection}/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      return { id };
+    },
   };
 }
 
