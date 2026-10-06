@@ -406,7 +406,7 @@ function model(collection: CollectionName) {
     },
 
     findMany: async (args: any = {}) => {
-      let rows = (await listDocuments(collection)).filter((row) =>
+      let rows = (await listDocuments(collection)).filter((row: any) =>
         matchesWhere(row, args.where)
       );
       rows = sortRows(rows, args.orderBy);
