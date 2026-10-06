@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase-client";
 
 type User = {
@@ -54,10 +54,10 @@ export default function ProfilePage() {
     }
     setPasswordLoading(true);
     try {
-      const current = firebaseAuth.currentUser;
-      if (!current?.email) throw new Error("Please sign in again before changing your password.");
-      await reauthenticateWithCredential(current, EmailAuthProvider.credential(current.email, passwordForm.currentPassword));
-      await updatePassword(current, passwordForm.newPassword);
+      if (!user?.email) throw new Error("Account email unavailable");
+      const credential = await signInWithEmailAndPassword(firebaseAuth, user.email, passwordForm.currentPassword);
+      await updatePassword(credential.user, passwordForm.newPassword);
+      await signOut(firebaseAuth);
       setPasswordMessage({ type: "success", text: "Password updated." });
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error: any) {
