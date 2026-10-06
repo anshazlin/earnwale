@@ -12,49 +12,52 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("FETCH STARTING");
-    console.log("LOGIN CLICKED");
     e.preventDefault();
     setError("");
-    if (!email.trim()) {
-      setError("Email is required");
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      setError("Email and password are required");
       return;
     }
-    if (!password) {
-      setError("Password is required");
-      return;
-    }
-
     setLoading(true);
-   try {
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email: email.trim(), password }),
-  });
+    try {
+      const { signInWithEmailAndPassword, sendEmailVerification, signOut } = await import("firebase/auth");
+      const { firebaseAuth } = await import("@/lib/firebase-client");
+      let credential;
+      try {
+        credential = await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, password);
+      } catch (firebaseError: any) {
+        if (["auth/user-not-found", "auth/invalid-credential", "auth/invalid-login-credentials"].includes(firebaseError?.code)) {
+          const migration = await fetch("/api/auth/migrate-legacy", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: normalizedEmail, password }),
+          });
+          if (!migration.ok) throw firebaseError;
+          credential = await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, password);
+        } else throw firebaseError;
+      }
 
-  console.log("STATUS:", res.status);
+      if (!credential.user.emailVerified) {
+        await sendEmailVerification(credential.user);
+        await signOut(firebaseAuth);
+        setError("Please verify your email. We sent you a verification link.");
+        return;
+      }
 
-  let data = null;
-  try {
-    data = await res.json();
-  } catch (e) {
-    console.log("No JSON body");
-  }
-
-  if (!res.ok) {
-    setError(data?.error || "Login failed");
-    setLoading(false);
-    return;
-  }
-
-  window.location.href = "/dashboard/my-courses";
-} catch (err) {
-  console.log("FETCH ERROR:", err);
-  setError("Something went wrong");
-  setLoading(false);
-}
+      const idToken = await credential.user.getIdToken(true);
+      const session = await fetch("/api/auth/session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        credentials: "include", body: JSON.stringify({ idToken }),
+      });
+      const data = await session.json().catch(() => ({}));
+      if (!session.ok) throw new Error(data?.error || "Login failed");
+      await signOut(firebaseAuth);
+      window.location.href = "/dashboard/my-courses";
+    } catch (err: any) {
+      setError(err?.message === "Login failed" ? err.message : "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputBase =
@@ -104,6 +107,10 @@ export default function LoginPage() {
                 className={inputBase}
                 disabled={loading}
               />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span></span><Link href="/forgot-password" className="text-xs font-medium text-amber-600 hover:text-amber-700">Forgot password?</Link>
             </div>
 
             <div>
