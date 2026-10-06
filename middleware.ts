@@ -1,39 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
 
-const COOKIE_NAME = "auth_token";
+const COOKIE_NAME = "firebase_session";
 
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
-  const protectedRoutes = ["/dashboard", "/admin"];
-
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  if (!isProtected) {
-    return NextResponse.next();
-  }
-
-  const token = req.cookies.get(COOKIE_NAME)?.value;
-
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-
-    await jwtVerify(token, secret);
-
-    return NextResponse.next();
-  } catch (error) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
+  const isProtected = ["/dashboard", "/admin"].some(route => pathname.startsWith(route));
+  if (!isProtected) return NextResponse.next();
+  if (!req.cookies.get(COOKIE_NAME)?.value) return NextResponse.redirect(new URL("/login", req.url));
+  return NextResponse.next();
 }
 
-export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
-};
+// Edge middleware performs presence-only routing. Every protected API performs
+// authoritative Firebase Admin session verification and user/admin authorization.
+export const config = { matcher: ["/dashboard/:path*", "/admin/:path*"] };
