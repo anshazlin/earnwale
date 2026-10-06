@@ -351,12 +351,12 @@ class TransactionClient {
 
   private async findMany(collection: CollectionName, args: any = {}) {
     let rows = (await listDocuments(collection, this.transactionId)).filter(
-      (row) => matchesWhere(row, args.where)
+      (row: any) => matchesWhere(row, args.where)
     );
     rows = sortRows(rows, args.orderBy);
     if (args.skip) rows = rows.slice(args.skip);
     if (args.take !== undefined) rows = rows.slice(0, args.take);
-    return rows.map((row) => applySelect(row, args.select));
+    return rows.map((row: any) => applySelect(row, args.select));
   }
 
   private async create(collection: CollectionName, args: any) {
@@ -394,7 +394,7 @@ function model(collection: CollectionName) {
         key === "id"
           ? await getDocument(collection, value)
           : (await listDocuments(collection)).find(
-              (item) => item[key] === value
+              (item: any) => item[key] === value
             ) ?? null;
 
       return row ? withInclude(row, args.include, args.select) : null;
@@ -414,7 +414,7 @@ function model(collection: CollectionName) {
       if (args.take !== undefined) rows = rows.slice(0, args.take);
 
       return Promise.all(
-        rows.map((row) => withInclude(row, args.include, args.select))
+        rows.map((row: any) => withInclude(row, args.include, args.select))
       );
     },
 
