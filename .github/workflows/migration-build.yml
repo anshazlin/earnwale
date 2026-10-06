@@ -1,16 +1,16 @@
-name: Migration Build Check
+name: Firebase Auth Migration Build
 
 on:
   push:
     branches:
-      - migration/firebase-firestore
+      - migration/firebase-auth
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  dependency-bootstrap:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,19 +20,15 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Install dependencies
+      - name: Generate Firebase dependency lockfile
+        run: npm install firebase firebase-admin --save
+      - name: Verify clean install
         run: npm ci
-      - name: Build
-        run: npm run build
-        env:
-          FIREBASE_PROJECT_ID: build-check
-          FIREBASE_CLIENT_EMAIL: build-check@example.invalid
-          FIREBASE_PRIVATE_KEY: |
-            -----BEGIN PRIVATE KEY-----
-            BUILD_CHECK_PLACEHOLDER
-            -----END PRIVATE KEY-----
-          JWT_SECRET: build-check-only
-          ADMIN_EMAIL: build-check@example.invalid
-          RAZORPAY_KEY_ID: build-check
-          RAZORPAY_KEY_SECRET: build-check
-          NEXT_PUBLIC_RAZORPAY_KEY_ID: build-check
+      - name: Upload generated dependency files
+        uses: actions/upload-artifact@v4
+        with:
+          name: firebase-auth-dependencies
+          path: |
+            package.json
+            package-lock.json
+          if-no-files-found: error
