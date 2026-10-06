@@ -21,6 +21,9 @@ export async function POST(req: Request) {
       if (user.firebaseUid && user.firebaseUid !== firebaseUser.uid) {
         return NextResponse.json({ error: "Account association conflict" }, { status: 409 });
       }
+      // Legacy password was just proven against bcrypt; synchronize the Firebase
+      // credential during this controlled bridge without removing the bcrypt hash yet.
+      await firebaseAdminAuth.updateUser(firebaseUser.uid, { password });
     } catch (error: any) {
       if (error?.code !== "auth/user-not-found") throw error;
       firebaseUser = await firebaseAdminAuth.createUser({ email, password, emailVerified: false });
