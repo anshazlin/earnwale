@@ -22,6 +22,7 @@ function safeSignatureEqual(expected: string, received: unknown) {
 }
 
 export async function POST(req: Request) {
+  let createdFirebaseUid: string | null = null;
   try {
     const body = await req.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, formData } = body ?? {};
@@ -81,6 +82,7 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const firebaseUser = await firebaseAdminAuth.createUser({ email, password, emailVerified: false });
+    createdFirebaseUid = firebaseUser.uid;
 
     async function generateUniqueReferralCode(tx: any) {
       for (let attempt = 0; attempt < 20; attempt++) {
@@ -165,16 +167,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, verificationRequired: true });
   } catch (error: any) {
-    // If Firebase Auth creation succeeded but the Firestore transaction failed, remove
-    // the orphaned Auth account. Existing Firestore/payment records are never deleted.
-    try {
-      const email = String((await req.clone().json())?.formData?.email ?? "").trim().toLowerCase();
-      if (email) {
-        const authUser = await firebaseAdminAuth.getUserByEmail(email);
-        const firestoreUser = await prisma.user.findUnique({ where: { email } });
-        if (authUser && !firestoreUser) await firebaseAdminAuth.deleteUser(authUser.uid);
-      }
-    } catch {}
+    if (createdFirebaseUid) {
+      try {
+        const linked = await prisma.user.findUnique({ where: { firebaseUid: createdFirebaseUid } });
+        if (!linked) await firebaseAdminAuth.deleteUser(createdFirebaseUid);
+      } catch {}
+    }
     const message = error?.message || "Payment verification failed";
     const expectedClientError =
       message === "Payment already processed" ||
