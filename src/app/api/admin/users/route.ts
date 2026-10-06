@@ -1,31 +1,12 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { requireAdmin, authErrorResponse } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const COOKIE_NAME = "auth_token";
 const PAGE_SIZE = 10;
 
 export async function GET(req: Request) {
   try {
-    const cookie = req.headers.get("cookie");
-    if (!cookie) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = cookie
-      .split("; ")
-      .find((row) => row.startsWith(`${COOKIE_NAME}=`))
-      ?.split("=")[1];
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-
-    if (decoded.email !== process.env.ADMIN_EMAIL) {
-      return NextResponse.json({ error: "Admin only" }, { status: 403 });
-    }
+    await requireAdmin(req);
 
     const url = new URL(req.url);
     const pageParam = url.searchParams.get("page");
@@ -80,11 +61,6 @@ export async function GET(req: Request) {
       page,
       pageSize: take,
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Failed to fetch users" },
-      { status: 500 },
-    );
-  }
+  } catch (error) { return authErrorResponse(error); }
 }
 
