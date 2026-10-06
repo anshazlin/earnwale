@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 
 const COOKIE_NAME = "auth_token";
 const PAGE_SIZE = 10;
@@ -36,7 +35,7 @@ export async function GET(req: Request) {
     const take = PAGE_SIZE;
     const skip = (page - 1) * take;
 
-        const where: Prisma.UserWhereInput = search
+        const where = search
       ? {
           OR: [
             {
