@@ -60,9 +60,13 @@ async function accessToken() {
   return data.access_token as string;
 }
 
-function baseUrl() {
+function databasePath() {
   const { projectId } = config();
-  return `https://firestore.googleapis.com/v1/projects/${projectId}/databases/earnwale/documents`;
+  return `projects/${projectId}/databases/earnwale`;
+}
+
+function baseUrl() {
+  return `https://firestore.googleapis.com/v1/${databasePath()}/documents`;
 }
 
 async function firestore(path: string, init: RequestInit = {}) {
@@ -218,11 +222,10 @@ async function getDocument(
   transactionId?: string
 ) {
   if (transactionId) {
-    const root = baseUrl().replace(/\/documents$/, "");
     const result = await firestore(":batchGet", {
       method: "POST",
       body: JSON.stringify({
-        documents: [`${root}/documents/${collection}/${id}`],
+        documents: [`${databasePath()}/documents/${collection}/${id}`],
         transaction: transactionId,
       }),
     });
@@ -290,7 +293,7 @@ async function commitWrites(writes: any[], transaction?: string) {
   }
 
   const documentWrites = [...merged.values()].map((write) => {
-    const name = `${baseUrl()}/${write.collection}/${write.id}`;
+    const name = `${databasePath()}/documents/${write.collection}/${write.id}`;
     return write.type === "create"
       ? {
           update: { name, fields: encodeFields(write.data) },
