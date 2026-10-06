@@ -338,7 +338,7 @@ class TransactionClient {
       key === "id"
         ? await getDocument(collection, value, this.transactionId)
         : (await listDocuments(collection, this.transactionId)).find(
-            (item) => item[key] === value
+            (item: any) => item[key] === value
           ) ?? null;
 
     return row ? applySelect(row, args.select) : null;
