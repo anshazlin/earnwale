@@ -280,7 +280,16 @@ async function withInclude(row: any, include?: any, select?: any) {
 async function commitWrites(writes: any[], transaction?: string) {
   if (!writes.length) return;
 
-  const documentWrites = writes.map((write) => {
+  const merged = new Map<string, any>();
+  for (const write of writes) {
+    const key = `${write.collection}/${write.id}`;
+    const previous = merged.get(key);
+    merged.set(key, previous
+      ? { ...write, type: previous.type === "create" ? "create" : write.type, data: { ...previous.data, ...write.data } }
+      : write);
+  }
+
+  const documentWrites = [...merged.values()].map((write) => {
     const name = `${baseUrl()}/${write.collection}/${write.id}`;
     return write.type === "create"
       ? {
