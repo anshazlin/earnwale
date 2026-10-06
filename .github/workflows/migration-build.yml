@@ -25,15 +25,7 @@ jobs:
         run: npm install firebase@12.19.0 firebase-admin@14.5.0 --save
       - name: Verify clean dependency install
         run: npm ci
-      - name: Build
-        run: npm run build
-        env:
-          FIREBASE_PROJECT_ID: build-check
-          FIREBASE_CLIENT_EMAIL: build-check@example.invalid
-          FIREBASE_PRIVATE_KEY: |
-            -----BEGIN PRIVATE KEY-----
-            BUILD_CHECK_PLACEHOLDER
-            -----END PRIVATE KEY-----
+      - name: Generate build-only RSA key\n        run: |\n          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/firebase-build-key.pem 2>/dev/null\n          echo "FIREBASE_PRIVATE_KEY<<EOF" >> "$GITHUB_ENV"\n          cat /tmp/firebase-build-key.pem >> "$GITHUB_ENV"\n          echo "EOF" >> "$GITHUB_ENV"\n      - name: Build\n        run: npm run build\n        env:\n          FIREBASE_PROJECT_ID: build-check\n          FIREBASE_CLIENT_EMAIL: build-check@example.invalid
           NEXT_PUBLIC_FIREBASE_API_KEY: build-check
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: build-check.firebaseapp.com
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: build-check
@@ -43,6 +35,7 @@ jobs:
           RAZORPAY_KEY_SECRET: build-check
           NEXT_PUBLIC_RAZORPAY_KEY_ID: build-check
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: firebase-auth-dependencies
           path: |
