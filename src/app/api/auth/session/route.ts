@@ -17,6 +17,10 @@ export async function POST(req: Request) {
     }
 
     const decoded = await firebaseAdminAuth.verifyIdToken(idToken, true);
+    const authAgeSeconds = Math.floor(Date.now() / 1000) - Number(decoded.auth_time ?? 0);
+    if (!decoded.auth_time || authAgeSeconds > 5 * 60) {
+      return NextResponse.json({ error: "Recent sign-in required" }, { status: 401 });
+    }
     if (!decoded.email_verified) {
       return NextResponse.json({ error: "Verify your email before signing in" }, { status: 403 });
     }
