@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const origin = req.headers.get("origin");
     const host = req.headers.get("host");
-    if (origin && host && new URL(origin).host !== host) {
+    if (!origin || !host || new URL(origin).host !== host) {
       return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
     }
 
