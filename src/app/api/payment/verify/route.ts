@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { firebaseAdminAuth } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
 import razorpay from "@/lib/razorpay";
 
-const COOKIE_NAME = "auth_token";
-const MAX_AGE_DAYS = 7;
-const MAX_AGE_SECONDS = MAX_AGE_DAYS * 24 * 60 * 60;
 const PLAN_AMOUNTS: Record<string, number> = {
   "300": 30000,
   "500": 50000,
@@ -83,6 +80,8 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const firebaseUser = await firebaseAdminAuth.createUser({ email, password, emailVerified: false });
+
     async function generateUniqueReferralCode(tx: any) {
       for (let attempt = 0; attempt < 20; attempt++) {
         const code = `ERW${crypto.randomInt(10000, 100000)}`;
@@ -113,6 +112,7 @@ export async function POST(req: Request) {
         data: {
           name: email.split("@")[0] || "Member",
           email,
+          firebaseUid: firebaseUser.uid,
           password: hashedPassword,
           plan,
           referralCode: myReferralCode,
@@ -163,25 +163,18 @@ export async function POST(req: Request) {
       return createdUser;
     });
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) throw new Error("Authentication configuration is missing");
-
-    const token = jwt.sign(
-      { userId: newUser.id, email: newUser.email },
-      jwtSecret,
-      { expiresIn: `${MAX_AGE_DAYS}d` }
-    );
-
-    const response = NextResponse.json({ success: true });
-    response.cookies.set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: MAX_AGE_SECONDS,
-      path: "/",
-    });
-    return response;
+    return NextResponse.json({ success: true, verificationRequired: true });
   } catch (error: any) {
+    // If Firebase Auth creation succeeded but the Firestore transaction failed, remove
+    // the orphaned Auth account. Existing Firestore/payment records are never deleted.
+    try {
+      const email = String((await req.clone().json())?.formData?.email ?? "").trim().toLowerCase();
+      if (email) {
+        const authUser = await firebaseAdminAuth.getUserByEmail(email);
+        const firestoreUser = await prisma.user.findUnique({ where: { email } });
+        if (authUser && !firestoreUser) await firebaseAdminAuth.deleteUser(authUser.uid);
+      }
+    } catch {}
     const message = error?.message || "Payment verification failed";
     const expectedClientError =
       message === "Payment already processed" ||
