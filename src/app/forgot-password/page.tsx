@@ -2,8 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase-client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +12,10 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      const [{ sendPasswordResetEmail }, { firebaseAuth }] = await Promise.all([
+        import("firebase/auth"),
+        import("@/lib/firebase-client"),
+      ]);
       await sendPasswordResetEmail(firebaseAuth, email.trim().toLowerCase());
     } catch {}
     setMessage("If an account exists for that email, a password reset link has been sent.");
