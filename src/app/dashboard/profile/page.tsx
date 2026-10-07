@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
+import { firebaseAuth } from "@/lib/firebase-client";
 
 type User = {
   name?: string;
@@ -45,49 +47,22 @@ export default function ProfilePage() {
     e.preventDefault();
     setPasswordMessage(null);
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordMessage({ type: "error", text: "New passwords do not match." });
-      return;
+      setPasswordMessage({ type: "error", text: "New passwords do not match." }); return;
     }
     if (passwordForm.newPassword.length < 6) {
-      setPasswordMessage({
-        type: "error",
-        text: "New password must be at least 6 characters.",
-      });
-      return;
+      setPasswordMessage({ type: "error", text: "New password must be at least 6 characters." }); return;
     }
     setPasswordLoading(true);
     try {
-      const res = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setPasswordMessage({
-          type: "error",
-          text: data?.error || "Failed to update password.",
-        });
-        return;
-      }
+      if (!user?.email) throw new Error("Account email unavailable");
+      const credential = await signInWithEmailAndPassword(firebaseAuth, user.email, passwordForm.currentPassword);
+      await updatePassword(credential.user, passwordForm.newPassword);
+      await signOut(firebaseAuth);
       setPasswordMessage({ type: "success", text: "Password updated." });
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch {
-      setPasswordMessage({
-        type: "error",
-        text: "Something went wrong. Please try again.",
-      });
-    } finally {
-      setPasswordLoading(false);
-    }
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error: any) {
+      setPasswordMessage({ type: "error", text: error?.code === "auth/invalid-credential" ? "Current password is incorrect." : "Please sign in again before changing your password." });
+    } finally { setPasswordLoading(false); }
   };
 
   if (loading) {
