@@ -20,6 +20,9 @@ type Withdrawal = {
     email: string;
     earnings?: number;
     upiId?: string | null;
+    payoutVerified?: boolean;
+    verifiedUpiId?: string | null;
+    payoutVerifiedAt?: string | null;
   };
 };
 
@@ -268,6 +271,11 @@ export default function AdminWithdrawPage() {
             const isProcessing = processingId === withdrawal.id;
             const upi = withdrawal.payoutUpiId ?? withdrawal.user?.upiId ?? "";
             const payoutName = withdrawal.payoutName ?? withdrawal.user?.name ?? "Customer";
+            const requestUpiVerified = Boolean(
+              withdrawal.user?.payoutVerified &&
+                upi &&
+                String(withdrawal.user?.verifiedUpiId ?? "").toLowerCase() === upi.toLowerCase(),
+            );
 
             return (
               <article
@@ -297,9 +305,16 @@ export default function AdminWithdrawPage() {
 
                   <div className="mt-4 rounded-2xl bg-slate-50 p-3">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">UPI payout</p>
-                    <p className="mt-1 break-all font-mono text-sm font-semibold text-slate-900">
-                      {upi || "No UPI ID saved"}
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <p className="break-all font-mono text-sm font-semibold text-slate-900">
+                        {upi || "No UPI ID saved"}
+                      </p>
+                      {upi && (
+                        <span className={requestUpiVerified ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800" : "rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900"}>
+                          {requestUpiVerified ? "Bound payout ✓" : "Verify name on this payout"}
+                        </span>
+                      )}
+                    </div>
                     {isPending && (
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
@@ -384,7 +399,7 @@ export default function AdminWithdrawPage() {
                             disabled={busy || paymentReference.trim().length < 3}
                             className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
                           >
-                            {busy ? "Saving…" : "Confirm paid"}
+                            {busy ? "Saving…" : requestUpiVerified ? "Confirm paid" : "Confirm paid & bind UPI"}
                           </button>
                         </div>
                       )}
