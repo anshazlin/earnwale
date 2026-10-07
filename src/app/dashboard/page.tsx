@@ -25,6 +25,7 @@ type Transaction = {
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [latestWithdrawal, setLatestWithdrawal] = useState<{ status?: string; amount?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -49,6 +50,7 @@ export default function DashboardPage() {
         if (!cancelled) {
           setUser(data?.user ?? null);
           setTransactions(Array.isArray(data?.transactions) ? data.transactions : []);
+          setLatestWithdrawal(data?.latestWithdrawal ?? null);
         }
       } catch {
         if (!cancelled) setError(true);
@@ -130,9 +132,9 @@ export default function DashboardPage() {
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric label="Available" value={formatAmount(user.earnings)} emphasis />
-        <Metric label="Total earned" value={formatAmount(user.totalEarned)} />
+        <Metric label="Referral earnings" value={formatAmount(user.totalEarned)} />
         <Metric label="Referrals" value={String(user.referralCount ?? 0)} />
-        <Metric label="Plan" value={`₹${user.plan}`} />
+        <Metric label="Withdrawal" value={latestWithdrawal?.status ? String(latestWithdrawal.status).replace(/^./, (s) => s.toUpperCase()) : "None"} />
       </section>
 
       <section>
@@ -143,9 +145,9 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <QuickAction href="/dashboard/my-courses" label="Courses" />
+          <QuickAction href="/dashboard/wallet" label="Wallet" />
           <QuickAction href="/dashboard/withdraw" label="Withdraw" />
-          <QuickAction href="/dashboard/profile" label="Profile" />
+          <QuickAction href="/dashboard/referrals" label="Referrals" />
         </div>
       </section>
 
