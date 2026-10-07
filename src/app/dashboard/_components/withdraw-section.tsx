@@ -20,7 +20,7 @@ type Withdraw = {
   [key: string]: unknown;
 };
 
-export function WithdrawSection() {
+export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {}) {
   const router = useRouter();
   const [balance, setBalance] = useState(0);
   const [page, setPage] = useState(1);
@@ -30,7 +30,7 @@ export function WithdrawSection() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (targetPage = page) => {
+  const fetchData = useCallback(async (targetPage: number) => {
     setLoadingHistory(true);
     setError(null);
     try {
@@ -53,7 +53,7 @@ export function WithdrawSection() {
     } finally {
       setLoadingHistory(false);
     }
-  }, [page, router]);
+  }, [router]);
 
   useEffect(() => {
     fetchData(page);
@@ -122,8 +122,11 @@ export function WithdrawSection() {
         return;
       }
 
-      setPage(1);
-      await fetchData(1);
+      if (page === 1) {
+        await fetchData(1);
+      } else {
+        setPage(1);
+      }
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
@@ -135,14 +138,16 @@ export function WithdrawSection() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl md:text-3xl">
-          Withdraw
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Request payouts from your available balance.
-        </p>
-      </div>
+      {!embedded && (
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl md:text-3xl">
+            Withdraw
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Request payouts from your available balance.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr),minmax(0,3fr)]">
         <section className="w-full rounded-2xl border border-amber-100 bg-white p-5 shadow-sm sm:p-6">
@@ -158,7 +163,7 @@ export function WithdrawSection() {
           </div>
 
           <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
-            Minimum withdraw amount is{" "}
+            Minimum withdrawal amount is{" "}
             <span className="font-semibold">450</span>. Requests are reviewed
             by our team before being processed.
           </p>
