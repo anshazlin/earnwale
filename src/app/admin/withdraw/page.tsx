@@ -6,6 +6,7 @@ type WithdrawalStatus = "pending" | "paid" | "rejected" | "approved" | string;
 
 type Withdrawal = {
   id: string;
+  userId: string;
   amount: number;
   status: WithdrawalStatus;
   createdAt: string;
@@ -208,6 +209,48 @@ export default function AdminWithdrawPage() {
     }
   };
 
+  const resetBinding = async (withdrawal: Withdrawal) => {
+    if (!withdrawal.user?.payoutVerified) return;
+    if (!window.confirm("Reset this customer's verified payout UPI? They will be able to edit it again and must verify the new UPI on a future payout.")) {
+      return;
+    }
+
+    setUpdatingId(withdrawal.id);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/payout/reset-binding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId: withdrawal.userId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error ?? "Unable to reset payout binding.");
+        return;
+      }
+
+      setWithdrawals((current) =>
+        current.map((item) =>
+          item.userId === withdrawal.userId
+            ? {
+                ...item,
+                user: {
+                  ...item.user,
+                  payoutVerified: false,
+                  payoutVerifiedAt: null,
+                },
+              }
+            : item,
+        ),
+      );
+    } catch {
+      setError("Unable to reset payout binding.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const openProcessor = (id: string) => {
     setError(null);
     setPaymentReference("");
@@ -334,6 +377,16 @@ export default function AdminWithdrawPage() {
                         {withdrawal.user?.payoutVerified ? "Verified & locked" : "First payout verification"}
                       </span>
                     </div>
+                    {withdrawal.user?.payoutVerified && (
+                      <button
+                        type="button"
+                        onClick={() => resetBinding(withdrawal)}
+                        disabled={busy}
+                        className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-600 disabled:opacity-50"
+                      >
+                        Reset UPI binding
+                      </button>
+                    )}
                     {isPending && (
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
