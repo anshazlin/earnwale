@@ -266,6 +266,58 @@ async function listDocuments(
     }));
 }
 
+
+async function queryDocumentsByEqualField(
+  collection: CollectionName,
+  field: string,
+  value: any,
+  limit?: number
+) {
+  const structuredQuery: any = {
+    from: [{ collectionId: collection }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: field },
+        op: "EQUAL",
+        value: encodeValue(value),
+      },
+    },
+  };
+  if (typeof limit === "number") structuredQuery.limit = limit;
+
+  const result = await firestore(":runQuery", {
+    method: "POST",
+    body: JSON.stringify({ structuredQuery }),
+  });
+
+  return (result ?? [])
+    .filter((entry: any) => entry.document)
+    .map((entry: any) => ({
+      id: docIdFromName(entry.document.name),
+      ...decodeFields(entry.document.fields),
+    }));
+}
+
+function simpleEqualityWhere(where?: any) {
+  if (!where || where.OR || typeof where !== "object") return null;
+  const entries = Object.entries(where);
+  if (entries.length !== 1) return null;
+  const [field, value] = entries[0];
+  if (value === null || ["string", "number", "boolean"].includes(typeof value)) {
+    return { field, value };
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.keys(value).length === 1 &&
+    "equals" in value
+  ) {
+    return { field, value: (value as any).equals };
+  }
+  return null;
+}
+
 async function withInclude(row: any, include?: any, select?: any) {
   let result = applySelect(row, select);
 
@@ -396,9 +448,7 @@ function model(collection: CollectionName) {
       const row =
         key === "id"
           ? await getDocument(collection, value)
-          : (await listDocuments(collection)).find(
-              (item: any) => item[key] === value
-            ) ?? null;
+          : (await queryDocumentsByEqualField(collection, key, value, 1))[0] ?? null;
 
       return row ? withInclude(row, args.include, args.select) : null;
     },
@@ -409,9 +459,11 @@ function model(collection: CollectionName) {
     },
 
     findMany: async (args: any = {}) => {
-      let rows = (await listDocuments(collection)).filter((row: any) =>
-        matchesWhere(row, args.where)
-      );
+      const simpleWhere = simpleEqualityWhere(args.where);
+      let rows = simpleWhere
+        ? await queryDocumentsByEqualField(collection, simpleWhere.field, simpleWhere.value)
+        : await listDocuments(collection);
+      rows = rows.filter((row: any) => matchesWhere(row, args.where));
       rows = sortRows(rows, args.orderBy);
       if (args.skip) rows = rows.slice(args.skip);
       if (args.take !== undefined) rows = rows.slice(0, args.take);

@@ -4,11 +4,15 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
-    const { user: authUser } = await requireAuth(req);
-    const user = await prisma.user.findUnique({ where: { id: authUser.id }, select: {
-      name: true, email: true, upiId: true, bankName: true, accountNumber: true, ifscCode: true,
-    }});
-    return NextResponse.json(user);
+    const { user } = await requireAuth(req);
+    return NextResponse.json({
+      name: user.name,
+      email: user.email,
+      upiId: user.upiId,
+      bankName: user.bankName,
+      accountNumber: user.accountNumber,
+      ifscCode: user.ifscCode,
+    });
   } catch (error) { return authErrorResponse(error); }
 }
 

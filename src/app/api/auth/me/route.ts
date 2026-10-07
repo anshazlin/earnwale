@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 import { requireAuth, authErrorResponse } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
-    const { user: authenticatedUser } = await requireAuth(req);
-    const user = await prisma.user.findUnique({ where: { id: authenticatedUser.id }, select: {
-      id: true, name: true, email: true, plan: true, referralCode: true,
-      earnings: true, totalEarned: true, referralCount: true,
-    }});
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-    return NextResponse.json({ user });
-  } catch (error) { return authErrorResponse(error); }
+    const { user } = await requireAuth(req);
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        plan: user.plan,
+        referralCode: user.referralCode,
+        earnings: user.earnings,
+        totalEarned: user.totalEarned,
+        referralCount: user.referralCount,
+      },
+    });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
 }

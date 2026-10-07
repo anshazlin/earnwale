@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type User = {
   id?: string;
@@ -20,79 +21,43 @@ type Withdraw = {
 };
 
 export function WithdrawSection() {
-  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+  const [balance, setBalance] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [history, setHistory] = useState<Withdraw[]>([]);
-  const [loadingUser, setLoadingUser] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUser = useCallback(async () => {
+  const fetchData = useCallback(async (targetPage = page) => {
+    setLoadingHistory(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/me", {
+      const res = await fetch(`/api/withdraw?page=${targetPage}`, {
         credentials: "include",
+        cache: "no-store",
       });
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          window.location.href = "/login";
-          return null;
-        }
-        throw new Error("Failed to load user");
+      if (res.status === 401 || res.status === 403) {
+        router.replace("/login");
+        return;
       }
-
-      const data = await res.json();
-      const u = data.user ?? data;
-      setUser(u);
-      return u as User;
-    } catch (err) {
-      console.error(err);
-      setError("Unable to load your account. Please try again.");
-      return null;
-    } finally {
-      setLoadingUser(false);
-    }
-  }, []);
-
-  const fetchHistory = useCallback(async () => {
-    setLoadingHistory(true);
-    try {
-      const res = await fetch("/api/withdraw", {
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-        throw new Error("Failed to load withdrawals");
-      }
-
+      if (!res.ok) throw new Error("Failed to load withdrawals");
       const json = await res.json();
-      const list = Array.isArray(json)
-        ? json
-        : json?.withdrawals ?? json?.data ?? [];
-      setHistory(Array.isArray(list) ? list : []);
+      setBalance(Number(json?.balance ?? 0));
+      setHistory(Array.isArray(json?.withdrawals) ? json.withdrawals : []);
+      setHasMore(Boolean(json?.hasMore));
     } catch (err) {
       console.error(err);
-      setHistory([]);
+      setError("Unable to load withdrawal details. Please try again.");
     } finally {
       setLoadingHistory(false);
     }
-  }, []);
+  }, [page, router]);
 
   useEffect(() => {
-    let cancelled = false;
-    fetchUser().then((u) => {
-      if (!u || cancelled) return;
-      fetchHistory();
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchUser, fetchHistory]);
+    fetchData(page);
+  }, [fetchData, page]);
 
   const hasOpenWithdrawal = useMemo(
     () =>
@@ -105,11 +70,9 @@ export function WithdrawSection() {
 
   const canWithdraw = useMemo(
     () =>
-      !!user &&
-      typeof user.earnings === "number" &&
-      user.earnings >= 450 &&
+      balance >= 450 &&
       !hasOpenWithdrawal,
-    [user, hasOpenWithdrawal],
+    [balance, hasOpenWithdrawal],
   );
 
   const formatAmount = (n: number | undefined) =>
@@ -159,8 +122,8 @@ export function WithdrawSection() {
         return;
       }
 
-      await fetchUser();
-      await fetchHistory();
+      setPage(1);
+      await fetchData(1);
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
@@ -169,22 +132,6 @@ export function WithdrawSection() {
     }
   };
 
-  if (loadingUser) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-          <p className="text-sm font-medium text-gray-600">
-            Loading withdraw details…
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -205,7 +152,7 @@ export function WithdrawSection() {
                 Available balance
               </p>
               <p className="mt-2 text-xl font-semibold text-amber-700 sm:text-2xl">
-                {formatAmount(user.earnings)}
+                {formatAmount(balance)}
               </p>
             </div>
           </div>
@@ -332,6 +279,11 @@ export function WithdrawSection() {
                 </div>
               </>
             )}
+          </div>
+          <div className="mt-4 flex items-center justify-between">
+            <button type="button" disabled={page === 1 || loadingHistory} onClick={() => setPage((p) => Math.max(1, p - 1))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold disabled:opacity-40">Previous</button>
+            <span className="text-xs text-slate-500">Page {page}</span>
+            <button type="button" disabled={!hasMore || loadingHistory} onClick={() => setPage((p) => p + 1)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold disabled:opacity-40">Next</button>
           </div>
         </section>
       </div>

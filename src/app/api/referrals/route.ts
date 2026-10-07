@@ -11,28 +11,21 @@ export async function GET(req: Request) {
     const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
     const skip = (page - 1) * PAGE_SIZE;
 
-    const rows = await prisma.transaction.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: PAGE_SIZE + 1,
-      select: {
-        id: true,
-        amount: true,
-        type: true,
-        description: true,
-        fromUser: true,
-        createdAt: true,
-      },
-    });
+    const rows = user.referralCode
+      ? await prisma.user.findMany({
+          where: { referredBy: user.referralCode },
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: PAGE_SIZE + 1,
+          select: { id: true, name: true, plan: true, createdAt: true },
+        })
+      : [];
 
     return NextResponse.json({
-      wallet: {
-        earnings: user.earnings,
-        totalEarned: user.totalEarned,
-        referralCount: user.referralCount,
-      },
-      transactions: rows.slice(0, PAGE_SIZE),
+      referralCode: user.referralCode,
+      referralCount: user.referralCount,
+      totalEarned: user.totalEarned,
+      referrals: rows.slice(0, PAGE_SIZE),
       page,
       pageSize: PAGE_SIZE,
       hasMore: rows.length > PAGE_SIZE,
