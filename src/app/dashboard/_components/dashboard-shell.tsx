@@ -1,67 +1,61 @@
 "use client";
 
-import { useState, type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
-type DashboardShellProps = {
-  children: ReactNode;
-};
+type DashboardShellProps = { children: ReactNode };
+type IconName = "home" | "wallet" | "courses" | "profile";
 
-type NavItem = {
-  name: string;
-  href: string;
-  icon: string;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { name: "Dashboard", href: "/dashboard", icon: "⌂" },
-  { name: "Wallet", href: "/dashboard/wallet", icon: "▣" },
-  { name: "Transactions", href: "/dashboard/transactions", icon: "↕" },
-  { name: "Referrals", href: "/dashboard/referrals", icon: "♧" },
-  { name: "Withdrawals", href: "/dashboard/withdraw", icon: "₹" },
-  { name: "My Courses", href: "/dashboard/my-courses", icon: "▤" },
-  { name: "Profile", href: "/dashboard/profile", icon: "●" },
-  { name: "KYC & Payout", href: "/dashboard/kyc", icon: "✓" },
-  { name: "Support", href: "/dashboard/support", icon: "?" },
+const NAV_ITEMS: Array<{ name: string; href: string; icon: IconName }> = [
+  { name: "Home", href: "/dashboard", icon: "home" },
+  { name: "Wallet", href: "/dashboard/wallet", icon: "wallet" },
+  { name: "Courses", href: "/dashboard/my-courses", icon: "courses" },
+  { name: "Profile", href: "/dashboard/profile", icon: "profile" },
 ];
 
-function classNames(...values: Array<string | false | null | undefined>) {
+function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
 }
 
-function getSectionTitle(pathname: string) {
-  const exact = NAV_ITEMS.find((nav) => nav.href === pathname);
-  if (exact) return exact.name;
-  const nested = NAV_ITEMS.find(
-    (nav) => nav.href !== "/dashboard" && pathname.startsWith(nav.href),
-  );
-  return nested?.name ?? "Earnwale";
+function activeFor(pathname: string, href: string) {
+  if (href === "/dashboard") return pathname === "/dashboard";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function sectionName(pathname: string) {
+  return NAV_ITEMS.find((item) => activeFor(pathname, item.href))?.name ?? "Home";
+}
+
+function NavIcon({ name, active = false }: { name: IconName; active?: boolean }) {
+  const common = "h-5 w-5";
+  const stroke = active ? "currentColor" : "currentColor";
+
+  if (name === "home") {
+    return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>;
+  }
+  if (name === "wallet") {
+    return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M16 11h5v4h-5a2 2 0 0 1 0-4Z"/><path d="M7 6V4h10v2"/></svg>;
+  }
+  if (name === "courses") {
+    return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/><path d="M8 7h8"/></svg>;
+  }
+  return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
 }
 
 export default function DashboardShell({ children }: DashboardShellProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/dashboard";
   const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
-
-  const sectionTitle = useMemo(
-    () => (pathname ? getSectionTitle(pathname) : "Dashboard"),
-    [pathname],
-  );
 
   const handleLogout = async () => {
     if (logoutLoading) return;
     setLogoutLoading(true);
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch {
-      // swallow error; navigation below will rely on auth middleware
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     } finally {
-      router.push("/login");
+      router.replace("/login");
       router.refresh();
       setLogoutLoading(false);
     }
@@ -69,170 +63,90 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Mobile sidebar */}
-      <div
-        className={classNames(
-          "fixed inset-0 z-40 flex md:hidden transition-opacity",
-          sidebarOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
-        )}
-        aria-hidden={!sidebarOpen}
-      >
-        <div
-          className="fixed inset-0 bg-slate-900/40"
-          onClick={() => setSidebarOpen(false)}
-        />
-        <div className="relative flex w-72 max-w-full flex-1 flex-col bg-white shadow-xl">
-          <Sidebar
-            pathname={pathname ?? "/dashboard"}
-            onNavigate={() => setSidebarOpen(false)}
-            onLogout={handleLogout}
-            logoutLoading={logoutLoading}
-          />
-        </div>
-      </div>
-
       <div className="flex min-h-screen">
-        {/* Desktop sidebar */}
-        <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col md:shadow-sm">
-          <Sidebar
-            pathname={pathname ?? "/dashboard"}
-            onNavigate={() => undefined}
-            onLogout={handleLogout}
-            logoutLoading={logoutLoading}
-          />
+        <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-amber-100 bg-white md:flex md:flex-col">
+          <div className="flex h-20 items-center gap-3 px-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400 font-bold text-slate-950">E</div>
+            <div>
+              <p className="font-semibold text-slate-950">Earnwale</p>
+              <p className="text-xs text-slate-500">Learning account</p>
+            </div>
+          </div>
+
+          <nav className="flex-1 space-y-1 px-3">
+            {NAV_ITEMS.map((item) => {
+              const active = activeFor(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch
+                  className={cx(
+                    "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition",
+                    active
+                      ? "bg-amber-100 text-amber-900"
+                      : "text-slate-600 hover:bg-amber-50 hover:text-slate-950",
+                  )}
+                >
+                  <span className={cx("flex h-9 w-9 items-center justify-center rounded-xl", active ? "bg-amber-400 text-slate-950" : "bg-slate-100 text-slate-500")}>
+                    <NavIcon name={item.icon} active={active} />
+                  </span>
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="p-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={logoutLoading}
+              className="w-full rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:opacity-60"
+            >
+              {logoutLoading ? "Logging out…" : "Logout"}
+            </button>
+          </div>
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
-            <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:h-16">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-gray-700 shadow-sm hover:bg-amber-50 md:hidden"
-                  onClick={() => setSidebarOpen(true)}
-                  aria-label="Open sidebar"
-                >
-                  <span className="sr-only">Open sidebar</span>
-                  <div className="space-y-0.5">
-                    <span className="block h-0.5 w-4 rounded-full bg-gray-700" />
-                    <span className="block h-0.5 w-3 rounded-full bg-gray-500" />
-                    <span className="block h-0.5 w-4 rounded-full bg-gray-700" />
-                  </div>
-                </button>
-                <Link
-                  href="/"
-                  className="text-base font-semibold tracking-tight text-gray-900 sm:text-lg"
-                >
-                  Earnwale
-                </Link>
-                <span className="hidden h-5 w-px bg-slate-200 sm:block" />
-                <div className="hidden items-center gap-2 text-xs font-medium text-gray-500 sm:flex">
-                  <span>Dashboard</span>
-                  <span>/</span>
-                  <span className="text-gray-700">{sectionTitle}</span>
-                </div>
-              </div>
+          <header className="sticky top-0 z-30 border-b border-amber-100 bg-white/95 backdrop-blur">
+            <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+              <Link href="/dashboard" prefetch className="font-semibold tracking-tight text-slate-950">Earnwale</Link>
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 md:hidden">{sectionName(pathname)}</span>
             </div>
           </header>
 
           <main className="flex-1">
-            <div className="mx-auto w-full max-w-6xl px-4 py-5 pb-24 sm:px-6 sm:py-7 md:pb-7">{children}</div>
+            <div className="mx-auto w-full max-w-6xl px-4 py-5 pb-28 sm:px-6 sm:py-7 md:pb-7">{children}</div>
           </main>
-          <MobileNav pathname={pathname ?? "/dashboard"} />
+
+          <MobileNav pathname={pathname} />
         </div>
       </div>
     </div>
   );
 }
 
-type SidebarProps = {
-  pathname: string;
-  onNavigate?: () => void;
-  onLogout: () => void;
-  logoutLoading: boolean;
-};
-
-function Sidebar({ pathname, onNavigate, onLogout, logoutLoading }: SidebarProps) {
-  return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center justify-between px-5">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-sm">
-            <span className="text-sm font-semibold">E</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-gray-900">Earnwale</span>
-            <span className="text-xs text-gray-500">Partner account</span>
-          </div>
-        </Link>
-      </div>
-
-      <nav className="mt-4 flex-1 space-y-1 px-3 text-sm">
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href)) ||
-            (item.href === "/dashboard" && pathname === "/dashboard");
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={classNames(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                "border border-transparent",
-                isActive
-                  ? "border-amber-200 bg-amber-50 text-amber-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-              )}
-            >
-              <span className={classNames("flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold", isActive ? "bg-amber-400 text-slate-950" : "bg-amber-50 text-amber-700")}>{item.icon}</span>
-              <span>{item.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="border-t border-slate-200 p-3">
-        <button
-          type="button"
-          onClick={onLogout}
-          disabled={logoutLoading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 shadow-sm transition-colors hover:bg-amber-100 disabled:opacity-70"
-        >
-          <span>{logoutLoading ? "Logging out…" : "Logout"}</span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-
-
 function MobileNav({ pathname }: { pathname: string }) {
-  const items = [
-    { name: "Home", href: "/dashboard", icon: "⌂" },
-    { name: "Wallet", href: "/dashboard/wallet", icon: "▣" },
-    { name: "Withdraw", href: "/dashboard/withdraw", icon: "₹" },
-    { name: "Profile", href: "/dashboard/profile", icon: "●" },
-  ];
-
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(15,23,42,0.06)] backdrop-blur md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-amber-100 bg-white/98 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
       <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-        {items.map((item) => {
-          const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+        {NAV_ITEMS.map((item) => {
+          const active = activeFor(pathname, item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={classNames(
-                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-colors",
-                active ? "bg-amber-100 text-amber-800" : "text-slate-500 hover:bg-amber-50",
+              prefetch
+              className={cx(
+                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-semibold transition active:scale-[0.98]",
+                active ? "bg-amber-100 text-amber-900" : "text-slate-500",
               )}
             >
-              <span className={classNames("flex h-6 w-6 items-center justify-center rounded-lg text-sm font-bold", active ? "bg-amber-400 text-slate-950" : "text-slate-500")}>{item.icon}</span>
+              <span className={cx("flex h-7 w-7 items-center justify-center rounded-xl", active ? "bg-amber-400 text-slate-950" : "text-slate-500")}>
+                <NavIcon name={item.icon} active={active} />
+              </span>
               <span>{item.name}</span>
             </Link>
           );
