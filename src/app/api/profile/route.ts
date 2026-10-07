@@ -35,8 +35,9 @@ export async function POST(req: Request) {
     }
 
     const { name, upiId, bankName, accountNumber, ifscCode } = await req.json();
-    const nextUpiId = upiId === null ? null : normalizeUpi(upiId);
+    const hasUpiUpdate = upiId !== undefined;
     const currentUpiId = normalizeUpi(user.upiId);
+    const nextUpiId = hasUpiUpdate ? normalizeUpi(upiId) || null : currentUpiId || null;
     const verifiedUpiId = normalizeUpi(user.verifiedUpiId);
     const payoutVerified =
       Boolean(user.payoutVerified) &&
@@ -45,8 +46,8 @@ export async function POST(req: Request) {
 
     if (
       payoutVerified &&
-      nextUpiId !== null &&
-      nextUpiId !== verifiedUpiId
+      hasUpiUpdate &&
+      normalizeUpi(nextUpiId) !== verifiedUpiId
     ) {
       return NextResponse.json(
         {
@@ -57,17 +58,17 @@ export async function POST(req: Request) {
       );
     }
 
-    if (nextUpiId && !/^[a-z0-9._-]{2,256}@[a-z0-9.-]{2,64}$/i.test(nextUpiId)) {
+    if (hasUpiUpdate && nextUpiId && !/^[a-z0-9._-]{2,256}@[a-z0-9.-]{2,64}$/i.test(nextUpiId)) {
       return NextResponse.json({ error: "Invalid UPI ID format" }, { status: 400 });
     }
 
-    const upiChanged = nextUpiId !== null && nextUpiId !== currentUpiId;
+    const upiChanged = hasUpiUpdate && normalizeUpi(nextUpiId) !== currentUpiId;
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
         ...(typeof name === "string" && name.trim() ? { name: name.trim() } : {}),
-        ...(upiId !== undefined ? { upiId: nextUpiId || null } : {}),
+        ...(hasUpiUpdate ? { upiId: nextUpiId } : {}),
         ...(bankName !== undefined ? { bankName: bankName || null } : {}),
         ...(accountNumber !== undefined ? { accountNumber: accountNumber || null } : {}),
         ...(ifscCode !== undefined ? { ifscCode: ifscCode || null } : {}),
