@@ -11,18 +11,19 @@ type DashboardShellProps = {
 type NavItem = {
   name: string;
   href: string;
+  icon: string;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { name: "Dashboard", href: "/dashboard" },
-  { name: "Wallet", href: "/dashboard/wallet" },
-  { name: "Transactions", href: "/dashboard/transactions" },
-  { name: "Referrals", href: "/dashboard/referrals" },
-  { name: "Withdrawals", href: "/dashboard/withdraw" },
-  { name: "My Courses", href: "/dashboard/my-courses" },
-  { name: "Profile", href: "/dashboard/profile" },
-  { name: "KYC & Payout", href: "/dashboard/kyc" },
-  { name: "Support", href: "/dashboard/support" },
+  { name: "Dashboard", href: "/dashboard", icon: "⌂" },
+  { name: "Wallet", href: "/dashboard/wallet", icon: "▣" },
+  { name: "Transactions", href: "/dashboard/transactions", icon: "↕" },
+  { name: "Referrals", href: "/dashboard/referrals", icon: "♧" },
+  { name: "Withdrawals", href: "/dashboard/withdraw", icon: "₹" },
+  { name: "My Courses", href: "/dashboard/my-courses", icon: "▤" },
+  { name: "Profile", href: "/dashboard/profile", icon: "●" },
+  { name: "KYC & Payout", href: "/dashboard/kyc", icon: "✓" },
+  { name: "Support", href: "/dashboard/support", icon: "?" },
 ];
 
 function classNames(...values: Array<string | false | null | undefined>) {
@@ -186,7 +187,7 @@ function Sidebar({ pathname, onNavigate, onLogout, logoutLoading }: SidebarProps
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
               )}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80 group-hover:bg-amber-500" />
+              <span className={classNames("flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold", isActive ? "bg-amber-400 text-slate-950" : "bg-amber-50 text-amber-700")}>{item.icon}</span>
               <span>{item.name}</span>
             </Link>
           );
@@ -211,10 +212,10 @@ function Sidebar({ pathname, onNavigate, onLogout, logoutLoading }: SidebarProps
 
 function MobileNav({ pathname }: { pathname: string }) {
   const items = [
-    { name: "Home", href: "/dashboard" },
-    { name: "Wallet", href: "/dashboard/wallet" },
-    { name: "Withdraw", href: "/dashboard/withdraw" },
-    { name: "Profile", href: "/dashboard/profile" },
+    { name: "Home", href: "/dashboard", icon: "⌂" },
+    { name: "Wallet", href: "/dashboard/wallet", icon: "▣" },
+    { name: "Withdraw", href: "/dashboard/withdraw", icon: "₹" },
+    { name: "Profile", href: "/dashboard/profile", icon: "●" },
   ];
 
   return (
@@ -227,11 +228,12 @@ function MobileNav({ pathname }: { pathname: string }) {
               key={item.href}
               href={item.href}
               className={classNames(
-                "flex min-h-11 items-center justify-center rounded-xl px-1 text-[11px] font-semibold transition-colors",
-                active ? "bg-amber-50 text-amber-700" : "text-slate-500 hover:bg-slate-50",
+                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-colors",
+                active ? "bg-amber-100 text-amber-800" : "text-slate-500 hover:bg-amber-50",
               )}
             >
-              {item.name}
+              <span className={classNames("flex h-6 w-6 items-center justify-center rounded-lg text-sm font-bold", active ? "bg-amber-400 text-slate-950" : "text-slate-500")}>{item.icon}</span>
+              <span>{item.name}</span>
             </Link>
           );
         })}
