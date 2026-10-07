@@ -137,21 +137,7 @@ export default function DashboardPage() {
         <Metric label="Withdrawal" value={latestWithdrawal?.status ? String(latestWithdrawal.status).replace(/^./, (s) => s.toUpperCase()) : "None"} />
       </section>
 
-      <section>
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">Quick actions</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Jump to what you need.</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <QuickAction href="/dashboard/wallet" label="Wallet" />
-          <QuickAction href="/dashboard/withdraw" label="Withdraw" />
-          <QuickAction href="/dashboard/referrals" label="Referrals" />
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Your referral link</h2>
@@ -165,10 +151,10 @@ export default function DashboardPage() {
           <p className="truncate">{referralLink}</p>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button onClick={handleCopyReferral} className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+          <button onClick={handleCopyReferral} className="min-h-11 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-50">
             {copied ? "Copied ✓" : "Copy link"}
           </button>
-          <button onClick={handleShareReferral} className="min-h-11 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
+          <button onClick={handleShareReferral} className="min-h-11 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300">
             Share
           </button>
         </div>
@@ -179,7 +165,7 @@ export default function DashboardPage() {
           <h2 className="text-base font-semibold text-slate-900">Recent activity</h2>
           <p className="mt-0.5 text-xs text-slate-500">Your latest wallet transactions.</p>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm">
           {transactions.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <p className="text-sm font-medium text-slate-700">No transactions yet</p>
@@ -213,7 +199,7 @@ export default function DashboardPage() {
 
 function Metric({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm sm:p-4">
+    <div className="min-w-0 rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-3.5 shadow-sm sm:p-4">
       <p className="truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
       <p className={`mt-2 truncate text-lg font-semibold tracking-tight sm:text-xl ${emphasis ? "text-amber-700" : "text-slate-900"}`}>{value}</p>
     </div>
