@@ -5,11 +5,10 @@ import { prisma } from "@/lib/prisma";
 /**
  * Manual payout workflow.
  * POST body:
- * - Paid: { id, status: "Paid", paymentReference, adminNote? }
+ * - Paid: { id, status: "Paid", paymentReference, adminNote?, beneficiaryNameMatched? }
  * - Rejected: { id, status: "Rejected", adminNote? }
  *
- * Paid is only allowed from pending/approved. The user's available earnings are
- * decremented only when the admin confirms the external UPI/bank transfer.
+ * The first successful manually checked UPI payout binds that UPI to the customer.
  */
 export async function POST(req: Request) {
   try {
@@ -20,6 +19,7 @@ export async function POST(req: Request) {
     const normalized = String(body?.status ?? "").trim().toLowerCase();
     const paymentReference = String(body?.paymentReference ?? "").trim();
     const adminNote = String(body?.adminNote ?? "").trim().slice(0, 300);
+    const beneficiaryNameMatched = body?.beneficiaryNameMatched === true;
 
     if (!withdrawalId || typeof withdrawalId !== "string") {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
@@ -42,6 +42,7 @@ export async function POST(req: Request) {
           { status: 400 },
         );
       }
+
       if (wStatus === "rejected") {
         return NextResponse.json({ success: true });
       }
@@ -54,102 +55,144 @@ export async function POST(req: Request) {
           reviewedAt: new Date(),
         },
       });
+
       return NextResponse.json({ success: true });
     }
 
-    if (normalized === "paid") {
-      if (wStatus === "paid") {
-        return NextResponse.json(
-          { error: "Withdrawal already marked paid" },
-          { status: 400 },
-        );
-      }
-      if (wStatus === "rejected") {
-        return NextResponse.json(
-          { error: "Withdrawal was rejected" },
-          { status: 400 },
-        );
-      }
-      if (wStatus !== "pending" && wStatus !== "approved") {
-        return NextResponse.json(
-          { error: "Invalid withdrawal state" },
-          { status: 400 },
-        );
-      }
-
-      if (paymentReference.length < 3 || paymentReference.length > 100) {
-        return NextResponse.json(
-          { error: "Enter the UTR / payment reference before marking paid" },
-          { status: 400 },
-        );
-      }
-
-      const duplicateReference = await prisma.withdrawal.findFirst({
-        where: { paymentReference },
-      });
-      if (duplicateReference && duplicateReference.id !== withdrawalId) {
-        return NextResponse.json(
-          { error: "This payment reference is already used for another withdrawal" },
-          { status: 409 },
-        );
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { id: withdrawal.userId },
-      });
-
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
-      if (user.earnings < withdrawal.amount) {
-        return NextResponse.json(
-          { error: "User balance is lower than this withdrawal amount" },
-          { status: 400 },
-        );
-      }
-
-      const paidAt = new Date();
-
-      await prisma.$transaction(async (tx) => {
-        await tx.user.update({
-          where: { id: withdrawal.userId },
-          data: {
-            earnings: {
-              decrement: withdrawal.amount,
-            },
-          },
-        });
-
-        await tx.withdrawal.update({
-          where: { id: withdrawalId },
-          data: {
-            status: "paid",
-            paymentReference,
-            paidAt,
-            reviewedAt: paidAt,
-            ...(adminNote ? { adminNote } : {}),
-          },
-        });
-
-        await tx.transaction.create({
-          data: {
-            userId: withdrawal.userId,
-            amount: withdrawal.amount,
-            type: "DEBIT",
-            description: `Withdrawal paid • Ref ${paymentReference}`,
-          },
-        });
-      });
-
-      return NextResponse.json({
-        success: true,
-        paymentReference,
-        paidAt: paidAt.toISOString(),
-      });
+    if (normalized !== "paid") {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    if (wStatus === "paid") {
+      return NextResponse.json(
+        { error: "Withdrawal already marked paid" },
+        { status: 400 },
+      );
+    }
+
+    if (wStatus === "rejected") {
+      return NextResponse.json(
+        { error: "Withdrawal was rejected" },
+        { status: 400 },
+      );
+    }
+
+    if (wStatus !== "pending" && wStatus !== "approved") {
+      return NextResponse.json(
+        { error: "Invalid withdrawal state" },
+        { status: 400 },
+      );
+    }
+
+    if (paymentReference.length < 3 || paymentReference.length > 100) {
+      return NextResponse.json(
+        { error: "Enter the UTR / payment reference before marking paid" },
+        { status: 400 },
+      );
+    }
+
+    const duplicateReference = await prisma.withdrawal.findFirst({
+      where: { paymentReference },
+    });
+
+    if (duplicateReference && duplicateReference.id !== withdrawalId) {
+      return NextResponse.json(
+        { error: "This payment reference is already used for another withdrawal" },
+        { status: 409 },
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: withdrawal.userId },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (user.earnings < withdrawal.amount) {
+      return NextResponse.json(
+        { error: "User balance is lower than this withdrawal amount" },
+        { status: 400 },
+      );
+    }
+
+    const payoutUpi = String(withdrawal.payoutUpiId ?? "").trim().toLowerCase();
+    const currentUpi = String(user.upiId ?? "").trim().toLowerCase();
+
+    if (payoutUpi && payoutUpi !== currentUpi) {
+      return NextResponse.json(
+        {
+          error:
+            "The customer's current payout UPI no longer matches this withdrawal request. Review before paying.",
+        },
+        { status: 409 },
+      );
+    }
+
+    const shouldBindUpi =
+      Boolean(payoutUpi) &&
+      !Boolean(user.payoutVerified);
+
+    if (shouldBindUpi && !beneficiaryNameMatched) {
+      return NextResponse.json(
+        {
+          error:
+            "Confirm that the beneficiary name shown in your payment app matches the customer before the first payout.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const paidAt = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: withdrawal.userId },
+        data: {
+          earnings: {
+            decrement: withdrawal.amount,
+          },
+          ...(shouldBindUpi
+            ? {
+                payoutVerified: true,
+                payoutVerifiedAt: paidAt,
+                payoutVerifiedReference: paymentReference,
+              }
+            : {}),
+        },
+      });
+
+      await tx.withdrawal.update({
+        where: { id: withdrawalId },
+        data: {
+          status: "paid",
+          paymentReference,
+          paidAt,
+          reviewedAt: paidAt,
+          beneficiaryNameMatched: shouldBindUpi
+            ? beneficiaryNameMatched
+            : Boolean(withdrawal.beneficiaryNameMatched),
+          ...(adminNote ? { adminNote } : {}),
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          userId: withdrawal.userId,
+          amount: withdrawal.amount,
+          type: "DEBIT",
+          description: `Withdrawal paid • Ref ${paymentReference}`,
+        },
+      });
+    });
+
+    return NextResponse.json({
+      success: true,
+      paymentReference,
+      paidAt: paidAt.toISOString(),
+      payoutBound: shouldBindUpi,
+    });
   } catch (error) {
     return authErrorResponse(error);
   }

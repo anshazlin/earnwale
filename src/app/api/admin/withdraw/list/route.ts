@@ -16,6 +16,8 @@ export async function GET(req: Request) {
             email: true,
             earnings: true,
             upiId: true,
+            payoutVerified: true,
+            payoutVerifiedAt: true,
             bankName: true,
             accountNumber: true,
             ifscCode: true,
