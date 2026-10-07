@@ -2,23 +2,28 @@ import { NextResponse } from "next/server";
 import { requireAdmin, authErrorResponse } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-
 /**
- * POST body: { id: string, status: "Paid" | "Rejected" }
- * Paid: only from pending (or legacy "approved"), decrements user earnings, withdrawal → paid, ledger DEBIT.
- * Rejected: sets withdrawal to rejected (no balance change).
+ * Manual payout workflow.
+ * POST body:
+ * - Paid: { id, status: "Paid", paymentReference, adminNote? }
+ * - Rejected: { id, status: "Rejected", adminNote? }
+ *
+ * Paid is only allowed from pending/approved. The user's available earnings are
+ * decremented only when the admin confirms the external UPI/bank transfer.
  */
 export async function POST(req: Request) {
   try {
     await requireAdmin(req);
 
-    const { id: withdrawalId, status } = await req.json();
+    const body = await req.json();
+    const withdrawalId = body?.id;
+    const normalized = String(body?.status ?? "").trim().toLowerCase();
+    const paymentReference = String(body?.paymentReference ?? "").trim();
+    const adminNote = String(body?.adminNote ?? "").trim().slice(0, 300);
 
     if (!withdrawalId || typeof withdrawalId !== "string") {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
-
-    const normalized = (status ?? "").toString().trim().toLowerCase();
 
     const withdrawal = await prisma.withdrawal.findUnique({
       where: { id: withdrawalId },
@@ -28,7 +33,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Withdrawal not found" }, { status: 404 });
     }
 
-    const wStatus = (withdrawal.status ?? "").toString().toLowerCase();
+    const wStatus = String(withdrawal.status ?? "").toLowerCase();
 
     if (normalized === "rejected") {
       if (wStatus === "paid") {
@@ -40,9 +45,14 @@ export async function POST(req: Request) {
       if (wStatus === "rejected") {
         return NextResponse.json({ success: true });
       }
+
       await prisma.withdrawal.update({
         where: { id: withdrawalId },
-        data: { status: "rejected" },
+        data: {
+          status: "rejected",
+          ...(adminNote ? { adminNote } : {}),
+          reviewedAt: new Date(),
+        },
       });
       return NextResponse.json({ success: true });
     }
@@ -61,7 +71,27 @@ export async function POST(req: Request) {
         );
       }
       if (wStatus !== "pending" && wStatus !== "approved") {
-        return NextResponse.json({ error: "Invalid withdrawal state" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid withdrawal state" },
+          { status: 400 },
+        );
+      }
+
+      if (paymentReference.length < 3 || paymentReference.length > 100) {
+        return NextResponse.json(
+          { error: "Enter the UTR / payment reference before marking paid" },
+          { status: 400 },
+        );
+      }
+
+      const duplicateReference = await prisma.withdrawal.findFirst({
+        where: { paymentReference },
+      });
+      if (duplicateReference && duplicateReference.id !== withdrawalId) {
+        return NextResponse.json(
+          { error: "This payment reference is already used for another withdrawal" },
+          { status: 409 },
+        );
       }
 
       const user = await prisma.user.findUnique({
@@ -79,6 +109,8 @@ export async function POST(req: Request) {
         );
       }
 
+      const paidAt = new Date();
+
       await prisma.$transaction(async (tx) => {
         await tx.user.update({
           where: { id: withdrawal.userId },
@@ -91,7 +123,13 @@ export async function POST(req: Request) {
 
         await tx.withdrawal.update({
           where: { id: withdrawalId },
-          data: { status: "paid" },
+          data: {
+            status: "paid",
+            paymentReference,
+            paidAt,
+            reviewedAt: paidAt,
+            ...(adminNote ? { adminNote } : {}),
+          },
         });
 
         await tx.transaction.create({
@@ -99,13 +137,20 @@ export async function POST(req: Request) {
             userId: withdrawal.userId,
             amount: withdrawal.amount,
             type: "DEBIT",
+            description: `Withdrawal paid • Ref ${paymentReference}`,
           },
         });
       });
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({
+        success: true,
+        paymentReference,
+        paidAt: paidAt.toISOString(),
+      });
     }
 
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-  } catch (error) { return authErrorResponse(error); }
+  } catch (error) {
+    return authErrorResponse(error);
+  }
 }
