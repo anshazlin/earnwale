@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase-client";
 
@@ -18,6 +19,7 @@ export default function ProfilePage() {
     confirmPassword: "",
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -63,6 +65,16 @@ export default function ProfilePage() {
     } catch (error: any) {
       setPasswordMessage({ type: "error", text: error?.code === "auth/invalid-credential" ? "Current password is incorrect." : "Please sign in again before changing your password." });
     } finally { setPasswordLoading(false); }
+  };
+
+  const handleLogout = async () => {
+    if (logoutLoading) return;
+    setLogoutLoading(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } finally {
+      window.location.href = "/login";
+    }
   };
 
   if (loading) {
@@ -185,6 +197,23 @@ export default function ProfilePage() {
             {passwordLoading ? "Updating…" : "Update Password"}
           </button>
         </form>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/dashboard/support"
+          className="flex items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+        >
+          Support
+        </Link>
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={logoutLoading}
+          className="rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:opacity-60"
+        >
+          {logoutLoading ? "Logging out…" : "Logout"}
+        </button>
       </div>
     </div>
   );
