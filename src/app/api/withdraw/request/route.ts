@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     if (lastWithdrawal && (Date.now() - new Date(lastWithdrawal.createdAt).getTime()) / 3600000 < 24) {
       return NextResponse.json({ error: "You can withdraw only once every 24 hours" }, { status: 400 });
     }
-    await prisma.withdrawal.create({ data: { userId: user.id, amount, status: "pending" } });
+    await prisma.withdrawal.create({ data: {\n      userId: user.id,\n      amount,\n      status: "pending",\n      payoutUpiId: user.upiId || null,\n      payoutName: user.name || null,\n      payoutMethod: user.upiId ? "upi" : "bank",\n    } });
     return NextResponse.json({ success: true });
   } catch (error) { return authErrorResponse(error); }
 }
