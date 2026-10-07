@@ -14,12 +14,15 @@ export class AuthError extends Error {
   constructor(message: string, public status = 401) { super(message); }
 }
 
-export async function requireAuth(req: Request, options: { allowUnverified?: boolean } = {}) {
+async function verifiedSession(req: Request) {
   const session = cookieValue(req, SESSION_COOKIE);
   if (!session) throw new AuthError("Unauthorized", 401);
-  let decoded;
-  try { decoded = await firebaseAdminAuth.verifySessionCookie(session, true); }
+  try { return await firebaseAdminAuth.verifySessionCookie(session, true); }
   catch { throw new AuthError("Invalid or expired session", 401); }
+}
+
+export async function requireAuth(req: Request, options: { allowUnverified?: boolean } = {}) {
+  const decoded = await verifiedSession(req);
   if (!options.allowUnverified && !decoded.email_verified) throw new AuthError("Email verification required", 403);
 
   const email = String(decoded.email ?? "").trim().toLowerCase();
@@ -36,10 +39,11 @@ export async function requireAuth(req: Request, options: { allowUnverified?: boo
 }
 
 export async function requireAdmin(req: Request) {
-  const auth = await requireAuth(req);
+  const decoded = await verifiedSession(req);
+  if (!decoded.email_verified) throw new AuthError("Email verification required", 403);
   const adminEmail = String(process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
-  if (!adminEmail || String(auth.decoded.email ?? "").toLowerCase() !== adminEmail) throw new AuthError("Admin only", 403);
-  return auth;
+  if (!adminEmail || String(decoded.email ?? "").trim().toLowerCase() !== adminEmail) throw new AuthError("Admin only", 403);
+  return { decoded };
 }
 
 export function authErrorResponse(error: unknown) {
