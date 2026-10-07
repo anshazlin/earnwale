@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 type AdminTransaction = {
   id: string;
   type: string;
@@ -56,80 +56,45 @@ export default function AdminTransactionsPage() {
     return value;
   };
 
-  const fetchTransactions = useCallback(
-    async (opts?: { page?: number; typeFilter?: "all" | "credit" | "debit" }) => {
-      const nextPage = opts?.page ?? page;
-      const nextFilter = opts?.typeFilter ?? typeFilter;
+  useEffect(() => {
+    let cancelled = false;
 
+    async function loadTransactions() {
       setLoading(true);
       setError(null);
-
       try {
-        const params = new URLSearchParams();
-        params.set("page", String(nextPage));
-        if (nextFilter !== "all") {
-          params.set("type", nextFilter);
-        }
-
-        const res = await fetch(
-          `/api/admin/transactions?${params.toString()}`,
-          {
-            credentials: "include",
-          },
-        );
-
-        if (res.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (res.status === 403) {
-          window.location.href = "/dashboard";
-          return;
-        }
-
-        if (!res.ok) {
-          throw new Error("Failed to load transactions");
-        }
-
+        const params = new URLSearchParams({ page: String(page) });
+        if (typeFilter !== "all") params.set("type", typeFilter);
+        const res = await fetch(`/api/admin/transactions?${params.toString()}`, { credentials: "include" });
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        if (res.status === 403) { window.location.href = "/dashboard"; return; }
+        if (!res.ok) throw new Error("Failed to load transactions");
         const data = await res.json();
-        const list = data?.transactions ?? [];
-
-        setTransactions(Array.isArray(list) ? list : []);
-        setTotal(typeof data?.total === "number" ? data.total : 0);
-        setPage(typeof data?.page === "number" ? data.page : nextPage);
-        setTypeFilter(nextFilter);
+        if (!cancelled) {
+          setTransactions(Array.isArray(data?.transactions) ? data.transactions : []);
+          setTotal(typeof data?.total === "number" ? data.total : 0);
+        }
       } catch (err) {
         console.error(err);
-        setError("Unable to load transactions. Please try again.");
-        setTransactions([]);
+        if (!cancelled) { setError("Unable to load transactions. Please try again."); setTransactions([]); }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    },
-    [page, typeFilter],
-  );
+    }
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+    loadTransactions();
+    return () => { cancelled = true; };
+  }, [page, typeFilter]);
 
-  const handleFilterChange = (
-    e: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    const value = e.target.value as "all" | "credit" | "debit";
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPage(1);
-    fetchTransactions({ page: 1, typeFilter: value });
+    setTypeFilter(e.target.value as "all" | "credit" | "debit");
   };
 
   const handlePageChange = (direction: "prev" | "next") => {
-    setPage((current) => {
-      const next =
-        direction === "prev" ? Math.max(1, current - 1) : current + 1;
-      if (next === current) return current;
-      fetchTransactions({ page: next });
-      return next;
-    });
+    setPage((current) =>
+      direction === "prev" ? Math.max(1, current - 1) : Math.min(totalPages, current + 1),
+    );
   };
 
   return (

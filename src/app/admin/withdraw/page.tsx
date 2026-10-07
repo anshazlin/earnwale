@@ -116,7 +116,11 @@ export default function AdminWithdrawPage() {
         return;
       }
 
-      window.location.reload();
+      setWithdrawals((current) =>
+        current.map((withdrawal) =>
+          withdrawal.id === id ? { ...withdrawal, status } : withdrawal,
+        ),
+      );
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
