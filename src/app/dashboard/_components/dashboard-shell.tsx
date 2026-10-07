@@ -17,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "My Courses", href: "/dashboard/my-courses" },
   { name: "My Profile", href: "/dashboard/profile" },
+  { name: "Withdraw", href: "/dashboard/withdraw" },
   { name: "KYC & Payout", href: "/dashboard/kyc" },
   { name: "Referral Policy", href: "/dashboard/referral-policy" },
   { name: "Support", href: "/dashboard/support" },
