@@ -1,6 +1,5 @@
-import { WithdrawSection } from "../_components/withdraw-section";
+import { redirect } from "next/navigation";
 
 export default function WithdrawPage() {
-  return <WithdrawSection />;
+  redirect("/dashboard/wallet");
 }
-
