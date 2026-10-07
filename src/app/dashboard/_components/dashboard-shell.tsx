@@ -15,11 +15,13 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { name: "Dashboard", href: "/dashboard" },
+  { name: "Wallet", href: "/dashboard/wallet" },
+  { name: "Transactions", href: "/dashboard/transactions" },
+  { name: "Referrals", href: "/dashboard/referrals" },
+  { name: "Withdrawals", href: "/dashboard/withdraw" },
   { name: "My Courses", href: "/dashboard/my-courses" },
-  { name: "My Profile", href: "/dashboard/profile" },
-  { name: "Withdraw", href: "/dashboard/withdraw" },
+  { name: "Profile", href: "/dashboard/profile" },
   { name: "KYC & Payout", href: "/dashboard/kyc" },
-  { name: "Referral Policy", href: "/dashboard/referral-policy" },
   { name: "Support", href: "/dashboard/support" },
 ];
 
@@ -210,7 +212,7 @@ function Sidebar({ pathname, onNavigate, onLogout, logoutLoading }: SidebarProps
 function MobileNav({ pathname }: { pathname: string }) {
   const items = [
     { name: "Home", href: "/dashboard" },
-    { name: "Courses", href: "/dashboard/my-courses" },
+    { name: "Wallet", href: "/dashboard/wallet" },
     { name: "Withdraw", href: "/dashboard/withdraw" },
     { name: "Profile", href: "/dashboard/profile" },
   ];
