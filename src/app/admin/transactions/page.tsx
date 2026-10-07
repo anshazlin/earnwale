@@ -135,7 +135,7 @@ export default function AdminTransactionsPage() {
   return (
     <>
         <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-          <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4 sm:h-16">
+          <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
             <div>
               <h1 className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
                 Transactions
@@ -147,7 +147,7 @@ export default function AdminTransactionsPage() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-screen-md px-4 py-6">
+        <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
           <section className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
