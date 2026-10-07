@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type WithdrawalStatus = "pending" | "paid" | "rejected" | "approved" | string;
 
@@ -9,72 +9,86 @@ type Withdrawal = {
   amount: number;
   status: WithdrawalStatus;
   createdAt: string;
+  paymentReference?: string | null;
+  paidAt?: string | null;
+  adminNote?: string | null;
   user: {
     name: string;
     email: string;
+    earnings?: number;
     upiId?: string | null;
-    bankName?: string | null;
-    accountNumber?: string | null;
-    ifscCode?: string | null;
   };
 };
 
+function statusLabel(status: WithdrawalStatus) {
+  const value = String(status ?? "").toLowerCase();
+  if (value === "paid") return "Paid";
+  if (value === "rejected") return "Rejected";
+  return "Pending";
+}
+
 function StatusBadge({ status }: { status: WithdrawalStatus }) {
-  const s = (status ?? "").toString().toLowerCase();
-  const styles: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-800",
-    paid: "bg-emerald-100 text-emerald-800",
-    rejected: "bg-red-100 text-red-800",
-  };
-  const label =
-    s === "paid"
-      ? "Paid"
-      : s === "rejected"
-        ? "Rejected"
-        : "Pending";
+  const value = String(status ?? "").toLowerCase();
+  const styles =
+    value === "paid"
+      ? "bg-emerald-100 text-emerald-800"
+      : value === "rejected"
+        ? "bg-rose-100 text-rose-800"
+        : "bg-amber-100 text-amber-900";
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${styles[s] ?? styles.pending}`}
-    >
-      {label}
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles}`}>
+      {statusLabel(status)}
     </span>
   );
 }
+
+const money = (value?: number) => `₹${Number(value ?? 0).toLocaleString("en-IN")}`;
+
+const dateTime = (value?: string | null) =>
+  value
+    ? new Date(value).toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
 
 export default function AdminWithdrawPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [paymentReference, setPaymentReference] = useState("");
+  const [adminNote, setAdminNote] = useState("");
+  const [copied, setCopied] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
     setError(null);
+
     try {
       const res = await fetch("/api/admin/withdraw/list", {
         credentials: "include",
+        cache: "no-store",
       });
 
       if (res.status === 401) {
         window.location.href = "/login";
         return;
       }
-
       if (res.status === 403) {
         window.location.href = "/dashboard";
         return;
       }
-
-      if (!res.ok) {
-        throw new Error("Failed to load withdrawals");
-      }
+      if (!res.ok) throw new Error("Failed to load withdrawals");
 
       const data = await res.json();
-      const list = data?.withdrawals ?? [];
-      setWithdrawals(Array.isArray(list) ? list : []);
-    } catch (err) {
-      console.error(err);
+      setWithdrawals(Array.isArray(data?.withdrawals) ? data.withdrawals : []);
+    } catch {
       setError("Unable to load withdrawals. Please try again.");
       setWithdrawals([]);
     } finally {
@@ -86,17 +100,45 @@ export default function AdminWithdrawPage() {
     fetchList();
   }, [fetchList]);
 
-  const updateStatus = async (id: string, status: "Paid" | "Rejected") => {
+  const pendingCount = useMemo(
+    () =>
+      withdrawals.filter((item) => {
+        const status = String(item.status ?? "").toLowerCase();
+        return status === "pending" || status === "approved";
+      }).length,
+    [withdrawals],
+  );
+
+  const copy = async (label: string, value: string) => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(label);
+      window.setTimeout(() => setCopied(null), 1400);
+    } catch {
+      setError("Copy failed. Press and hold the value to copy it.");
+    }
+  };
+
+  const updateStatus = async (
+    id: string,
+    status: "Paid" | "Rejected",
+    options?: { paymentReference?: string; adminNote?: string },
+  ) => {
     setUpdatingId(id);
     setError(null);
+
     try {
       const res = await fetch("/api/admin/withdrawal/update", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({
+          id,
+          status,
+          paymentReference: options?.paymentReference,
+          adminNote: options?.adminNote,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -105,12 +147,10 @@ export default function AdminWithdrawPage() {
         window.location.href = "/login";
         return;
       }
-
       if (res.status === 403) {
         window.location.href = "/dashboard";
         return;
       }
-
       if (!res.ok) {
         setError(data?.error ?? "Action failed. Please try again.");
         return;
@@ -118,200 +158,253 @@ export default function AdminWithdrawPage() {
 
       setWithdrawals((current) =>
         current.map((withdrawal) =>
-          withdrawal.id === id ? { ...withdrawal, status } : withdrawal,
+          withdrawal.id === id
+            ? {
+                ...withdrawal,
+                status: status.toLowerCase(),
+                paymentReference:
+                  status === "Paid"
+                    ? data?.paymentReference ?? options?.paymentReference ?? null
+                    : withdrawal.paymentReference,
+                paidAt:
+                  status === "Paid"
+                    ? data?.paidAt ?? new Date().toISOString()
+                    : withdrawal.paidAt,
+                adminNote: options?.adminNote || withdrawal.adminNote,
+              }
+            : withdrawal,
         ),
       );
-    } catch (err) {
-      console.error(err);
+
+      if (processingId === id) {
+        setProcessingId(null);
+        setPaymentReference("");
+        setAdminNote("");
+      }
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const formatAmount = (n: number) =>
-    typeof n === "number" ? `₹${n.toLocaleString()}` : "₹0";
+  const openProcessor = (id: string) => {
+    setError(null);
+    setPaymentReference("");
+    setAdminNote("");
+    setProcessingId((current) => (current === id ? null : id));
+  };
 
-  const formatDate = (d: string) =>
-    d ? new Date(d).toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
+  const confirmPaid = async (withdrawal: Withdrawal) => {
+    const reference = paymentReference.trim();
+    if (reference.length < 3) {
+      setError("Paste the UTR / payment reference before confirming the payout.");
+      return;
+    }
+    await updateStatus(withdrawal.id, "Paid", {
+      paymentReference: reference,
+      adminNote: adminNote.trim(),
+    });
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
-              Withdrawal Management
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Review and process user withdrawal requests.
-            </p>
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+            Manual payout desk
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+            Withdrawals
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+            Pay through your normal UPI/bank app, then record the UTR here. Marking a request paid deducts the customer wallet balance.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <div className="rounded-2xl bg-amber-100 px-4 py-2 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">Pending</p>
+            <p className="text-lg font-bold text-amber-950">{pendingCount}</p>
           </div>
           <a
             href="/admin"
-            className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900"
+            className="flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
           >
-            ← Back to Dashboard
+            Admin home
           </a>
         </div>
+      </div>
 
-        {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
-            {error}
-          </div>
-        )}
+      <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
+        Before paying, open the UPI ID in your payment app and check the displayed beneficiary name against the customer name. This is a manual payout check, not formal KYC.
+      </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          {loading ? (
-            <div className="flex min-h-[320px] items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-9 w-9 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
-                <p className="text-sm text-gray-600">Loading withdrawals…</p>
-              </div>
-            </div>
-          ) : withdrawals.length === 0 ? (
-            <div className="flex min-h-[320px] flex-col items-center justify-center gap-2 px-4 py-12 text-center">
-              <div className="rounded-full bg-slate-100 p-4">
-                <svg
-                  className="h-8 w-8 text-slate-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M20 12H4m0 0 6-6m-6 6 6 6"
-                  />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-gray-700">
-                No withdrawal requests
-              </p>
-              <p className="max-w-sm text-xs text-gray-500">
-                When users request withdrawals, they will appear here for
-                review.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-[600px] w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      User
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Email
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      UPI ID
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Bank
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Account
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      IFSC
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
-                  {withdrawals.map((w) => {
-                    const status = (w.status ?? "").toString().toLowerCase();
-                    const isPending =
-                      status === "pending" || status === "approved";
-                    const busy = updatingId === w.id;
-
-                    return (
-                      <tr
-                        key={w.id}
-                        className="transition-colors hover:bg-slate-50/80"
-                      >
-                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
-                          {w.user?.name ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                          {w.user?.email ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-900">
-                          {formatAmount(w.amount)}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                          {w.user?.upiId ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                          {w.user?.bankName ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 font-mono text-sm text-gray-600">
-                          {w.user?.accountNumber ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 font-mono text-sm text-gray-600">
-                          {w.user?.ifscCode ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3">
-                          <StatusBadge status={w.status} />
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                          {formatDate(w.createdAt)}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            {isPending ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => updateStatus(w.id, "Paid")}
-                                  disabled={busy}
-                                  className="rounded-lg bg-green-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
-                                >
-                                  {busy ? "…" : "Mark paid"}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    updateStatus(w.id, "Rejected")
-                                  }
-                                  disabled={busy}
-                                  className="rounded-lg bg-red-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
-                                >
-                                  {busy ? "…" : "Reject"}
-                                </button>
-                              </>
-                            ) : (
-                              <span className="text-xs text-gray-400">
-                                No actions
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+      {error && (
+        <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+          {error}
         </div>
+      )}
+
+      {loading ? (
+        <div className="space-y-3">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="h-44 animate-pulse rounded-3xl bg-slate-200" />
+          ))}
+        </div>
+      ) : withdrawals.length === 0 ? (
+        <div className="rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-sm">
+          <p className="text-sm font-semibold text-slate-800">No withdrawal requests</p>
+          <p className="mt-1 text-xs text-slate-500">New customer requests will appear here.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {withdrawals.map((withdrawal) => {
+            const status = String(withdrawal.status ?? "").toLowerCase();
+            const isPending = status === "pending" || status === "approved";
+            const busy = updatingId === withdrawal.id;
+            const isProcessing = processingId === withdrawal.id;
+            const upi = withdrawal.user?.upiId ?? "";
+
+            return (
+              <article
+                key={withdrawal.id}
+                className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+              >
+                <div className="p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="truncate text-base font-semibold text-slate-950">
+                          {withdrawal.user?.name ?? "Customer"}
+                        </h2>
+                        <StatusBadge status={withdrawal.status} />
+                      </div>
+                      <p className="mt-1 truncate text-xs text-slate-500">
+                        {withdrawal.user?.email ?? "—"}
+                      </p>
+                      <p className="mt-1 text-[11px] text-slate-400">
+                        Requested {dateTime(withdrawal.createdAt)}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-2xl font-bold tracking-tight text-slate-950">
+                      {money(withdrawal.amount)}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-slate-50 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">UPI payout</p>
+                    <p className="mt-1 break-all font-mono text-sm font-semibold text-slate-900">
+                      {upi || "No UPI ID saved"}
+                    </p>
+                    {isPending && (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          disabled={!upi}
+                          onClick={() => copy("upi", upi)}
+                          className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900 disabled:opacity-40"
+                        >
+                          {copied === "upi" ? "UPI copied ✓" : "Copy UPI"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => copy("amount", String(withdrawal.amount))}
+                          className="rounded-xl bg-amber-400 px-3 py-2 text-xs font-semibold text-slate-950"
+                        >
+                          {copied === "amount" ? "Amount copied ✓" : "Copy amount"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {status === "paid" && (
+                    <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
+                      <p className="text-xs font-semibold text-emerald-900">Payment recorded</p>
+                      <p className="mt-1 font-mono text-xs text-emerald-800">
+                        Ref: {withdrawal.paymentReference ?? "—"}
+                      </p>
+                      <p className="mt-1 text-[11px] text-emerald-700">
+                        Paid {dateTime(withdrawal.paidAt)}
+                      </p>
+                    </div>
+                  )}
+
+                  {status === "rejected" && withdrawal.adminNote && (
+                    <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-xs text-rose-800">
+                      {withdrawal.adminNote}
+                    </div>
+                  )}
+
+                  {isPending && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => openProcessor(withdrawal.id)}
+                        disabled={!upi || busy}
+                        className="w-full rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:opacity-40"
+                      >
+                        {isProcessing ? "Close payout form" : "I paid this customer"}
+                      </button>
+
+                      {isProcessing && (
+                        <div className="mt-3 space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold text-amber-950">
+                              UTR / payment reference *
+                            </label>
+                            <input
+                              value={paymentReference}
+                              onChange={(event) => setPaymentReference(event.target.value)}
+                              placeholder="Paste transaction reference"
+                              autoComplete="off"
+                              className="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-amber-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold text-amber-950">
+                              Admin note (optional)
+                            </label>
+                            <input
+                              value={adminNote}
+                              onChange={(event) => setAdminNote(event.target.value)}
+                              placeholder="Anything useful for your records"
+                              className="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-amber-400"
+                            />
+                          </div>
+                          <p className="text-[11px] leading-5 text-amber-800">
+                            Confirm only after the transfer has actually been sent. This will deduct {money(withdrawal.amount)} from the customer's available balance.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => confirmPaid(withdrawal)}
+                            disabled={busy || paymentReference.trim().length < 3}
+                            className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                          >
+                            {busy ? "Saving…" : "Confirm paid"}
+                          </button>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateStatus(withdrawal.id, "Rejected", {
+                            adminNote: adminNote.trim() || "Withdrawal rejected by admin.",
+                          })
+                        }
+                        disabled={busy}
+                        className="mt-2 w-full rounded-2xl border border-rose-200 bg-white px-4 py-2.5 text-xs font-semibold text-rose-700 disabled:opacity-50"
+                      >
+                        Reject request
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
