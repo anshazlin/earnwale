@@ -4,74 +4,46 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-type NavItem = {
-  label: string;
-  href: string;
-};
+type NavItem = { label: string; href: string; icon: string; hint: string };
 
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/admin" },
-  { label: "Users", href: "/admin/users" },
-  { label: "Withdrawals", href: "/admin/withdraw" },
-  { label: "Transactions", href: "/admin/transactions" },
+  { label: "Overview", href: "/admin", icon: "⌂", hint: "Health & priorities" },
+  { label: "Users", href: "/admin/users", icon: "◎", hint: "Accounts & plans" },
+  { label: "Withdrawals", href: "/admin/withdraw", icon: "↗", hint: "Review payouts" },
+  { label: "Transactions", href: "/admin/transactions", icon: "⇄", hint: "Money activity" },
 ];
 
-type AdminSidebarProps = {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-};
+type Props = { sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void };
 
-export function AdminSidebar({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) {
+export function AdminSidebar({ sidebarOpen, setSidebarOpen }: Props) {
   const pathname = usePathname();
-
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname, setSidebarOpen]);
+  useEffect(() => setSidebarOpen(false), [pathname, setSidebarOpen]);
 
   return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-slate-200 bg-white/95 px-5 py-6 shadow-sm backdrop-blur ${
-        sidebarOpen ? "flex flex-col" : "hidden md:flex md:flex-col"
-      }`}
-    >
-      <div className="mb-8 flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
-          <span className="text-sm font-semibold">EA</span>
+    <aside className={`fixed inset-y-0 left-0 z-40 w-[280px] border-r border-slate-200/80 bg-white px-4 py-5 shadow-xl shadow-slate-900/5 transition-transform md:translate-x-0 md:shadow-none ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <div className="flex h-full flex-col">
+        <div className="mb-7 flex items-center justify-between px-2">
+          <Link href="/admin" className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-950 text-sm font-bold text-white">EW</div>
+            <div><p className="text-sm font-bold text-slate-950">Earnwale</p><p className="text-xs text-slate-500">Admin control center</p></div>
+          </Link>
+          <button onClick={() => setSidebarOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 md:hidden" aria-label="Close menu">×</button>
         </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold text-slate-900">
-            Earnwale Admin
-          </span>
-          <span className="text-xs text-slate-500">Control Panel</span>
+        <nav className="space-y-1.5">
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+            return <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-2xl px-3 py-3 transition ${active ? "bg-slate-950 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}>
+              <span className={`grid h-9 w-9 place-items-center rounded-xl text-lg ${active ? "bg-white/10" : "bg-slate-100"}`}>{item.icon}</span>
+              <span className="min-w-0"><span className="block text-sm font-semibold">{item.label}</span><span className={`block truncate text-[11px] ${active ? "text-slate-300" : "text-slate-400"}`}>{item.hint}</span></span>
+            </Link>;
+          })}
+        </nav>
+        <div className="mt-auto rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs font-semibold text-slate-800">Secure admin session</p>
+          <p className="mt-1 text-[11px] leading-4 text-slate-500">Sensitive actions remain protected by Firebase session verification.</p>
+          <button type="button" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login"; }} className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100">Sign out</button>
         </div>
       </div>
-
-      <nav className="space-y-1 text-sm">
-        {ADMIN_NAV_ITEMS.map((item) => {
-          const active =
-            pathname === item.href ||
-            (item.href !== "/admin" && pathname.startsWith(item.href));
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={`group flex items-center justify-between rounded-xl px-3 py-2.5 font-medium transition-colors ${
-                active
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <span>{item.label}</span>
-              {active && (
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
     </aside>
   );
 }
-
