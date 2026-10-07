@@ -6,18 +6,25 @@ export async function GET(req: Request) {
   try {
     const { user } = await requireAuth(req);
 
-    const transactions = await prisma.transaction.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-      select: {
-        id: true,
-        amount: true,
-        type: true,
-        description: true,
-        createdAt: true,
-      },
-    });
+    const [transactions, latestWithdrawal] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: {
+          id: true,
+          amount: true,
+          type: true,
+          description: true,
+          createdAt: true,
+        },
+      }),
+      prisma.withdrawal.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, amount: true, status: true, createdAt: true },
+      }),
+    ]);
 
     return NextResponse.json({
       user: {
@@ -30,6 +37,7 @@ export async function GET(req: Request) {
         totalEarned: user.totalEarned,
         referralCount: user.referralCount,
       },
+      latestWithdrawal,
       transactions,
     });
   } catch (error) {
