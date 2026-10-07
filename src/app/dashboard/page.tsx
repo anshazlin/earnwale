@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 type User = {
   id?: string;
@@ -25,52 +26,47 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [walletLoading, setWalletLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const fetchUser = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
+  useEffect(() => {
+    let cancelled = false;
 
-      if (!res.ok) {
-        window.location.href = "/login";
-        return;
+    async function loadDashboard() {
+      try {
+        const res = await fetch("/api/dashboard", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/login";
+          return;
+        }
+        if (!res.ok) throw new Error("Dashboard request failed");
+
+        const data = await res.json();
+        if (!cancelled) {
+          setUser(data?.user ?? null);
+          setTransactions(Array.isArray(data?.transactions) ? data.transactions : []);
+        }
+      } catch {
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      const data = await res.json();
-      const u = data.user ?? data;
-      setUser(u);
-    } catch {
-      window.location.href = "/login";
-    } finally {
-      setLoading(false);
     }
+
+    loadDashboard();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    setWalletLoading(true);
-
-    fetch("/api/wallet", { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        const list =
-          Array.isArray(data) ? data : data?.transactions ?? data?.data ?? [];
-        setTransactions(Array.isArray(list) ? list : []);
-      })
-      .catch(() => setTransactions([]))
-      .finally(() => setWalletLoading(false));
-  }, [user]);
-
-  const referralLink =
-    typeof window !== "undefined" && user?.referralCode
-      ? `${window.location.origin}/signup?ref=${user.referralCode}`
-      : "";
+  const referralLink = useMemo(() => {
+    if (typeof window === "undefined" || !user?.referralCode) return "";
+    return `${window.location.origin}/signup?ref=${user.referralCode}`;
+  }, [user?.referralCode]);
 
   const handleCopyReferral = async () => {
     if (!referralLink) return;
@@ -83,7 +79,6 @@ export default function DashboardPage() {
 
   const handleShareReferral = async () => {
     if (!referralLink) return;
-
     try {
       if (navigator.share) {
         await navigator.share({
@@ -94,130 +89,118 @@ export default function DashboardPage() {
         return;
       }
     } catch {}
-
     await handleCopyReferral();
   };
 
-  const formatAmount = (n?: number) =>
-    typeof n === "number" ? `₹${n.toLocaleString()}` : "₹0";
+  const formatAmount = (value?: number) =>
+    typeof value === "number" ? `₹${value.toLocaleString("en-IN")}` : "₹0";
 
-  if (loading) {
+  if (loading) return <DashboardSkeleton />;
+
+  if (error || !user) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-          <p className="text-sm text-gray-500">Loading dashboard…</p>
-        </div>
+      <div className="rounded-2xl border border-red-100 bg-white p-6 text-center shadow-sm">
+        <p className="text-sm font-semibold text-slate-900">Dashboard unavailable</p>
+        <p className="mt-1 text-xs text-slate-500">Please refresh the page and try again.</p>
+        <button onClick={() => window.location.reload()} className="mt-4 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white">
+          Retry
+        </button>
       </div>
     );
   }
 
-  if (!user) return null;
-
   return (
-    <div className="space-y-5 px-3 sm:px-4">
-      {/* Header */}
-      <div>
-        <h1 className="text-lg font-semibold text-gray-900 sm:text-2xl">
-          Partner Dashboard
-        </h1>
-        <p className="mt-1 text-xs text-gray-500 sm:text-sm">
-          Welcome back, {user.name}.
-        </p>
-      </div>
-
-      {/* Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:gap-4">
-        <Card title="Name">{user.name}</Card>
-        <Card title="Selected Plan">₹{user.plan}</Card>
-        <Card title="Current Earnings">
-          <span className="font-semibold text-amber-700 text-lg sm:text-xl">
-            {formatAmount(user.earnings)}
-          </span>
-        </Card>
-        <Card title="Total Earned">
-          <span className="font-semibold text-amber-700 text-lg sm:text-xl">
-            {formatAmount(user.totalEarned)}
-          </span>
-        </Card>
-        <Card title="Referral Count">{user.referralCount ?? 0}</Card>
-      </div>
-
-      {/* Referral */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
-          Your Referral Link
-        </h2>
-        <p className="mt-1 text-xs text-gray-500 sm:text-sm">
-          Share this link to invite friends. Your referrals are tracked automatically.
-        </p>
-
-        <div className="mt-4 flex flex-col gap-3">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[11px] font-mono text-gray-900 sm:text-sm">
-            <div className="truncate">{referralLink}</div>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-7">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-300">Partner dashboard</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Welcome back, {user.name}
+            </h1>
+            <p className="mt-2 max-w-lg text-sm leading-6 text-slate-300">
+              Your earnings, referrals and recent activity in one place.
+            </p>
           </div>
+          <Link href="/dashboard/withdraw" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
+            Withdraw earnings
+          </Link>
+        </div>
+      </section>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              onClick={handleCopyReferral}
-              className="w-full rounded-xl border border-amber-200 bg-white px-4 py-2.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 sm:w-auto sm:text-sm"
-            >
-              {copied ? "Copied" : "Copy link"}
-            </button>
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Metric label="Available" value={formatAmount(user.earnings)} emphasis />
+        <Metric label="Total earned" value={formatAmount(user.totalEarned)} />
+        <Metric label="Referrals" value={String(user.referralCount ?? 0)} />
+        <Metric label="Plan" value={`₹${user.plan}`} />
+      </section>
 
-            <button
-              onClick={handleShareReferral}
-              className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-semibold text-white hover:bg-amber-600 sm:w-auto sm:text-sm"
-            >
-              Share Link
-            </button>
+      <section>
+        <div className="mb-3 flex items-end justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Quick actions</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Jump to what you need.</p>
           </div>
         </div>
-      </div>
-
-      {/* Transactions */}
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
-            Recent Transactions
-          </h2>
-          <p className="text-xs text-gray-500 sm:text-sm">
-            Your latest wallet activity.
-          </p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <QuickAction href="/dashboard/my-courses" label="Courses" />
+          <QuickAction href="/dashboard/withdraw" label="Withdraw" />
+          <QuickAction href="/dashboard/profile" label="Profile" />
         </div>
+      </section>
 
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          {walletLoading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-gray-500">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-              <span className="text-sm">Loading…</span>
-            </div>
-          ) : transactions.length === 0 ? (
-            <div className="py-10 text-center text-sm text-gray-500">
-              No transactions yet.
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Your referral link</h2>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Share your unique link. Eligible referrals are tracked automatically.</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+            {user.referralCode}
+          </span>
+        </div>
+        <div className="mt-4 rounded-xl bg-slate-50 px-3 py-3 font-mono text-xs text-slate-600">
+          <p className="truncate">{referralLink}</p>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button onClick={handleCopyReferral} className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+            {copied ? "Copied ✓" : "Copy link"}
+          </button>
+          <button onClick={handleShareReferral} className="min-h-11 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
+            Share
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-3">
+          <h2 className="text-base font-semibold text-slate-900">Recent activity</h2>
+          <p className="mt-0.5 text-xs text-slate-500">Your latest wallet transactions.</p>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {transactions.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <p className="text-sm font-medium text-slate-700">No transactions yet</p>
+              <p className="mt-1 text-xs text-slate-500">Your wallet activity will appear here.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-amber-50">
-              {transactions.map((tx, i) => (
-                <li
-                  key={tx.id ?? i}
-                  className="flex items-center justify-between px-3 py-3 sm:px-5"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {tx.description ?? tx.type ?? "Transaction"}
-                    </p>
-                    {tx.createdAt && (
-                      <p className="text-[11px] text-gray-500">
-                        {new Date(tx.createdAt).toLocaleDateString()}
+            <ul className="divide-y divide-slate-100">
+              {transactions.map((tx, index) => {
+                const credit = (tx.type ?? "").toUpperCase() === "CREDIT";
+                return (
+                  <li key={tx.id ?? index} className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">{tx.description ?? tx.type ?? "Transaction"}</p>
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                       </p>
-                    )}
-                  </div>
-                  <p className="text-sm font-semibold text-amber-700">
-                    {formatAmount(tx.amount)}
-                  </p>
-                </li>
-              ))}
+                    </div>
+                    <p className={`shrink-0 text-sm font-semibold ${credit ? "text-emerald-700" : "text-slate-900"}`}>
+                      {credit ? "+" : ""}{formatAmount(tx.amount)}
+                    </p>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -226,19 +209,32 @@ export default function DashboardPage() {
   );
 }
 
-function Card({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Metric({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
-      <p className="text-xs text-gray-500 sm:text-sm">{title}</p>
-      <div className="mt-1 text-base font-semibold text-gray-900 sm:text-lg">
-        {children}
+    <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm sm:p-4">
+      <p className="truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className={`mt-2 truncate text-lg font-semibold tracking-tight sm:text-xl ${emphasis ? "text-amber-700" : "text-slate-900"}`}>{value}</p>
+    </div>
+  );
+}
+
+function QuickAction({ href, label }: { href: string; label: string }) {
+  return (
+    <Link href={href} className="flex min-h-16 items-center justify-center rounded-2xl border border-slate-200 bg-white px-2 py-3 text-center text-xs font-semibold text-slate-700 shadow-sm transition hover:border-amber-200 hover:bg-amber-50 sm:text-sm">
+      {label}
+    </Link>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse" aria-label="Loading dashboard">
+      <div className="h-44 rounded-3xl bg-slate-200" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => <div key={item} className="h-20 rounded-2xl bg-slate-200" />)}
       </div>
+      <div className="h-32 rounded-2xl bg-slate-200" />
+      <div className="h-56 rounded-2xl bg-slate-200" />
     </div>
   );
 }

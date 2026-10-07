@@ -14,9 +14,10 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
+  { name: "Dashboard", href: "/dashboard" },
   { name: "My Courses", href: "/dashboard/my-courses" },
   { name: "My Profile", href: "/dashboard/profile" },
-  { name: "Partner Dashboard", href: "/dashboard" },
+  { name: "Withdraw", href: "/dashboard/withdraw" },
   { name: "KYC & Payout", href: "/dashboard/kyc" },
   { name: "Referral Policy", href: "/dashboard/referral-policy" },
   { name: "Support", href: "/dashboard/support" },
@@ -64,7 +65,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-amber-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Mobile sidebar */}
       <div
         className={classNames(
@@ -89,7 +90,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
       <div className="flex min-h-screen">
         {/* Desktop sidebar */}
-        <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-amber-100 bg-white/90 backdrop-blur md:flex md:flex-col md:shadow-sm">
+        <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col md:shadow-sm">
           <Sidebar
             pathname={pathname ?? "/dashboard"}
             onNavigate={() => undefined}
@@ -99,12 +100,12 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-amber-100 bg-white/80 backdrop-blur">
-            <div className="mx-auto flex h-14 w-full max-w-screen-md items-center justify-between px-4 sm:h-16">
+          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+            <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:h-16">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center rounded-xl border border-amber-100 bg-white px-2.5 py-1.5 text-gray-700 shadow-sm hover:bg-amber-50 md:hidden"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-gray-700 shadow-sm hover:bg-amber-50 md:hidden"
                   onClick={() => setSidebarOpen(true)}
                   aria-label="Open sidebar"
                 >
@@ -121,7 +122,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                 >
                   Earnwale
                 </Link>
-                <span className="hidden h-5 w-px bg-amber-100 sm:block" />
+                <span className="hidden h-5 w-px bg-slate-200 sm:block" />
                 <div className="hidden items-center gap-2 text-xs font-medium text-gray-500 sm:flex">
                   <span>Dashboard</span>
                   <span>/</span>
@@ -132,8 +133,9 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           </header>
 
           <main className="flex-1">
-            <div className="mx-auto w-full max-w-screen-md px-4 py-6">{children}</div>
+            <div className="mx-auto w-full max-w-6xl px-4 py-5 pb-24 sm:px-6 sm:py-7 md:pb-7">{children}</div>
           </main>
+          <MobileNav pathname={pathname ?? "/dashboard"} />
         </div>
       </div>
     </div>
@@ -157,7 +159,7 @@ function Sidebar({ pathname, onNavigate, onLogout, logoutLoading }: SidebarProps
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-900">Earnwale</span>
-            <span className="text-xs text-gray-500">Creator Dashboard</span>
+            <span className="text-xs text-gray-500">Partner account</span>
           </div>
         </Link>
       </div>
@@ -189,7 +191,7 @@ function Sidebar({ pathname, onNavigate, onLogout, logoutLoading }: SidebarProps
         })}
       </nav>
 
-      <div className="border-t border-amber-100 p-3">
+      <div className="border-t border-slate-200 p-3">
         <button
           type="button"
           onClick={onLogout}
@@ -203,3 +205,35 @@ function Sidebar({ pathname, onNavigate, onLogout, logoutLoading }: SidebarProps
   );
 }
 
+
+
+function MobileNav({ pathname }: { pathname: string }) {
+  const items = [
+    { name: "Home", href: "/dashboard" },
+    { name: "Courses", href: "/dashboard/my-courses" },
+    { name: "Withdraw", href: "/dashboard/withdraw" },
+    { name: "Profile", href: "/dashboard/profile" },
+  ];
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(15,23,42,0.06)] backdrop-blur md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+        {items.map((item) => {
+          const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={classNames(
+                "flex min-h-11 items-center justify-center rounded-xl px-1 text-[11px] font-semibold transition-colors",
+                active ? "bg-amber-50 text-amber-700" : "text-slate-500 hover:bg-slate-50",
+              )}
+            >
+              {item.name}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
