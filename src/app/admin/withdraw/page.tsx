@@ -301,17 +301,17 @@ export default function AdminWithdrawPage() {
                         <button
                           type="button"
                           disabled={!upi}
-                          onClick={() => copy("upi", upi)}
+                          onClick={() => copy(`${withdrawal.id}:upi`, upi)}
                           className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900 disabled:opacity-40"
                         >
-                          {copied === "upi" ? "UPI copied ✓" : "Copy UPI"}
+                          {copied === `${withdrawal.id}:upi` ? "UPI copied ✓" : "Copy UPI"}
                         </button>
                         <button
                           type="button"
-                          onClick={() => copy("amount", String(withdrawal.amount))}
+                          onClick={() => copy(`${withdrawal.id}:amount`, String(withdrawal.amount))}
                           className="rounded-xl bg-amber-400 px-3 py-2 text-xs font-semibold text-slate-950"
                         >
-                          {copied === "amount" ? "Amount copied ✓" : "Copy amount"}
+                          {copied === `${withdrawal.id}:amount` ? "Amount copied ✓" : "Copy amount"}
                         </button>
                       </div>
                     )}
@@ -389,7 +389,7 @@ export default function AdminWithdrawPage() {
                         type="button"
                         onClick={() =>
                           updateStatus(withdrawal.id, "Rejected", {
-                            adminNote: adminNote.trim() || "Withdrawal rejected by admin.",
+                            adminNote: "Withdrawal rejected by admin.",
                           })
                         }
                         disabled={busy}
