@@ -17,6 +17,8 @@ type Withdraw = {
   amount?: number;
   status?: WithdrawStatus;
   createdAt?: string;
+  paymentReference?: string;
+  paidAt?: string;
   [key: string]: unknown;
 };
 
@@ -164,8 +166,7 @@ export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {
 
           <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
             Minimum withdrawal amount is{" "}
-            <span className="font-semibold">450</span>. Requests are reviewed
-            by our team before being processed.
+            <span className="font-semibold">450</span>. Requests are reviewed and processed within 24 hours. Bank/UPI settlement times may vary.
           </p>
 
           {error && (
@@ -232,6 +233,9 @@ export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {
                             ? new Date(w.createdAt).toLocaleDateString()
                             : "—"}
                         </p>
+                        {w.paymentReference && (
+                          <p className="mt-1 text-[11px] font-medium text-emerald-700">Ref: {w.paymentReference}</p>
+                        )}
                       </div>
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${statusStyles(
@@ -251,6 +255,7 @@ export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {
                         <th className="px-4 py-3 font-medium">Amount</th>
                         <th className="px-4 py-3 font-medium">Status</th>
                         <th className="px-4 py-3 font-medium">Date</th>
+                        <th className="px-4 py-3 font-medium">Reference</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-amber-50 bg-white">
@@ -277,6 +282,7 @@ export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {
                               ? new Date(w.createdAt).toLocaleDateString()
                               : "—"}
                           </td>
+                          <td className="px-4 py-3 font-mono text-[11px] text-gray-500">{w.paymentReference ?? "—"}</td>
                         </tr>
                       ))}
                     </tbody>

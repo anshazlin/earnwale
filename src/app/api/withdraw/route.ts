@@ -16,7 +16,7 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       skip,
       take: PAGE_SIZE + 1,
-      select: { id: true, amount: true, status: true, createdAt: true },
+      select: { id: true, amount: true, status: true, createdAt: true, paymentReference: true, paidAt: true },
     });
 
     return NextResponse.json({

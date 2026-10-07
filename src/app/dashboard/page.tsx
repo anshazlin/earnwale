@@ -14,17 +14,8 @@ type User = {
   referralCount?: number;
 };
 
-type Transaction = {
-  id?: string;
-  amount?: number;
-  type?: string;
-  description?: string;
-  createdAt?: string;
-};
-
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [latestWithdrawal, setLatestWithdrawal] = useState<{ status?: string; amount?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -49,7 +40,6 @@ export default function DashboardPage() {
         const data = await res.json();
         if (!cancelled) {
           setUser(data?.user ?? null);
-          setTransactions(Array.isArray(data?.transactions) ? data.transactions : []);
           setLatestWithdrawal(data?.latestWithdrawal ?? null);
         }
       } catch {
@@ -121,10 +111,10 @@ export default function DashboardPage() {
               Welcome back, {user.name}
             </h1>
             <p className="mt-2 max-w-lg text-sm leading-6 text-slate-300">
-              Your earnings, referrals and recent activity in one place.
+              Your learning account, referral earnings and payout status in one place.
             </p>
           </div>
-          <Link href="/dashboard/withdraw" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
+          <Link href="/dashboard/wallet" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
             Withdraw earnings
           </Link>
         </div>
@@ -160,39 +150,6 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section>
-        <div className="mb-3">
-          <h2 className="text-base font-semibold text-slate-900">Recent activity</h2>
-          <p className="mt-0.5 text-xs text-slate-500">Your latest wallet transactions.</p>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm">
-          {transactions.length === 0 ? (
-            <div className="px-5 py-10 text-center">
-              <p className="text-sm font-medium text-slate-700">No transactions yet</p>
-              <p className="mt-1 text-xs text-slate-500">Your wallet activity will appear here.</p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {transactions.map((tx, index) => {
-                const credit = (tx.type ?? "").toUpperCase() === "CREDIT";
-                return (
-                  <li key={tx.id ?? index} className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">{tx.description ?? tx.type ?? "Transaction"}</p>
-                      <p className="mt-0.5 text-[11px] text-slate-500">
-                        {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
-                      </p>
-                    </div>
-                    <p className={`shrink-0 text-sm font-semibold ${credit ? "text-emerald-700" : "text-slate-900"}`}>
-                      {credit ? "+" : ""}{formatAmount(tx.amount)}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      </section>
     </div>
   );
 }
@@ -206,14 +163,6 @@ function Metric({ label, value, emphasis = false }: { label: string; value: stri
   );
 }
 
-function QuickAction({ href, label }: { href: string; label: string }) {
-  return (
-    <Link href={href} className="flex min-h-16 items-center justify-center rounded-2xl border border-slate-200 bg-white px-2 py-3 text-center text-xs font-semibold text-slate-700 shadow-sm transition hover:border-amber-200 hover:bg-amber-50 sm:text-sm">
-      {label}
-    </Link>
-  );
-}
-
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse" aria-label="Loading dashboard">
@@ -222,7 +171,6 @@ function DashboardSkeleton() {
         {[0, 1, 2, 3].map((item) => <div key={item} className="h-20 rounded-2xl bg-slate-200" />)}
       </div>
       <div className="h-32 rounded-2xl bg-slate-200" />
-      <div className="h-56 rounded-2xl bg-slate-200" />
     </div>
   );
 }
