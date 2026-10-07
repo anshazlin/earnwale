@@ -26,6 +26,9 @@ export async function POST(req: Request) {
     }
 
     const email = String(decoded.email ?? "").trim().toLowerCase();
+    const adminEmail = String(process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+    const isAdmin = Boolean(adminEmail && email === adminEmail);
+
     let user = await prisma.user.findUnique({ where: { firebaseUid: decoded.uid } });
     if (!user && email) {
       user = await prisma.user.findUnique({ where: { email } });
@@ -36,10 +39,12 @@ export async function POST(req: Request) {
         user = await prisma.user.update({ where: { id: user.id }, data: { firebaseUid: decoded.uid } });
       }
     }
-    if (!user) return NextResponse.json({ error: "Account record not found" }, { status: 403 });
+    if (!user && !isAdmin) {
+      return NextResponse.json({ error: "Account record not found" }, { status: 403 });
+    }
 
     const sessionCookie = await firebaseAdminAuth.createSessionCookie(idToken, { expiresIn: SESSION_MAX_AGE_MS });
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, isAdmin });
     response.cookies.set(SESSION_COOKIE, sessionCookie, {
       httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax",
       maxAge: Math.floor(SESSION_MAX_AGE_MS / 1000), path: "/",
