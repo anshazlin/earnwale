@@ -1,7 +1,5 @@
-"use client";
-import { useEffect,useState } from "react";
-import { useRouter } from "next/navigation";
-type Tx={id:string;amount:number;type:string;description?:string;createdAt?:string};
-export default function TransactionsPage(){const router=useRouter();const[page,setPage]=useState(1);const[rows,setRows]=useState<Tx[]>([]);const[more,setMore]=useState(false);const[loading,setLoading]=useState(true);const[error,setError]=useState("");
-useEffect(()=>{let off=false;setLoading(true);setError("");fetch(`/api/wallet?page=${page}`,{credentials:"include",cache:"no-store"}).then(async r=>{if(r.status===401||r.status===403){router.replace("/login");return null}if(!r.ok)throw new Error();return r.json()}).then(v=>{if(v&&!off){setRows(v.transactions??[]);setMore(!!v.hasMore)}}).catch(()=>!off&&setError("Unable to load transactions.")).finally(()=>!off&&setLoading(false));return()=>{off=true}},[page,router]);
-return <div className="space-y-5"><header><h1 className="text-2xl font-semibold">Transactions</h1><p className="mt-1 text-sm text-slate-500">Your wallet activity, newest first.</p></header>{error&&<p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}<div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">{loading?<div className="h-64 animate-pulse bg-slate-100"/>:rows.length?<ul className="divide-y divide-slate-100">{rows.map(x=><li key={x.id} className="flex items-center justify-between gap-4 p-4"><div className="min-w-0"><p className="truncate text-sm font-medium">{x.description||x.type||"Transaction"}</p><p className="mt-1 text-xs text-slate-500">{x.createdAt?new Date(x.createdAt).toLocaleString("en-IN"):"—"}</p></div><div className="text-right"><p className="text-sm font-semibold">₹{Number(x.amount??0).toLocaleString("en-IN")}</p><p className="text-[11px] uppercase text-slate-400">{x.type}</p></div></li>)}</ul>:<p className="p-10 text-center text-sm text-slate-500">No transactions yet.</p>}</div><div className="flex justify-between"><button disabled={page===1||loading} onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-xl border bg-white px-4 py-2 text-sm disabled:opacity-40">Previous</button><span className="py-2 text-xs text-slate-500">Page {page}</span><button disabled={!more||loading} onClick={()=>setPage(p=>p+1)} className="rounded-xl border bg-white px-4 py-2 text-sm disabled:opacity-40">Next</button></div></div>}
+import { redirect } from "next/navigation";
+
+export default function TransactionsPage() {
+  redirect("/dashboard/wallet");
+}
