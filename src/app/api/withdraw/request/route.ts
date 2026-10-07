@@ -22,6 +22,18 @@ export async function POST(req: Request) {
 
     const amount = Math.min(user.earnings, MAX_WITHDRAWAL);
 
+    const holdUntil = user.payoutChangeAvailableAt
+      ? new Date(user.payoutChangeAvailableAt)
+      : null;
+    if (holdUntil && holdUntil.getTime() > Date.now()) {
+      return NextResponse.json(
+        {
+          error: `Payout account security hold is active until ${holdUntil.toLocaleString("en-IN")}`,
+        },
+        { status: 400 },
+      );
+    }
+
     if (!user.upiId && !user.accountNumber) {
       return NextResponse.json(
         { error: "Please add payout details first" },

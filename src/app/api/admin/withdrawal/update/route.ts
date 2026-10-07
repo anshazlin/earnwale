@@ -110,6 +110,9 @@ export async function POST(req: Request) {
       }
 
       const paidAt = new Date();
+      const payoutUpiId = String(withdrawal.payoutUpiId ?? "").trim().toLowerCase();
+      const currentUpiId = String(user.upiId ?? "").trim().toLowerCase();
+      const shouldBindPayout = Boolean(payoutUpiId && currentUpiId === payoutUpiId);
 
       await prisma.$transaction(async (tx) => {
         await tx.user.update({
@@ -118,6 +121,15 @@ export async function POST(req: Request) {
             earnings: {
               decrement: withdrawal.amount,
             },
+            ...(shouldBindPayout
+              ? {
+                  payoutVerified: true,
+                  verifiedUpiId: payoutUpiId,
+                  payoutVerifiedAt: paidAt,
+                  payoutVerificationReference: paymentReference,
+                  payoutChangeAvailableAt: null,
+                }
+              : {}),
           },
         });
 
@@ -146,6 +158,7 @@ export async function POST(req: Request) {
         success: true,
         paymentReference,
         paidAt: paidAt.toISOString(),
+        payoutBound: shouldBindPayout,
       });
     }
 
