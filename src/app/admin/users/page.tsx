@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 type AdminUser = {
   id: string;
   name: string;
@@ -42,75 +42,46 @@ export default function AdminUsersPage() {
         })
       : "—";
 
-  const fetchUsers = useCallback(
-    async (opts?: { page?: number; search?: string }) => {
-      const nextPage = opts?.page ?? page;
-      const nextSearch = opts?.search ?? search;
+  useEffect(() => {
+    let cancelled = false;
 
+    async function loadUsers() {
       setLoading(true);
       setError(null);
-
       try {
-        const params = new URLSearchParams();
-        params.set("page", String(nextPage));
-        if (nextSearch.trim().length > 0) {
-          params.set("search", nextSearch.trim());
-        }
-
-        const res = await fetch(`/api/admin/users?${params.toString()}`, {
-          credentials: "include",
-        });
-
-        if (res.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (res.status === 403) {
-          window.location.href = "/dashboard";
-          return;
-        }
-
-        if (!res.ok) {
-          throw new Error("Failed to load users");
-        }
-
+        const params = new URLSearchParams({ page: String(page) });
+        if (search.trim()) params.set("search", search.trim());
+        const res = await fetch(`/api/admin/users?${params.toString()}`, { credentials: "include" });
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        if (res.status === 403) { window.location.href = "/dashboard"; return; }
+        if (!res.ok) throw new Error("Failed to load users");
         const data = await res.json();
-        const list = data?.users ?? [];
-
-        setUsers(Array.isArray(list) ? list : []);
-        setTotal(typeof data?.total === "number" ? data.total : 0);
-        setPage(typeof data?.page === "number" ? data.page : nextPage);
-        setSearch(nextSearch);
+        if (!cancelled) {
+          setUsers(Array.isArray(data?.users) ? data.users : []);
+          setTotal(typeof data?.total === "number" ? data.total : 0);
+        }
       } catch (err) {
         console.error(err);
-        setError("Unable to load users. Please try again.");
-        setUsers([]);
+        if (!cancelled) { setError("Unable to load users. Please try again."); setUsers([]); }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    },
-    [page, search],
-  );
+    }
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    loadUsers();
+    return () => { cancelled = true; };
+  }, [page, search]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    fetchUsers({ page: 1, search: searchInput });
+    setSearch(searchInput.trim());
   };
 
   const handlePageChange = (direction: "prev" | "next") => {
-    setPage((current) => {
-      const next =
-        direction === "prev" ? Math.max(1, current - 1) : current + 1;
-      if (next === current) return current;
-      fetchUsers({ page: next });
-      return next;
-    });
+    setPage((current) =>
+      direction === "prev" ? Math.max(1, current - 1) : Math.min(totalPages, current + 1),
+    );
   };
 
   return (
