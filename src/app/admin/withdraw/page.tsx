@@ -12,6 +12,9 @@ type Withdrawal = {
   paymentReference?: string | null;
   paidAt?: string | null;
   adminNote?: string | null;
+  payoutUpiId?: string | null;
+  payoutName?: string | null;
+  payoutMethod?: string | null;
   user: {
     name: string;
     email: string;
@@ -263,7 +266,8 @@ export default function AdminWithdrawPage() {
             const isPending = status === "pending" || status === "approved";
             const busy = updatingId === withdrawal.id;
             const isProcessing = processingId === withdrawal.id;
-            const upi = withdrawal.user?.upiId ?? "";
+            const upi = withdrawal.payoutUpiId ?? withdrawal.user?.upiId ?? "";
+            const payoutName = withdrawal.payoutName ?? withdrawal.user?.name ?? "Customer";
 
             return (
               <article
@@ -275,7 +279,7 @@ export default function AdminWithdrawPage() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="truncate text-base font-semibold text-slate-950">
-                          {withdrawal.user?.name ?? "Customer"}
+                          {payoutName}
                         </h2>
                         <StatusBadge status={withdrawal.status} />
                       </div>
