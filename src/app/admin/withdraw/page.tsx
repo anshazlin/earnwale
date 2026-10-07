@@ -20,6 +20,8 @@ type Withdrawal = {
     email: string;
     earnings?: number;
     upiId?: string | null;
+    payoutVerified?: boolean;
+    payoutVerifiedAt?: string | null;
   };
 };
 
@@ -66,6 +68,7 @@ export default function AdminWithdrawPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [paymentReference, setPaymentReference] = useState("");
   const [adminNote, setAdminNote] = useState("");
+  const [beneficiaryNameMatched, setBeneficiaryNameMatched] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,7 +129,11 @@ export default function AdminWithdrawPage() {
   const updateStatus = async (
     id: string,
     status: "Paid" | "Rejected",
-    options?: { paymentReference?: string; adminNote?: string },
+    options?: {
+      paymentReference?: string;
+      adminNote?: string;
+      beneficiaryNameMatched?: boolean;
+    },
   ) => {
     setUpdatingId(id);
     setError(null);
@@ -141,6 +148,7 @@ export default function AdminWithdrawPage() {
           status,
           paymentReference: options?.paymentReference,
           adminNote: options?.adminNote,
+          beneficiaryNameMatched: options?.beneficiaryNameMatched,
         }),
       });
 
@@ -174,6 +182,14 @@ export default function AdminWithdrawPage() {
                     ? data?.paidAt ?? new Date().toISOString()
                     : withdrawal.paidAt,
                 adminNote: options?.adminNote || withdrawal.adminNote,
+                user:
+                  status === "Paid" && data?.payoutBound
+                    ? {
+                        ...withdrawal.user,
+                        payoutVerified: true,
+                        payoutVerifiedAt: data?.paidAt ?? new Date().toISOString(),
+                      }
+                    : withdrawal.user,
               }
             : withdrawal,
         ),
@@ -183,6 +199,7 @@ export default function AdminWithdrawPage() {
         setProcessingId(null);
         setPaymentReference("");
         setAdminNote("");
+        setBeneficiaryNameMatched(false);
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -195,6 +212,7 @@ export default function AdminWithdrawPage() {
     setError(null);
     setPaymentReference("");
     setAdminNote("");
+    setBeneficiaryNameMatched(false);
     setProcessingId((current) => (current === id ? null : id));
   };
 
@@ -204,9 +222,14 @@ export default function AdminWithdrawPage() {
       setError("Paste the UTR / payment reference before confirming the payout.");
       return;
     }
+    if (!withdrawal.user?.payoutVerified && !beneficiaryNameMatched) {
+      setError("Confirm that you checked the beneficiary name before the first payout.");
+      return;
+    }
     await updateStatus(withdrawal.id, "Paid", {
       paymentReference: reference,
       adminNote: adminNote.trim(),
+      beneficiaryNameMatched,
     });
   };
 
@@ -297,9 +320,20 @@ export default function AdminWithdrawPage() {
 
                   <div className="mt-4 rounded-2xl bg-slate-50 p-3">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">UPI payout</p>
-                    <p className="mt-1 break-all font-mono text-sm font-semibold text-slate-900">
-                      {upi || "No UPI ID saved"}
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <p className="break-all font-mono text-sm font-semibold text-slate-900">
+                        {upi || "No UPI ID saved"}
+                      </p>
+                      <span
+                        className={
+                          withdrawal.user?.payoutVerified
+                            ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800"
+                            : "rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800"
+                        }
+                      >
+                        {withdrawal.user?.payoutVerified ? "Verified & locked" : "First payout verification"}
+                      </span>
+                    </div>
                     {isPending && (
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
@@ -375,13 +409,30 @@ export default function AdminWithdrawPage() {
                               className="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-amber-400"
                             />
                           </div>
+                          {!withdrawal.user?.payoutVerified && (
+                            <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-amber-200 bg-white p-3">
+                              <input
+                                type="checkbox"
+                                checked={beneficiaryNameMatched}
+                                onChange={(event) => setBeneficiaryNameMatched(event.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-amber-300 text-emerald-600"
+                              />
+                              <span className="text-[11px] leading-5 text-amber-950">
+                                I checked the beneficiary name shown in my payment app and it matches this customer. This first successful payout will verify and lock the UPI ID.
+                              </span>
+                            </label>
+                          )}
                           <p className="text-[11px] leading-5 text-amber-800">
                             Confirm only after the transfer has actually been sent. This will deduct {money(withdrawal.amount)} from the customer's available balance.
                           </p>
                           <button
                             type="button"
                             onClick={() => confirmPaid(withdrawal)}
-                            disabled={busy || paymentReference.trim().length < 3}
+                            disabled={
+                              busy ||
+                              paymentReference.trim().length < 3 ||
+                              (!withdrawal.user?.payoutVerified && !beneficiaryNameMatched)
+                            }
                             className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
                           >
                             {busy ? "Saving…" : "Confirm paid"}
