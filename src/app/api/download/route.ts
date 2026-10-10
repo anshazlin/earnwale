@@ -7,11 +7,34 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const file = searchParams.get("file");
-    if (!file || !["scholar", "capital"].includes(file)) return NextResponse.json({ error: "Invalid file" }, { status: 400 });
+    if (!file || !["scholar", "capital"].includes(file)) {
+      return NextResponse.json({ error: "Invalid file" }, { status: 400 });
+    }
+
     const { user } = await requireAuth(req);
-    if (file === "scholar" && user.plan !== "300" && user.plan !== "500") return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    if (file === "capital" && user.plan !== "500") return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    const filePath = path.join(process.cwd(), file === "scholar" ? "src/secure-files/scholar-protocol.pdf" : "src/secure-files/capital-compounder.pdf");
-    return new NextResponse(fs.readFileSync(filePath), { headers: { "Content-Type": "application/pdf", "Content-Disposition": "inline" } });
-  } catch (error) { return authErrorResponse(error); }
+    const plan = String(user.plan ?? "").trim();
+
+    if (file === "scholar" && plan !== "300" && plan !== "500") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+    if (file === "capital" && plan !== "500") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    const filePath = path.join(
+      process.cwd(),
+      file === "scholar"
+        ? "src/secure-files/scholar-protocol.pdf"
+        : "src/secure-files/capital-compounder.pdf",
+    );
+
+    return new NextResponse(fs.readFileSync(filePath), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": "inline",
+      },
+    });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
 }
