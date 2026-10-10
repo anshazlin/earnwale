@@ -71,17 +71,27 @@ export default function DashboardPage() {
 
   const handleShareReferral = async () => {
     if (!referralLink) return;
+
+    const shareText =
+      "Join Earnwale and explore premium learning programs. Use my referral link:";
+
     try {
       if (navigator.share) {
         await navigator.share({
           title: "Join Earnwale",
-          text: "Check out this premium learning platform.",
+          text: shareText,
           url: referralLink,
         });
         return;
       }
-    } catch {}
-    await handleCopyReferral();
+    } catch (error: any) {
+      if (error?.name === "AbortError") return;
+    }
+
+    const whatsappUrl =
+      "https://wa.me/?text=" +
+      encodeURIComponent(`${shareText} ${referralLink}`);
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   const formatAmount = (value?: number) =>
@@ -138,13 +148,13 @@ export default function DashboardPage() {
           </span>
         </div>
         <div className="mt-4 rounded-xl bg-slate-50 px-3 py-3 font-mono text-xs text-slate-600">
-          <p className="truncate">{referralLink}</p>
+          <p className="truncate">{referralLink || "Generating your referral link…"}</p>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button onClick={handleCopyReferral} className="min-h-11 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-50">
+          <button onClick={handleCopyReferral} disabled={!referralLink} className="min-h-11 disabled:cursor-not-allowed disabled:opacity-50 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-50">
             {copied ? "Copied ✓" : "Copy link"}
           </button>
-          <button onClick={handleShareReferral} className="min-h-11 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300">
+          <button onClick={handleShareReferral} disabled={!referralLink} className="min-h-11 disabled:cursor-not-allowed disabled:opacity-50 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-300">
             Share
           </button>
         </div>
