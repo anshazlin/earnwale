@@ -9,6 +9,7 @@ type AdminUser = {
   earnings: number;
   totalEarned: number;
   referralCount: number;
+  referralCode: string;
   createdAt: string;
 };
 
@@ -22,6 +23,9 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [testLoadingId, setTestLoadingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
 
   const totalPages = useMemo(
     () => (total > 0 ? Math.ceil(total / PAGE_SIZE) : 1),
@@ -78,6 +82,52 @@ export default function AdminUsersPage() {
     setSearch(searchInput.trim());
   };
 
+  const copyReferralLink = async (user: AdminUser) => {
+    if (!user.referralCode) return;
+    const link = `${window.location.origin}/signup?ref=${user.referralCode}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedUserId(user.id);
+      window.setTimeout(() => setCopiedUserId(null), 1600);
+    } catch {
+      setError("Unable to copy referral link.");
+    }
+  };
+
+  const addTestReferral = async (user: AdminUser) => {
+    if (!user.email.toLowerCase().includes("+test@") || testLoadingId) return;
+    setTestLoadingId(user.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/admin/users/test-referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Unable to add test referral");
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === user.id
+            ? {
+                ...item,
+                earnings: Number(data?.earnings ?? item.earnings),
+                totalEarned: Number(data?.totalEarned ?? item.totalEarned),
+                referralCount: Number(data?.referralCount ?? item.referralCount),
+              }
+            : item,
+        ),
+      );
+      setNotice(`Added 1 TEST referral and ₹250 credit to ${user.email}.`);
+    } catch (err: any) {
+      setError(err?.message || "Unable to add test referral.");
+    } finally {
+      setTestLoadingId(null);
+    }
+  };
+
   const handlePageChange = (direction: "prev" | "next") => {
     setPage((current) =>
       direction === "prev" ? Math.max(1, current - 1) : Math.min(totalPages, current + 1),
@@ -128,6 +178,11 @@ export default function AdminUsersPage() {
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+            {notice && (
+              <div className="border-b border-emerald-100 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-700 sm:px-6">
+                {notice}
+              </div>
+            )}
             {error && (
               <div className="border-b border-red-100 bg-red-50 px-4 py-3 text-xs font-medium text-red-700 sm:px-6">
                 {error}
@@ -163,7 +218,9 @@ export default function AdminUsersPage() {
                       <th className="px-4 py-3 sm:px-6">Earnings</th>
                       <th className="px-4 py-3 sm:px-6">Total Earned</th>
                       <th className="px-4 py-3 sm:px-6">Referral Count</th>
+                      <th className="px-4 py-3 sm:px-6">Referral Code</th>
                       <th className="px-4 py-3 sm:px-6">Created Date</th>
+                      <th className="px-4 py-3 sm:px-6">Test</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white">
@@ -190,8 +247,36 @@ export default function AdminUsersPage() {
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700 sm:px-6">
                           {user.referralCount}
                         </td>
+                        <td className="whitespace-nowrap px-4 py-3 sm:px-6">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-slate-700">{user.referralCode || "—"}</span>
+                            {user.referralCode && (
+                              <button
+                                type="button"
+                                onClick={() => copyReferralLink(user)}
+                                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                              >
+                                {copiedUserId === user.id ? "Copied ✓" : "Copy link"}
+                              </button>
+                            )}
+                          </div>
+                        </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500 sm:px-6 sm:text-sm">
                           {formatDate(user.createdAt)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 sm:px-6">
+                          {user.email.toLowerCase().includes("+test@") ? (
+                            <button
+                              type="button"
+                              onClick={() => addTestReferral(user)}
+                              disabled={testLoadingId === user.id}
+                              className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+                            >
+                              {testLoadingId === user.id ? "Adding…" : "Add test referral + ₹250"}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
