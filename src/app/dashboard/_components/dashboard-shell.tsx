@@ -6,13 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 type DashboardShellProps = { children: ReactNode };
-type IconName = "home" | "wallet" | "courses" | "profile";
+type IconName = "home" | "wallet" | "courses" | "dashboard";
 
 const NAV_ITEMS: Array<{ name: string; href: string; icon: IconName }> = [
-  { name: "Home", href: "/dashboard", icon: "home" },
+  { name: "Home", href: "/", icon: "home" },
   { name: "Wallet", href: "/dashboard/wallet", icon: "wallet" },
   { name: "Courses", href: "/dashboard/my-courses", icon: "courses" },
-  { name: "Profile", href: "/dashboard/profile", icon: "profile" },
+  { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
 ];
 
 function cx(...values: Array<string | false | null | undefined>) {
@@ -20,28 +20,58 @@ function cx(...values: Array<string | false | null | undefined>) {
 }
 
 function activeFor(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
   if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function sectionName(pathname: string) {
-  return NAV_ITEMS.find((item) => activeFor(pathname, item.href))?.name ?? "Home";
+  if (pathname.startsWith("/dashboard/profile")) return "Account";
+  if (pathname.startsWith("/dashboard/support")) return "Support";
+  return NAV_ITEMS.find((item) => activeFor(pathname, item.href))?.name ?? "Earnwale";
 }
 
-function NavIcon({ name, active = false }: { name: IconName; active?: boolean }) {
+function NavIcon({ name }: { name: IconName }) {
   const common = "h-5 w-5";
-  const stroke = active ? "currentColor" : "currentColor";
 
   if (name === "home") {
-    return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>;
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m3 10 9-7 9 7" />
+        <path d="M5 9v11h14V9" />
+        <path d="M9 20v-6h6v6" />
+      </svg>
+    );
   }
+
   if (name === "wallet") {
-    return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M16 11h5v4h-5a2 2 0 0 1 0-4Z"/><path d="M7 6V4h10v2"/></svg>;
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="6" width="18" height="14" rx="3" />
+        <path d="M16 11h5v4h-5a2 2 0 0 1 0-4Z" />
+        <path d="M7 6V4h10v2" />
+      </svg>
+    );
   }
+
   if (name === "courses") {
-    return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/><path d="M8 7h8"/></svg>;
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z" />
+        <path d="M4 5.5v16" />
+        <path d="M8 7h8" />
+      </svg>
+    );
   }
-  return <svg className={common} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
+
+  return (
+    <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
 }
 
 export default function DashboardShell({ children }: DashboardShellProps) {
@@ -66,11 +96,13 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       <div className="flex min-h-screen">
         <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-amber-100 bg-white md:flex md:flex-col">
           <div className="flex h-20 items-center gap-3 px-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400 font-bold text-slate-950">E</div>
-            <div>
-              <p className="font-semibold text-slate-950">Earnwale</p>
-              <p className="text-xs text-slate-500">Learning account</p>
-            </div>
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400 font-bold text-slate-950">E</div>
+              <div>
+                <p className="font-semibold text-slate-950">Earnwale</p>
+                <p className="text-xs text-slate-500">Learning account</p>
+              </div>
+            </Link>
           </div>
 
           <nav className="flex-1 space-y-1 px-3">
@@ -88,8 +120,15 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                       : "text-slate-600 hover:bg-amber-50 hover:text-slate-950",
                   )}
                 >
-                  <span className={cx("flex h-9 w-9 items-center justify-center rounded-xl", active ? "bg-amber-400 text-slate-950" : "bg-slate-100 text-slate-500")}>
-                    <NavIcon name={item.icon} active={active} />
+                  <span
+                    className={cx(
+                      "flex h-9 w-9 items-center justify-center rounded-xl",
+                      active
+                        ? "bg-amber-400 text-slate-950"
+                        : "bg-slate-100 text-slate-500",
+                    )}
+                  >
+                    <NavIcon name={item.icon} />
                   </span>
                   {item.name}
                 </Link>
@@ -112,13 +151,19 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         <div className="flex min-h-screen flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-amber-100 bg-white/95 backdrop-blur">
             <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-              <Link href="/dashboard" prefetch className="font-semibold tracking-tight text-slate-950">Earnwale</Link>
-              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 md:hidden">{sectionName(pathname)}</span>
+              <Link href="/" prefetch className="font-semibold tracking-tight text-slate-950">
+                Earnwale
+              </Link>
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 md:hidden">
+                {sectionName(pathname)}
+              </span>
             </div>
           </header>
 
           <main className="flex-1">
-            <div className="mx-auto w-full max-w-6xl px-4 py-5 pb-28 sm:px-6 sm:py-7 md:pb-7">{children}</div>
+            <div className="mx-auto w-full max-w-6xl px-4 py-5 pb-28 sm:px-6 sm:py-7 md:pb-7">
+              {children}
+            </div>
           </main>
 
           <MobileNav pathname={pathname} />
@@ -144,8 +189,13 @@ function MobileNav({ pathname }: { pathname: string }) {
                 active ? "bg-amber-100 text-amber-900" : "text-slate-500",
               )}
             >
-              <span className={cx("flex h-7 w-7 items-center justify-center rounded-xl", active ? "bg-amber-400 text-slate-950" : "text-slate-500")}>
-                <NavIcon name={item.icon} active={active} />
+              <span
+                className={cx(
+                  "flex h-7 w-7 items-center justify-center rounded-xl",
+                  active ? "bg-amber-400 text-slate-950" : "text-slate-500",
+                )}
+              >
+                <NavIcon name={item.icon} />
               </span>
               <span>{item.name}</span>
             </Link>

@@ -106,12 +106,12 @@ export default function DashboardPage() {
       <section className="overflow-hidden rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-300">Partner dashboard</p>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-300">Personal dashboard</p>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
               Welcome back, {user.name}
             </h1>
             <p className="mt-2 max-w-lg text-sm leading-6 text-slate-300">
-              Your learning account, referral earnings and payout status in one place.
+              Your account overview, referral earnings and payout status in one place.
             </p>
           </div>
           <Link href="/dashboard/wallet" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
@@ -150,6 +150,26 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      <section className="grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/dashboard/profile"
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-200 hover:bg-amber-50"
+        >
+          <p className="text-sm font-semibold text-slate-900">Profile & security</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            View your account details and change your password.
+          </p>
+        </Link>
+        <Link
+          href="/dashboard/support"
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-200 hover:bg-amber-50"
+        >
+          <p className="text-sm font-semibold text-slate-900">Support</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Get help with courses, payments, referrals or withdrawals.
+          </p>
+        </Link>
+      </section>
     </div>
   );
 }
