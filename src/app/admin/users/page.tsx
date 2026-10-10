@@ -9,6 +9,7 @@ type AdminUser = {
   earnings: number;
   totalEarned: number;
   referralCount: number;
+  referralCode: string;
   createdAt: string;
 };
 
@@ -24,6 +25,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [testLoadingId, setTestLoadingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
 
   const totalPages = useMemo(
     () => (total > 0 ? Math.ceil(total / PAGE_SIZE) : 1),
@@ -78,6 +80,18 @@ export default function AdminUsersPage() {
     e.preventDefault();
     setPage(1);
     setSearch(searchInput.trim());
+  };
+
+  const copyReferralLink = async (user: AdminUser) => {
+    if (!user.referralCode) return;
+    const link = `${window.location.origin}/signup?ref=${user.referralCode}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedUserId(user.id);
+      window.setTimeout(() => setCopiedUserId(null), 1600);
+    } catch {
+      setError("Unable to copy referral link.");
+    }
   };
 
   const addTestReferral = async (user: AdminUser) => {
@@ -204,6 +218,7 @@ export default function AdminUsersPage() {
                       <th className="px-4 py-3 sm:px-6">Earnings</th>
                       <th className="px-4 py-3 sm:px-6">Total Earned</th>
                       <th className="px-4 py-3 sm:px-6">Referral Count</th>
+                      <th className="px-4 py-3 sm:px-6">Referral Code</th>
                       <th className="px-4 py-3 sm:px-6">Created Date</th>
                       <th className="px-4 py-3 sm:px-6">Test</th>
                     </tr>
@@ -231,6 +246,20 @@ export default function AdminUsersPage() {
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700 sm:px-6">
                           {user.referralCount}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 sm:px-6">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-slate-700">{user.referralCode || "—"}</span>
+                            {user.referralCode && (
+                              <button
+                                type="button"
+                                onClick={() => copyReferralLink(user)}
+                                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                              >
+                                {copiedUserId === user.id ? "Copied ✓" : "Copy link"}
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500 sm:px-6 sm:text-sm">
                           {formatDate(user.createdAt)}
