@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth, authErrorResponse } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const MIN_WITHDRAWAL = 450;
+const MIN_WITHDRAWAL = 250;
 const MAX_WITHDRAWAL = 4500;
 
 export async function POST(req: Request) {
