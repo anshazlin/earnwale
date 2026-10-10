@@ -27,7 +27,7 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       select: {
         id: true, name: true, email: true, plan: true, earnings: true,
-        totalEarned: true, referralCount: true, createdAt: true,
+        totalEarned: true, referralCount: true, referralCode: true, createdAt: true,
       },
     });
 
