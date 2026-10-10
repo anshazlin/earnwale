@@ -97,6 +97,8 @@ export default function DashboardPage() {
   const formatAmount = (value?: number) =>
     typeof value === "number" ? `₹${value.toLocaleString("en-IN")}` : "₹0";
 
+  const displayName = user?.name?.trim() || "Member";
+
   if (loading) return <DashboardSkeleton />;
 
   if (error || !user) {
@@ -112,34 +114,37 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl bg-slate-950 p-5 text-white shadow-sm sm:p-7">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-300">Personal dashboard</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Welcome back, {user.name}
-            </h1>
-            <p className="mt-2 max-w-lg text-sm leading-6 text-slate-300">
-              Your account overview, referral earnings and payout status in one place.
-            </p>
-          </div>
-          <Link href="/dashboard/wallet" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
+    <div className="mx-auto w-full min-w-0 max-w-screen-md space-y-5 overflow-x-hidden">
+      <section className="w-full min-w-0 rounded-2xl border border-amber-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="min-w-0">
+          <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-800">
+            Personal dashboard
+          </span>
+          <h1 className="mt-3 break-words text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+            Welcome back, {displayName}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Your account overview, referral earnings and payout status in one place.
+          </p>
+          <Link
+            href="/dashboard/wallet"
+            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+          >
             Withdraw earnings
           </Link>
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="grid w-full min-w-0 grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric label="Available" value={formatAmount(user.earnings)} emphasis />
         <Metric label="Referral earnings" value={formatAmount(user.totalEarned)} />
         <Metric label="Referrals" value={String(user.referralCount ?? 0)} />
         <Metric label="Withdrawal" value={latestWithdrawal?.status ? String(latestWithdrawal.status).replace(/^./, (s) => s.toUpperCase()) : "None"} />
       </section>
 
-      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+      <section className="w-full min-w-0 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Your referral link</h2>
             <p className="mt-1 text-xs leading-5 text-slate-500">Share your unique link. Eligible referrals are tracked automatically.</p>
           </div>
@@ -147,8 +152,8 @@ export default function DashboardPage() {
             {user.referralCode}
           </span>
         </div>
-        <div className="mt-4 rounded-xl bg-slate-50 px-3 py-3 font-mono text-xs text-slate-600">
-          <p className="truncate">{referralLink || "Generating your referral link…"}</p>
+        <div className="mt-4 w-full min-w-0 rounded-xl bg-slate-50 px-3 py-3 font-mono text-xs text-slate-600">
+          <p className="break-all">{referralLink || "Generating your referral link…"}</p>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button onClick={handleCopyReferral} disabled={!referralLink} className="min-h-11 disabled:cursor-not-allowed disabled:opacity-50 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-50">
@@ -160,10 +165,10 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className="grid w-full min-w-0 gap-3 sm:grid-cols-2">
         <Link
           href="/dashboard/profile"
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-200 hover:bg-amber-50"
+          className="w-full min-w-0 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm transition hover:bg-amber-50"
         >
           <p className="text-sm font-semibold text-slate-900">Profile & security</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -172,7 +177,7 @@ export default function DashboardPage() {
         </Link>
         <Link
           href="/dashboard/support"
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-200 hover:bg-amber-50"
+          className="w-full min-w-0 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm transition hover:bg-amber-50"
         >
           <p className="text-sm font-semibold text-slate-900">Support</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -186,7 +191,7 @@ export default function DashboardPage() {
 
 function Metric({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-3.5 shadow-sm sm:p-4">
+    <div className="min-w-0 rounded-2xl border border-amber-200 bg-white p-3.5 shadow-sm sm:p-4">
       <p className="truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
       <p className={`mt-2 truncate text-lg font-semibold tracking-tight sm:text-xl ${emphasis ? "text-amber-700" : "text-slate-900"}`}>{value}</p>
     </div>
