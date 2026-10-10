@@ -80,7 +80,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen overflow-x-hidden bg-slate-50">
       <div className="flex min-h-screen">
         <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-amber-100 bg-white md:flex md:flex-col">
           <div className="flex h-20 items-center gap-3 px-5">
@@ -136,7 +136,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           </div>
         </aside>
 
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-amber-100 bg-white/95 backdrop-blur">
             <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
               <Link href="/dashboard" prefetch className="font-semibold tracking-tight text-slate-950">
@@ -148,8 +148,8 @@ export default function DashboardShell({ children }: DashboardShellProps) {
             </div>
           </header>
 
-          <main className="flex-1">
-            <div className="mx-auto w-full max-w-6xl px-4 py-5 pb-28 sm:px-6 sm:py-7 md:pb-7">
+          <main className="min-w-0 flex-1 overflow-x-hidden">
+            <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-5 pb-28 sm:px-6 sm:py-7 md:pb-7">
               {children}
             </div>
           </main>
