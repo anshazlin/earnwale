@@ -72,7 +72,7 @@ export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {
 
   const canWithdraw = useMemo(
     () =>
-      balance >= 450 &&
+      balance >= 250 &&
       !hasOpenWithdrawal,
     [balance, hasOpenWithdrawal],
   );
@@ -166,7 +166,7 @@ export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {
 
           <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
             Minimum withdrawal amount is{" "}
-            <span className="font-semibold">450</span>. Requests are reviewed and processed within 24 hours. Bank/UPI settlement times may vary.
+            <span className="font-semibold">250</span>. Requests are reviewed and processed within 24 hours. Bank/UPI settlement times may vary.
           </p>
 
           {error && (
@@ -186,7 +186,7 @@ export function WithdrawSection({ embedded = false }: { embedded?: boolean } = {
             <p className="mt-2 text-xs text-gray-500">
               {hasOpenWithdrawal
                 ? "You already have a withdrawal in progress. Wait until it is paid or rejected before requesting again."
-                : "You need at least ₹450 in available balance to request a withdrawal."}
+                : "You need at least ₹250 in available balance to request a withdrawal."}
             </p>
           )}
         </section>

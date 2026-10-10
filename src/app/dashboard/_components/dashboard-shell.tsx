@@ -6,13 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 type DashboardShellProps = { children: ReactNode };
-type IconName = "home" | "wallet" | "courses" | "dashboard";
+type IconName = "home" | "wallet" | "dashboard";
 
 const NAV_ITEMS: Array<{ name: string; href: string; icon: IconName }> = [
-  { name: "Home", href: "/", icon: "home" },
+  { name: "Home", href: "/dashboard", icon: "home" },
   { name: "Wallet", href: "/dashboard/wallet", icon: "wallet" },
-  { name: "Courses", href: "/dashboard/my-courses", icon: "courses" },
-  { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
+  { name: "Dashboard", href: "/dashboard/personal", icon: "dashboard" },
 ];
 
 function cx(...values: Array<string | false | null | undefined>) {
@@ -20,7 +19,6 @@ function cx(...values: Array<string | false | null | undefined>) {
 }
 
 function activeFor(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
   if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -50,16 +48,6 @@ function NavIcon({ name }: { name: IconName }) {
         <rect x="3" y="6" width="18" height="14" rx="3" />
         <path d="M16 11h5v4h-5a2 2 0 0 1 0-4Z" />
         <path d="M7 6V4h10v2" />
-      </svg>
-    );
-  }
-
-  if (name === "courses") {
-    return (
-      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z" />
-        <path d="M4 5.5v16" />
-        <path d="M8 7h8" />
       </svg>
     );
   }
@@ -96,7 +84,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       <div className="flex min-h-screen">
         <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-amber-100 bg-white md:flex md:flex-col">
           <div className="flex h-20 items-center gap-3 px-5">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/dashboard" className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400 font-bold text-slate-950">E</div>
               <div>
                 <p className="font-semibold text-slate-950">Earnwale</p>
@@ -151,7 +139,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         <div className="flex min-h-screen flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-amber-100 bg-white/95 backdrop-blur">
             <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-              <Link href="/" prefetch className="font-semibold tracking-tight text-slate-950">
+              <Link href="/dashboard" prefetch className="font-semibold tracking-tight text-slate-950">
                 Earnwale
               </Link>
               <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 md:hidden">
@@ -176,7 +164,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 function MobileNav({ pathname }: { pathname: string }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-amber-100 bg-white/98 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+      <div className="mx-auto grid max-w-md grid-cols-3 gap-1">
         {NAV_ITEMS.map((item) => {
           const active = activeFor(pathname, item.href);
           return (

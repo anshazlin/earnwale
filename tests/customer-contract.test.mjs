@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("customer money rules remain server-authoritative", async () => {
   const withdraw = await read("src/app/api/withdraw/request/route.ts");
-  assert.match(withdraw, /const MIN_WITHDRAWAL = 450;/);
+  assert.match(withdraw, /const MIN_WITHDRAWAL = 250;/);
   assert.match(withdraw, /const MAX_WITHDRAWAL = 4500;/);
   assert.match(withdraw, /requireAuth\(req\)/);
 });
