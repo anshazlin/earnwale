@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { COURSE_MODULES } from "@/lib/trading-course";
+import Link from "next/link";
 
 type Account = { plan?: number | string };
 type Config = { videos: { id: number; available: boolean }[]; downloads: string[] };
@@ -70,7 +71,7 @@ export default function MyCoursesPage() {
     finally{setExamBusy(false);}
   }
   if(loading) return <div className="flex min-h-[40vh] items-center justify-center"><span className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" aria-label="Loading courses" /></div>;
-  if(!authorised) return <section className="rounded-2xl border border-amber-200 bg-white p-7"><h1 className="text-2xl font-bold text-slate-900">My Courses</h1><p className="mt-3 text-slate-600">Enroll in Earnwale Trading Academy to access the lessons.</p><a href="/#courses" className="mt-5 inline-block rounded-xl bg-amber-500 px-5 py-3 font-semibold text-white">View plans</a></section>;
+  if(!authorised) return <section className="rounded-2xl border border-amber-200 bg-white p-7"><h1 className="text-2xl font-bold text-slate-900">My Courses</h1><p className="mt-3 text-slate-600">Enroll in Earnwale Trading Academy to access the lessons.</p><Link href="/#courses" className="mt-5 inline-block rounded-xl bg-amber-500 px-5 py-3 font-semibold text-white">View plans</Link></section>;
   return <div className="space-y-6 pb-8">
     <section className="overflow-hidden rounded-3xl bg-[#071B33] px-5 py-7 text-white sm:px-8 sm:py-9">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Earnwale Trading Academy · Starter</p>
