@@ -1,7 +1,7 @@
 import { importPKCS8, SignJWT } from "jose";
 
 type Json = Record<string, any>;
-type CollectionName = "users" | "transactions" | "withdrawals";
+type CollectionName = "users" | "transactions" | "withdrawals" | "courseAttempts";
 
 const globalForFirestore = globalThis as unknown as {
   firestoreAccessToken?: { value: string; expiresAt: number };
@@ -374,6 +374,7 @@ class TransactionClient {
   user = this.collection("users");
   transaction = this.collection("transactions");
   withdrawal = this.collection("withdrawals");
+  courseAttempt = this.collection("courseAttempts");
 
   private collection(collection: CollectionName) {
     return {
@@ -517,6 +518,7 @@ export const prisma = {
   user: model("users"),
   transaction: model("transactions"),
   withdrawal: model("withdrawals"),
+  courseAttempt: model("courseAttempts"),
 
   $transaction: async <T>(callback: (tx: any) => Promise<T>) => {
     const tokenResponse = await firestore(":beginTransaction", {
