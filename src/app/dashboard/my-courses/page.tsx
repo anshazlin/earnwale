@@ -1,211 +1,138 @@
 "use client";
-
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
+import { COURSE_MODULES } from "@/lib/trading-course";
 
-type User = {
-  name?: string;
-  email?: string;
-  plan?: number;
+type Account = { plan?: number | string };
+type Config = { videos: { id: number; available: boolean }[]; downloads: string[] };
+type Question = { id: number; question: string; options: string[] };
+type ExamData = { questions: Question[]; passingScore: number; questionCount: number };
+type Result = {
+  score: number; total: number; passed: boolean; passingScore: number;
+  review: { id: number; chosenChoice: number; correctChoice: number; explanation: string }[];
 };
-
-const SCHOLAR = {
-  title: "The Scholar's Protocol",
-  subtitle: "Advanced Cognitive Strategies for High-Performance Learning",
-  description:
-    "Master focus systems, memory frameworks, and cognitive performance strategies designed for ambitious students.",
-  learn: [
-    "Deep focus systems",
-    "Memory optimization frameworks",
-    "Strategic study planning",
-    "High-performance learning habits",
-  ],
-  image: "/images/scholar.jpg",
-  download: "/api/download?file=scholar",
-};
-
-const CAPITAL = {
-  title: "The Capital Compounder",
-  subtitle: "Advanced Financial Engineering for the Modern Student",
-  description:
-    "Learn structured financial thinking, capital growth models, and long-term wealth systems.",
-  learn: [
-    "Capital growth strategy",
-    "Financial decision models",
-    "Risk & reward structure",
-    "Wealth-building psychology",
-  ],
-  image: "/images/capital.jpg",
-  download: "/api/download?file=capital",
-};
-
-function CourseCard({
-  title,
-  subtitle,
-  description,
-  learn,
-  image,
-  download,
-}: {
-  title: string;
-  subtitle: string;
-  description: string;
-  learn: string[];
-  image: string;
-  download: string;
-}) {
-  return (
-    <article className="flex w-full flex-col overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="p-4 pb-0 sm:p-6 sm:pb-0">
-        <Image
-          src={image}
-          alt={title}
-          width={1200}
-          height={720}
-          className="h-48 w-full max-w-full rounded-xl object-cover"
-          priority
-        />
-      </div>
-
-      <div className="flex flex-1 flex-col p-4 sm:p-6 md:p-7">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-            Lifetime Digital Access
-          </span>
-        </div>
-        <h2 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
-          {title}
-        </h2>
-        <p className="mt-1 text-sm font-medium text-amber-700">{subtitle}</p>
-        <p className="mt-4 text-sm leading-relaxed text-gray-600">
-          {description}
-        </p>
-
-        <div className="mt-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            What You&apos;ll Learn
-          </h3>
-          <ul className="mt-3 space-y-2">
-            {learn.map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-8 flex flex-1 items-end">
-          <a
-            href={download}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:py-4"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            Download Ebook
-          </a>
-        </div>
-      </div>
-    </article>
-  );
-}
-
 export default function MyCoursesPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading,setLoading]=useState(true);
+  const [authorised,setAuthorised]=useState(false);
+  const [config,setConfig]=useState<Config|null>(null);
+  const [active,setActive]=useState(1);
+  const [videoError,setVideoError]=useState(false);
+  const [exam,setExam]=useState<ExamData|null>(null);
+  const [answers,setAnswers]=useState<Record<number,number>>({});
+  const [result,setResult]=useState<Result|null>(null);
+  const [examBusy,setExamBusy]=useState(false);
+  const [examError,setExamError]=useState("");
 
-  const fetchUser = useCallback(async () => {
+  const bootstrap=useCallback(async()=>{
     try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      if (!res.ok) {
-        window.location.href = "/login";
-        return;
+      const res=await fetch("/api/auth/me",{credentials:"include"});
+      if(res.status===401){window.location.href="/login";return;}
+      if(!res.ok) throw new Error("Could not check your enrollment.");
+      const data=await res.json();
+      const user:Account=data.user??data;
+      const permitted=["300","500"].includes(String(user.plan??""));
+      setAuthorised(permitted);
+      if(permitted) {
+        const configRes=await fetch("/api/trading/media?config=1",{credentials:"include"});
+        if(configRes.ok)setConfig(await configRes.json());
       }
-      const data = await res.json();
-      setUser(data?.user ?? data);
-    } catch {
-      window.location.href = "/login";
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    } catch {setExamError("Unable to load the course. Try refreshing the page.");}
+    finally {setLoading(false);}
+  },[]);
+  useEffect(()=>{void bootstrap();},[bootstrap]);
+  const selected=COURSE_MODULES.find(m=>m.id===active)??COURSE_MODULES[0];
+  const playable=Boolean(config?.videos.find(m=>m.id===active)?.available);
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-      </div>
-    );
+  async function startExam(){
+    setExamBusy(true);setExamError("");
+    try{
+      const res=await fetch("/api/trading/quiz",{credentials:"include"});
+      if(!res.ok)throw new Error("The assessment is temporarily unavailable.");
+      setExam(await res.json());setResult(null);setAnswers({});
+    } catch(e){setExamError(e instanceof Error?e.message:"Could not load assessment.");}
+    finally{setExamBusy(false);}
   }
-
-  const plan = Number(user?.plan);
-
-  return (
-    <div className="space-y-8 sm:space-y-10">
-      <div>
-        <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl md:text-3xl">
-          My Courses
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Access your purchased digital programs.
-        </p>
+  async function submitExam(){
+    if(!exam || Object.keys(answers).length!==exam.questions.length)return;
+    setExamBusy(true);setExamError("");
+    try{
+      const res=await fetch("/api/trading/quiz",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({answers:exam.questions.map(q=>({id:q.id,choice:answers[q.id]}))})});
+      const data=await res.json();
+      if(!res.ok) throw new Error(data.error??"Could not submit assessment.");
+      setResult(data);
+    }catch(e){setExamError(e instanceof Error?e.message:"Please try again.");}
+    finally{setExamBusy(false);}
+  }
+  if(loading) return <div className="flex min-h-[40vh] items-center justify-center"><span className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" aria-label="Loading courses" /></div>;
+  if(!authorised) return <section className="rounded-2xl border border-amber-200 bg-white p-7"><h1 className="text-2xl font-bold text-slate-900">My Courses</h1><p className="mt-3 text-slate-600">Enroll in Earnwale Trading Academy to access the lessons.</p><a href="/#courses" className="mt-5 inline-block rounded-xl bg-amber-500 px-5 py-3 font-semibold text-white">View plans</a></section>;
+  return <div className="space-y-6 pb-8">
+    <section className="overflow-hidden rounded-3xl bg-[#071B33] px-5 py-7 text-white sm:px-8 sm:py-9">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Earnwale Trading Academy · Starter</p>
+      <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Trading Fundamentals</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">Six beginner lessons with fictional market examples, worksheets and a knowledge assessment. Educational content only—not investment advice, signals or guaranteed returns.</p>
+      <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
+        <span className="rounded-full bg-white/10 px-3 py-2">6 lessons</span>
+        <span className="rounded-full bg-white/10 px-3 py-2">44 min 44 sec of video</span>
+        <span className="rounded-full bg-white/10 px-3 py-2">20-question assessment</span>
       </div>
+    </section>
 
-      {!plan ? (
-        <div className="rounded-2xl border border-amber-100 bg-white p-8 shadow-sm sm:p-10 md:p-12">
-          <p className="text-center text-sm text-gray-600 sm:text-base">
-            No courses purchased yet.
-          </p>
-        </div>
-      ) : (
-        <div
-          className={`grid grid-cols-1 gap-6 sm:gap-8 ${plan === 300 ? "max-w-2xl" : "md:grid-cols-2 md:gap-10"}`}
-        >
-          {/* Scholar's Protocol - 300 & 500 users */}
-          {(plan === 300 || plan === 500) && (
-            <CourseCard
-              title={SCHOLAR.title}
-              subtitle={SCHOLAR.subtitle}
-              description={SCHOLAR.description}
-              learn={SCHOLAR.learn}
-              image={SCHOLAR.image}
-              download={SCHOLAR.download}
-            />
-          )}
+    <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px]">
+      <div className="min-w-0 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold text-slate-900">Module {selected.id}: {selected.title}</h2><span className="text-xs text-slate-500">{selected.duration}</span></div>
+        {playable ? (
+          <div className="aspect-video w-full overflow-hidden rounded-xl bg-slate-950">
+            <video key={active} controls playsInline preload="none" className="h-full w-full" onError={()=>setVideoError(true)}>
+              <source src={`/api/trading/media?module=${active}`} type="video/mp4" />
+              Your browser does not support this video.
+            </video>
+          </div>
+        ) : (
+          <div className="flex aspect-video flex-col items-center justify-center rounded-xl bg-slate-950 px-5 text-center text-white">
+            <p className="text-base font-semibold">Video is being prepared</p>
+            <p className="mt-2 text-sm text-slate-300">This lesson will become playable after secure video hosting is configured.</p>
+          </div>
+        )}
+        {videoError && <p className="text-sm text-rose-700" role="alert">The video could not be loaded. Please try again later.</p>}
+        <p className="text-sm leading-6 text-slate-600">{selected.summary}</p>
+        <p className="text-xs text-slate-500">Videos stream only when selected. No automatic loading of all six lessons.</p>
+      </div>
+      <aside className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-base font-semibold text-slate-900">Course lessons</h2>
+        {COURSE_MODULES.map(m=><button key={m.id} type="button" onClick={()=>{setActive(m.id);setVideoError(false);}}
+          className={`w-full rounded-xl border px-3 py-3 text-left transition-colors ${active===m.id?"border-amber-400 bg-amber-50":"border-slate-200 hover:bg-slate-50"}`}>
+          <span className="flex items-center justify-between gap-3"><span className="text-sm font-semibold text-slate-900">{m.id}. {m.title}</span><span className="shrink-0 text-xs text-slate-500">{m.duration}</span></span>
+          <span className="mt-1 block text-xs text-slate-500">{config?.videos.find(x=>x.id===m.id)?.available?"Ready to watch":"Pending upload"}</span>
+        </button>)}
+      </aside>
+    </section>
 
-          {/* The Capital Compounder - 500 users only */}
-          {plan === 500 && (
-            <CourseCard
-              title={CAPITAL.title}
-              subtitle={CAPITAL.subtitle}
-              description={CAPITAL.description}
-              learn={CAPITAL.learn}
-              image={CAPITAL.image}
-              download={CAPITAL.download}
-            />
-          )}
-        </div>
-      )}
-    </div>
-  );
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold text-slate-900">Learning resources</h2>
+      <p className="mt-1 text-sm text-slate-600">Read the handbook and complete the fictional exercises after watching the lessons.</p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        {config?.downloads.includes("handbook")&&<a className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white" href="/api/trading/media?file=handbook">Download handbook</a>}
+        {config?.downloads.includes("workbook")&&<a className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-900" href="/api/trading/media?file=workbook">Download worksheets</a>}
+        {!config?.downloads.length&&<p className="text-sm text-amber-800">Handbook and worksheets will appear once secure file hosting is configured.</p>}
+      </div>
+    </section>
+
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold text-slate-900">Final knowledge assessment</h2>
+      <p className="mt-1 text-sm text-slate-600">20 multiple-choice questions · suggested 30 minutes · pass at 16/20. This is a learning check, not a professional qualification to trade.</p>
+      {!exam && <button type="button" disabled={examBusy} onClick={startExam} className="mt-4 rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 disabled:opacity-60">{examBusy?"Loading…":"Start assessment"}</button>}
+      {exam && <div className="mt-5 space-y-6">
+        {exam.questions.map((q,i)=><fieldset key={q.id} disabled={Boolean(result)} className="space-y-2 border-t border-slate-100 pt-4">
+          <legend className="mb-2 text-sm font-semibold text-slate-900">{i+1}. {q.question}</legend>
+          {q.options.map((option,index)=><label key={index} className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+            <input className="mt-1 accent-amber-500" type="radio" name={`q-${q.id}`} checked={answers[q.id]===index} onChange={()=>setAnswers(previous=>({...previous,[q.id]:index}))}/>
+            <span>{String.fromCharCode(65+index)}. {option}</span>
+          </label>)}
+          {result && <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700"><strong>{answers[q.id]===result.review[i].correctChoice?"✓ Correct":"Review:"}</strong> Answer {String.fromCharCode(65+result.review[i].correctChoice)}. {result.review[i].explanation}</p>}
+        </fieldset>)}
+        {!result ? <button type="button" onClick={submitExam} disabled={examBusy || Object.keys(answers).length!==exam.questions.length} className="rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40">{examBusy?"Grading…":`Submit answers (${Object.keys(answers).length}/20)`}</button>
+          : <div className="rounded-xl bg-[#071B33] p-5 text-white"><p className="text-lg font-semibold">Score: {result.score}/{result.total} — {result.passed?"Knowledge check passed":"Review lessons and retry"}</p><p className="mt-2 text-sm text-blue-100">This assessment measures introductory knowledge only.</p><button type="button" onClick={()=>{setExam(null);setAnswers({});setResult(null);}} className="mt-4 rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950">New attempt</button></div>}
+      </div>}
+      {examError && <p role="alert" className="mt-3 text-sm text-rose-700">{examError}</p>}
+    </section>
+  </div>;
 }
