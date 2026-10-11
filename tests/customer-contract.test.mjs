@@ -15,7 +15,9 @@ test("dashboard and account lists are bounded", async () => {
   const dashboard = await read("src/app/api/dashboard/route.ts");
   const wallet = await read("src/app/api/wallet/route.ts");
   const withdrawals = await read("src/app/api/withdraw/route.ts");
-  assert.match(dashboard, /take: 6/);
+  // Dashboard uses a single latest-withdrawal query instead of a broad list.
+  assert.match(dashboard, /prisma\.withdrawal\.findFirst\(/);
+  assert.doesNotMatch(dashboard, /prisma\.withdrawal\.findMany\(/);
   assert.match(wallet, /PAGE_SIZE = 10/);
   assert.match(wallet, /hasMore/);
   assert.match(withdrawals, /PAGE_SIZE = 10/);
