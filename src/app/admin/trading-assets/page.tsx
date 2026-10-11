@@ -46,6 +46,7 @@ export default function TradingAssetsPage() {
       setNotice(error instanceof Error ? error.message : "Upload failed; please retry.");
     } finally { setBusy(null); }
   }
+  const storedCount = ASSETS.filter(asset => current.some(item => item.id === asset.id && item.ready)).length;
   const selectedPreview = "module-"+preview;
   const canPreview = Boolean(current.find(item => item.id === selectedPreview)?.ready);
   const handbookReady = Boolean(current.find(item => item.id === "handbook")?.ready);
@@ -56,6 +57,7 @@ export default function TradingAssetsPage() {
       <h1 className="mt-2 text-2xl font-bold">Course media uploads</h1>
       <p className="mt-3 text-sm leading-6 text-blue-100">Upload the exact six MP4 videos and two student PDFs. Files go directly from this browser to Vercel Blob, not through the website server. Upload only materials you have reviewed and have rights to distribute.</p>
     </div>
+    <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">Verified course files: {storedCount} / {ASSETS.length} · {storedCount === ASSETS.length ? "All resources ready for administrator playback checks" : "Wait for storage validation or refresh status"}</p>
     <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">The incorrect Decoding the Trading Hype video (WA0042) must NOT be uploaded. Use Trading Psychology (WA0044) for Module 6. Files are sent to a private Blob store. Videos require a valid paid-course login; do not upload material until reviewed.</div>
     {notice && <p role="status" className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800">{notice}</p>}
     <div className="space-y-3">
