@@ -76,7 +76,7 @@ test("media is enrollment-protected and does not auto-preload six videos", async
   const dashboard = await read("src/app/dashboard/my-courses/page.tsx");
   assert.match(dashboard, /preload="none"/);
   assert.match(dashboard, /history=1/);
-  assert.match(dashboard, /Start assessment/);
+  assert.match(dashboard, /Start 8-question assessment/);
 });
 
 test("retired ebook endpoint cannot serve old PDFs", async () => {
