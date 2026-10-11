@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import SiteNavbar from "@/app/components/SiteNavbar";
@@ -143,17 +142,15 @@ export default function SignupContent() {
   const products = [
     {
       id: "300",
-      title: "The Scholar's Protocol",
-      description: "Advanced Cognitive Strategies for High-Performance Learning",
+      title: "Earnwale Trading Academy — Starter",
+      description: "Six video lessons (44:44), beginner handbook, worksheets and 20-question knowledge check.",
       price: "₹300",
-      image: "/images/scholar.jpg",
     },
     {
       id: "500",
-      title: "The Capital Compounder",
-      description: "Advanced Financial Engineering for the Modern Student",
+      title: "Earnwale Trading Academy — Pro (Coming Soon)",
+      description: "Additional learning workshops are being developed. Enrollment is not open yet.",
       price: "₹500",
-      image: "/images/capital.jpg",
     },
   ];
 
@@ -185,15 +182,9 @@ export default function SignupContent() {
             </p>
 
             <div className="mt-4 flex flex-col gap-4">
-              <div className="hidden w-full max-w-full sm:block">
-                <Image
-                  src={selectedProduct.image}
-                  alt={selectedProduct.title}
-                  width={400}
-                  height={250}
-                  className="w-full max-w-full h-auto rounded-xl object-cover"
-                  priority
-                />
+              <div className="rounded-xl bg-[#071B33] p-4 text-white">
+                <p className="text-xs font-bold tracking-[0.16em] text-amber-300">EARNWALE TRADING ACADEMY</p>
+                <p className="mt-2 text-base font-bold">Trading Fundamentals</p>
               </div>
 
               <div className="min-w-0">
@@ -214,7 +205,8 @@ export default function SignupContent() {
                       <button
                         key={product.id}
                         type="button"
-                        onClick={() => setForm({ ...form, plan: product.id })}
+                        disabled={product.id === "500"}
+                        onClick={() => { if (product.id === "300") setForm({ ...form, plan: product.id }); }}
                         className={`rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-colors ${
                           selected
                             ? "border-amber-500 bg-amber-50 text-amber-800"
@@ -223,7 +215,7 @@ export default function SignupContent() {
                       >
                         {product.price}
                         <span className="mt-0.5 block text-xs font-medium text-gray-500">
-                          {product.id === "300" ? "Core" : "Extended"}
+                          {product.id === "300" ? "Available" : "Coming soon"}
                         </span>
                       </button>
                     );
@@ -330,7 +322,7 @@ export default function SignupContent() {
             </button>
 
             <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
-              This is a one-time digital course purchase. Access is granted immediately after successful payment. Referral rewards, if applicable, are
+              Starter is a one-time educational purchase. Access is granted after successful payment once the course is launched. Referral rewards, if applicable, are
               promotional incentives and not guaranteed income.
             </p>
           </div>
