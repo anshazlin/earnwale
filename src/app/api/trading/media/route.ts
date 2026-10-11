@@ -30,8 +30,8 @@ export async function GET(req:Request) {
     if(!source) return NextResponse.json({error:"Course resource is not yet available"},{status:503});
     const parsed=new URL(source);
     if(parsed.protocol!=="https:") return NextResponse.json({error:"Media configuration error"},{status:503});
-    const headers:HeadersInit={};
-    if(isVideo){const range=req.headers.get("range");if(range) headers["Range"]=range;}
+    const headers=new Headers();
+    if(isVideo){const range=req.headers.get("range");if(range) headers.set("Range",range);}
     // Use a protected streaming endpoint, not a client-bundled URL. Configure
     // storage with private/signed upstream credentials before production launch.
     const upstream=await fetch(parsed.toString(),{headers,cache:"no-store",redirect:"error"});
