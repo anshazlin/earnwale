@@ -2,6 +2,7 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { requireAdmin, authErrorResponse } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { head } from "@vercel/blob";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,15 @@ export async function GET(request: Request) {
     await authorise(request);
     const found = await Promise.all(Object.keys(ASSETS).map(async (id) => {
       const data = await prisma.courseAsset.findUnique({ where: { id } });
-      return { id, ready: typeof data?.url === "string" && data.url.includes(".private.blob.vercel-storage.com"), updatedAt: data?.updatedAt ?? null };
+      if (typeof data?.url !== "string" || !data.url.includes(".private.blob.vercel-storage.com")) {
+        return { id, ready: false, recorded: Boolean(data?.url), updatedAt: data?.updatedAt ?? null };
+      }
+      try {
+        const blob = await head(data.url);
+        return { id, ready: blob.size > 0, recorded: true, updatedAt: data?.updatedAt ?? null };
+      } catch {
+        return { id, ready: false, recorded: true, updatedAt: data?.updatedAt ?? null };
+      }
     }));
     return NextResponse.json({ assets: found }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return authErrorResponse(error); }
