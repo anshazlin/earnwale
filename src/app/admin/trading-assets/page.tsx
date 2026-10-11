@@ -32,7 +32,7 @@ export default function TradingAssetsPage() {
     setBusy(id);setNotice("");
     try {
       await upload(asset.path, file, {
-        access: "public",
+        access: "private",
         handleUploadUrl: "/api/admin/trading-assets",
         clientPayload: id,
         multipart: true,
@@ -50,7 +50,7 @@ export default function TradingAssetsPage() {
       <h1 className="mt-2 text-2xl font-bold">Course media uploads</h1>
       <p className="mt-3 text-sm leading-6 text-blue-100">Upload the exact six MP4 videos and two student PDFs. Files go directly from this browser to Vercel Blob, not through the website server. Upload only materials you have reviewed and have rights to distribute.</p>
     </div>
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">The incorrect Decoding the Trading Hype video (WA0042) must NOT be uploaded. Use Trading Psychology (WA0044) for Module 6. Public Blob origin links are unlisted, not DRM-protected; the student player requires a login.</div>
+    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">The incorrect Decoding the Trading Hype video (WA0042) must NOT be uploaded. Use Trading Psychology (WA0044) for Module 6. Files are sent to a private Blob store. Videos require a valid paid-course login; do not upload material until reviewed.</div>
     {notice && <p role="status" className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800">{notice}</p>}
     <div className="space-y-3">
       {ASSETS.map(asset => {
