@@ -9,6 +9,7 @@ type NavItem = { label: string; href: string; icon: string; hint: string };
 export const ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "Overview", href: "/admin", icon: "⌂", hint: "Health & priorities" },
   { label: "Users", href: "/admin/users", icon: "◎", hint: "Accounts & plans" },
+  { label: "Trading Academy", href: "/admin/trading-assets", icon: "▶", hint: "Upload and preview lessons" },
   { label: "Withdrawals", href: "/admin/withdraw", icon: "↗", hint: "Review payouts" },
   { label: "Transactions", href: "/admin/transactions", icon: "⇄", hint: "Money activity" },
 ];
