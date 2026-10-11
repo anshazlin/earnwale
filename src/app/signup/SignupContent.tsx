@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Script from "next/script";
 import SiteNavbar from "@/app/components/SiteNavbar";
 import { useSearchParams } from "next/navigation";
