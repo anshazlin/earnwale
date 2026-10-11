@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import SiteNavbar from "@/app/components/SiteNavbar";
 
 const faqs = [
   {
-    q: "Is this legal?",
-    a: "Yes. Earnwale provides digital educational content. Referral rewards are optional promotional incentives as described in our terms.",
+    q: "Does this course give stock recommendations?",
+    a: "No. Earnwale Trading Academy provides beginner financial education, not stock tips, personalized advice or guaranteed returns.",
   },
   {
     q: "When do I get paid?",
@@ -45,10 +44,10 @@ export default function HomePage() {
         <div className="w-full max-w-full">
           <div className="flex flex-col items-center text-center">
             <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl md:text-3xl lg:text-4xl">
-              Master College Success & Smart Money Skills
+              Understand Stock Markets. Learn Trading Fundamentals.
             </h1>
             <p className="mt-3 max-w-xl text-sm text-gray-600 sm:text-base">
-              Access premium digital learning resources designed to help students improve academic performance, build confidence, and develop practical financial knowledge.
+              Learn market basics, candlesticks, chart reading, risk and trading psychology with six videos, fictional examples and practice activities.
             </p>
             <div className="mt-6 flex w-full max-w-sm flex-col gap-3 sm:mx-auto sm:max-w-none sm:flex-row sm:justify-center">
               <Link
@@ -75,77 +74,54 @@ export default function HomePage() {
             Choose Your Plan
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-center text-sm text-gray-600 sm:text-base">
-            One-time purchase. Lifetime access to premium learning content.
+            Starter is a one-time educational purchase. Pro is planned and is not available to enroll in yet.
           </p>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 hidden sm:block">
-                <Image
-                  src="/images/scholar.jpg"
-                  alt="The Scholar's Protocol course cover"
-                  width={600}
-                  height={380}
-                  className="w-full max-w-full h-auto rounded-xl object-cover"
-                  priority
-                />
-              </div>
+              <div className="mb-4 rounded-xl bg-[#071B33] p-5 text-white"><p className="text-xs font-bold tracking-[0.16em] text-amber-300">EARNWALE TRADING ACADEMY</p><p className="mt-2 text-xl font-bold">Starter: Trading Fundamentals</p><p className="text-sm text-blue-100">6 videos • 44 min 44 sec</p></div>
               <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Starter Plan</h3>
               <p className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">₹300</p>
               <p className="mt-1 text-sm font-medium text-amber-700">
-                Core foundations for focused, high-performance learning.
+                Learn how markets operate, interpret charts and understand trading risk.
               </p>
               <ul className="mt-5 space-y-2 text-sm text-gray-700 sm:mt-6 sm:space-y-3">
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Instant access to ebook
+                  <span className="text-amber-500">✔</span> Six lessons • 44 min 44 sec of video
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Structured, step-by-step learning roadmap
+                  <span className="text-amber-500">✔</span> Beginner handbook and practice worksheets
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Lifetime access and updates
+                  <span className="text-amber-500">✔</span> 20-question final knowledge assessment
                 </li>
               </ul>
               <Link
                 href="/signup"
                 className="mt-5 block w-full rounded-xl border-2 border-amber-500 bg-white py-3 text-center text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50 sm:mt-6 sm:py-4"
               >
-                Get Started
+                Enroll in Starter
               </Link>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm sm:ring-2 sm:ring-amber-200">
-              <div className="mb-4 hidden sm:block">
-                <Image
-                  src="/images/capital.jpg"
-                  alt="The Capital Compounder course cover"
-                  width={600}
-                  height={380}
-                  className="w-full max-w-full h-auto rounded-xl object-cover"
-                  priority
-                />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Popular</p>
+              <div className="mb-4 rounded-xl bg-slate-100 p-5"><p className="text-xs font-bold tracking-[0.16em] text-slate-500">EARNWALE TRADING ACADEMY</p><p className="mt-2 text-xl font-bold text-slate-900">Pro: Practical Trading Education</p><p className="text-sm text-slate-600">Additional lessons in development</p></div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Pro planned</p>
               <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Pro Plan</h3>
               <p className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">₹500</p>
               <p className="mt-1 text-sm font-medium text-amber-700">
-                Advanced systems for mastering money and decision-making.
+                Planned deeper practice built on Starter. Final Pro benefits will be confirmed before enrollment.
               </p>
               <ul className="mt-5 space-y-2 text-sm text-gray-700 sm:mt-6 sm:space-y-3">
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Everything in Starter, plus advanced modules
+                  <span className="text-amber-500">✔</span> Planned: Starter access plus additional case studies
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Practical frameworks and implementation guides
+                  <span className="text-amber-500">✔</span> Planned: guided exercises and a trading journal
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Lifetime access and updates
+                  <span className="text-amber-500">✔</span> Planned: further structured review activities
                 </li>
               </ul>
-              <Link
-                href="/signup"
-                className="mt-5 block w-full rounded-xl bg-amber-500 py-3 text-center text-sm font-semibold text-white shadow-md transition-colors hover:bg-amber-600 sm:mt-6 sm:py-4"
-              >
-                Start Pro
-              </Link>
+              <p aria-label="Pro course coming soon" className="mt-5 block w-full rounded-xl bg-slate-100 py-3 text-center text-sm font-semibold text-slate-600 sm:mt-6 sm:py-4">Pro enrollment coming soon</p>
             </div>
           </div>
         </div>
@@ -166,7 +142,7 @@ export default function HomePage() {
               </div>
               <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Buy Course</h3>
               <p className="mt-2 text-sm text-gray-600">
-                Choose a plan and get instant access to the ebook. One-time purchase.
+                Enroll in Starter to access videos, PDFs and a knowledge check after successful payment.
               </p>
             </div>
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -188,7 +164,7 @@ export default function HomePage() {
               </div>
               <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Apply What You Learn</h3>
               <p className="mt-2 text-sm text-gray-600">
-                Use structured frameworks and actionable insights from the course to improve academic performance and financial decision-making.
+                Review fictional market examples, complete the worksheets and take a short assessment.
               </p>
             </div>
           </div>
