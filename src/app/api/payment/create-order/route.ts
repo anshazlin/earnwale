@@ -24,6 +24,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Starter enrollment is not open yet" }, { status: 503 });
     }
 
+    const requiredCourseAssets = [
+      "EARNWALE_TRADING_VIDEO_1_URL",
+      "EARNWALE_TRADING_VIDEO_2_URL",
+      "EARNWALE_TRADING_VIDEO_3_URL",
+      "EARNWALE_TRADING_VIDEO_4_URL",
+      "EARNWALE_TRADING_VIDEO_5_URL",
+      "EARNWALE_TRADING_VIDEO_6_URL",
+      "EARNWALE_TRADING_HANDBOOK_URL",
+      "EARNWALE_TRADING_WORKBOOK_URL",
+    ];
+    if (requiredCourseAssets.some(key => !process.env[key]?.startsWith("https://"))) {
+      return NextResponse.json({ error: "Course resources are not ready for enrollment" }, { status: 503 });
+    }
+
     const order = await razorpay.orders.create({
       amount,
       currency: "INR",
