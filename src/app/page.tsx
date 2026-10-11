@@ -92,7 +92,7 @@ export default function HomePage() {
                   <span className="text-amber-500">✔</span> Beginner handbook and practice worksheets
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> 20-question final knowledge assessment
+                  <span className="text-amber-500">✔</span> 8-question knowledge check with fresh questions each attempt
                 </li>
               </ul>
               <Link
