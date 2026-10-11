@@ -1,0 +1,27 @@
+name: Trading Academy checks
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "package*.json"
+      - ".github/workflows/trading-academy-checks.yml"
+  workflow_dispatch:
+jobs:
+  test-and-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci --no-audit
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run lint
+      # Production build must also succeed in the configured hosting environment
+      # with its proper non-public Firebase/Razorpay environment values.
