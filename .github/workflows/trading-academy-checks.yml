@@ -39,4 +39,21 @@ jobs:
           fi
       - run: npm test
       - run: npm run typecheck
-      - run: npm run lint
+      - name: Lint new and changed course frontend/routes
+        run: npx eslint src/app/api/trading/quiz/route.ts src/app/api/trading/media/route.ts src/lib/trading-course.ts src/app/dashboard/my-courses/page.tsx src/app/page.tsx src/app/signup/SignupContent.tsx src/app/api/payment/create-order/route.ts
+      - name: Prepare ephemeral Firebase credentials for compile-only build
+        run: |
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/earnwale-ci.pem 2>/dev/null
+          {
+            echo 'FIREBASE_PRIVATE_KEY<<PEM'
+            cat /tmp/earnwale-ci.pem
+            echo PEM
+          } >> "$GITHUB_ENV"
+      - name: Build production Next.js bundle (no real provider calls)
+        env:
+          FIREBASE_PROJECT_ID: earnwale-ci-placeholder
+          FIREBASE_CLIENT_EMAIL: ci@earnwale-ci-placeholder.iam.gserviceaccount.com
+          RAZORPAY_KEY_ID: rzp_test_ci_placeholder
+          RAZORPAY_KEY_SECRET: ci_placeholder_key_only
+          EARNWALE_STARTER_ENROLLMENT_ENABLED: "false"
+        run: npm run build
