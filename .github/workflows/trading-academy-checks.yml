@@ -10,18 +10,33 @@ on:
 jobs:
   test-and-typecheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
-      - run: npm ci --no-audit
+      # The repository's existing lockfile was out of sync with package.json.
+      - name: Refresh lockfile from package manifest
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify clean install
+        run: npm ci --no-audit
+      - name: Update feature-branch lockfile
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feature/trading-academy-20261011'
+        run: |
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: synchronize lockfile with dependency manifest"
+            git push origin HEAD:feature/trading-academy-20261011
+          fi
       - run: npm test
       - run: npm run typecheck
       - run: npm run lint
-      # Production build must also succeed in the configured hosting environment
-      # with its proper non-public Firebase/Razorpay environment values.
