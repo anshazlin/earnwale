@@ -15,6 +15,14 @@ VID-20261011-WA0042.mp4 (Decoding the Trading Hype) was sent by mistake and must
 
 Total video runtime approximately 44:44, **not 120 minutes**.
 
+## Staged Starter launch: no customers yet
+- Per founder's report, there are no real customers. This removes the production customer-data migration need, but do not assume seeded/test accounts are nonexistent.
+- Draft catalog now advertises Starter as 44:44 of video plus a handbook, worksheets and a quiz. Pro remains shown at ₹500 as a future offering, but new Pro orders are denied server-side.
+- **Do not accept Starter payments until delivery works**. The order endpoint now requires `EARNWALE_STARTER_ENROLLMENT_ENABLED=true` (unset/false defaults to closed). Set this only after assets are deployed and purchase-to-dashboard delivery is tested.
+- The existing business logic credits ₹250 referral reward for a ₹300 purchase and ₹450 for ₹500; each leaves ₹50 before fees, taxes, refunds and overhead. Review/refactor referral economics and refund reversal before launch.
+- Current Pro payment verification remains able to verify any previously issued/paid order, if one exists, but new Pro order creation is blocked.
+- The website checkout descriptions no longer refer to the retired eBooks.
+
 ## Required media hosting
 Upload six MP4 files to a streaming-capable private or signed media service. Do NOT commit large MP4s to Git or rely on Vercel function ephemeral storage. Configure these **server-only** environment variables after hosting:
 - EARNWALE_TRADING_VIDEO_1_URL through EARNWALE_TRADING_VIDEO_6_URL
