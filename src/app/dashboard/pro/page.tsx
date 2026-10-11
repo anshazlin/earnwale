@@ -71,7 +71,7 @@ export default function ProLearningPage(){
     finally{setBusy(false);}
   }
 
-  const module=PRO_MODULES.find(item=>item.id===lesson)??PRO_MODULES[0];
+  const currentModule=PRO_MODULES.find(item=>item.id===lesson)??PRO_MODULES[0];
   const playable=Boolean(config?.videos.find(item=>item.id===lesson)?.available);
   const question=exam?.questions[step];
   const review=question?grade?.review.find(item=>item.id===question.id):null;
@@ -99,7 +99,7 @@ export default function ProLearningPage(){
 
     <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="min-w-0 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex flex-wrap justify-between gap-2"><h2 className="text-lg font-semibold text-slate-900">P{module.id}: {module.title}</h2><span className="text-xs text-slate-500">Pro lesson</span></div>
+        <div className="flex flex-wrap justify-between gap-2"><h2 className="text-lg font-semibold text-slate-900">P{currentModule.id}: {currentModule.title}</h2><span className="text-xs text-slate-500">Pro lesson</span></div>
         {playable?<div className="aspect-video w-full overflow-hidden rounded-xl bg-slate-950">
           <video key={lesson} controls playsInline preload="none" className="h-full w-full" onError={()=>setVideoError(true)}>
             <source src={`/api/pro/media?module=${lesson}`} type="video/mp4"/>
@@ -110,7 +110,7 @@ export default function ProLearningPage(){
           <p className="mt-2 text-sm text-slate-300">This lesson will be available after its NotebookLM video is generated, reviewed and securely uploaded.</p>
         </div>}
         {videoError&&<p role="alert" className="text-sm text-rose-700">This video could not be played. Please try again later.</p>}
-        <p className="text-sm leading-6 text-slate-600">{module.summary}</p>
+        <p className="text-sm leading-6 text-slate-600">{currentModule.summary}</p>
         <p className="text-xs text-slate-500">Videos only load when selected. Prices, charts and companies in Pro lessons are fictional.</p>
       </div>
       <aside className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
