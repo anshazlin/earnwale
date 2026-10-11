@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 type Question = { id: number; question: string; options: [string, string, string, string]; answer: number; explanation: string };
+type AttemptRecord = { id: string; score: number; total: number; passed: boolean; createdAt: Date };
 const QUESTIONS: Question[] = [
   {id:1,question:"Which market is where a company initially issues new securities?",options:["Primary market","Secondary market","Over-the-counter resale","Brokerage ledger"],answer:0,explanation:"Primary-market issuance makes newly issued securities available; secondary markets trade existing securities."},
   {id:2,question:"A company share generally represents what?",options:["A fixed-interest loan","An ownership interest","A guaranteed dividend","A risk-free claim"],answer:1,explanation:"Shares represent ownership interests; dividends and price returns are not guaranteed."},
@@ -43,7 +44,7 @@ export async function GET(req: Request) {
         take: 5,
       });
       return NextResponse.json({
-        attempts: attempts.map((attempt: any) => ({
+        attempts: attempts.map((attempt: AttemptRecord) => ({
           id: attempt.id,
           score: attempt.score,
           total: attempt.total,
@@ -66,9 +67,9 @@ export async function POST(req: Request) {
 
     const raw = await req.text();
     if (raw.length > 10000) return NextResponse.json({ error: "Submission too large" }, { status: 413 });
-    let payload: any;
+    let payload: unknown;
     try { payload = JSON.parse(raw); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
-    if (!payload || !Array.isArray(payload.answers) || payload.answers.length !== QUESTIONS.length) {
+    if (!payload || typeof payload !== "object" || !("answers" in payload) || !Array.isArray(payload.answers) || payload.answers.length !== QUESTIONS.length) {
       return NextResponse.json({ error: "Submit exactly 20 answers" }, { status: 400 });
     }
     const submitted = new Map<number, number>();
