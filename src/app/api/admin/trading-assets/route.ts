@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     await authorise(request);
     const found = await Promise.all(Object.keys(ASSETS).map(async (id) => {
       const data = await prisma.courseAsset.findUnique({ where: { id } });
-      return { id, ready: Boolean(data?.url), updatedAt: data?.updatedAt ?? null };
+      return { id, ready: typeof data?.url === "string" && data.url.includes(".private.blob.vercel-storage.com"), updatedAt: data?.updatedAt ?? null };
     }));
     return NextResponse.json({ assets: found }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return authErrorResponse(error); }
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
           throw new Error("Uploaded course asset mismatch");
         }
         const url = new URL(blob.url);
-        if (url.protocol !== "https:" || !url.hostname.endsWith(".public.blob.vercel-storage.com")) {
+        if (url.protocol !== "https:" || !url.hostname.endsWith(".private.blob.vercel-storage.com")) {
           throw new Error("Uploaded asset has an unexpected storage origin");
         }
         const current = await prisma.courseAsset.findUnique({ where: { id: assetId } });
