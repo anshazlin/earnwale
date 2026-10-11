@@ -142,7 +142,7 @@ export default function SignupContent() {
     {
       id: "300",
       title: "Earnwale Trading Academy — Starter",
-      description: "Six video lessons (44:44), beginner handbook, worksheets and 20-question knowledge check.",
+      description: "Six video lessons (44:44), beginner handbook, worksheets and 8-question rotating knowledge check.",
       price: "₹300",
     },
     {
