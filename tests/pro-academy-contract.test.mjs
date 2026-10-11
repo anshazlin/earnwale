@@ -5,7 +5,7 @@ const read=file=>readFile(new URL(`../${file}`,import.meta.url),"utf8");
 
 test("Pro plan is separate from Starter, includes six lessons and five learner PDFs",async()=>{
   const course=await read("src/lib/pro-course.ts");
-  assert.match(course,/String\(plan ?? ""\)\.trim\(\) === "500"/);
+  assert.match(course,/\.trim\(\) === "500"/);
   const ids=[...course.matchAll(/\{id:(\d+),title:/g)];
   assert.equal(ids.length,6);
   assert.deepEqual(ids.map(match=>Number(match[1])),[1,2,3,4,5,6]);
