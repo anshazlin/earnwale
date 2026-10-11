@@ -19,6 +19,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
+    // Fail closed until all student assets and compliance checks are complete.
+    if (process.env.EARNWALE_STARTER_ENROLLMENT_ENABLED !== "true") {
+      return NextResponse.json({ error: "Starter enrollment is not open yet" }, { status: 503 });
+    }
+
     const order = await razorpay.orders.create({
       amount,
       currency: "INR",
