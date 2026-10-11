@@ -148,7 +148,7 @@ export default function SignupContent() {
     {
       id: "500",
       title: "Earnwale Trading Academy — Pro (Coming Soon)",
-      description: "Additional learning workshops are being developed. Enrollment is not open yet.",
+      description: "Planned: Starter plus six new Pro lessons, five PDFs and an 8-question rotating Pro assessment. Videos are being produced; enrollment is not open.",
       price: "₹500",
     },
   ];
