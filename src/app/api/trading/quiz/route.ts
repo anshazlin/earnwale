@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth, authErrorResponse } from "@/lib/auth";
 import { hasTradingAccess } from "@/lib/trading-course";
+import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 type Question = { id: number; question: string; options: [string, string, string, string]; answer: number; explanation: string };
@@ -26,31 +27,84 @@ const QUESTIONS: Question[] = [
   {id:19,question:"Increasing risk impulsively to recover recent losses is called:",options:["Diversification","Revenge trading","Settlement","Liquidity provision"],answer:1,explanation:"Revenge trading is reacting to losses with emotionally driven additional risk."},
   {id:20,question:"Which practice best supports reflection after a simulated trading decision?",options:["Only record wins","Copy an influencer","Journal evidence, alternatives and risks","Assume past gains guarantee future results"],answer:2,explanation:"A useful journal includes evidence, alternative explanations, uncertainty and reflection."}
 ];
-async function verify(req: Request) {
+// Firestore-backed score history; the answer key never leaves GET responses.
+async function authorisedUser(req: Request) {
   const { user } = await requireAuth(req);
-  if (!hasTradingAccess(user.plan)) return false;
-  return true;
+  return hasTradingAccess(user.plan) ? user : null;
 }
 export async function GET(req: Request) {
   try {
-    if (!(await verify(req))) return NextResponse.json({error:"Access denied"},{status:403});
-    return NextResponse.json({passingScore:16, questionCount:QUESTIONS.length, questions:QUESTIONS.map(({id,question,options})=>({id,question,options}))},{headers:{"Cache-Control":"private, no-store"}});
-  } catch(e){ return authErrorResponse(e); }
+    const user = await authorisedUser(req);
+    if (!user) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (new URL(req.url).searchParams.get("history") === "1") {
+      const attempts = await prisma.courseAttempt.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      });
+      return NextResponse.json({
+        attempts: attempts.map((attempt: any) => ({
+          id: attempt.id,
+          score: attempt.score,
+          total: attempt.total,
+          passed: attempt.passed,
+          createdAt: attempt.createdAt,
+        })),
+      }, { headers: { "Cache-Control": "private, no-store" } });
+    }
+    return NextResponse.json({
+      passingScore: 16,
+      questionCount: QUESTIONS.length,
+      questions: QUESTIONS.map(({ id, question, options }) => ({ id, question, options })),
+    }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) { return authErrorResponse(error); }
 }
 export async function POST(req: Request) {
   try {
-    if (!(await verify(req))) return NextResponse.json({error:"Access denied"},{status:403});
-    const payload = await req.json().catch(()=>null);
-    if (!payload || !Array.isArray(payload.answers) || payload.answers.length!==QUESTIONS.length)
-      return NextResponse.json({error:"Submit exactly 20 answers"},{status:400});
+    const user = await authorisedUser(req);
+    if (!user) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+
+    const raw = await req.text();
+    if (raw.length > 10000) return NextResponse.json({ error: "Submission too large" }, { status: 413 });
+    let payload: any;
+    try { payload = JSON.parse(raw); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+    if (!payload || !Array.isArray(payload.answers) || payload.answers.length !== QUESTIONS.length) {
+      return NextResponse.json({ error: "Submit exactly 20 answers" }, { status: 400 });
+    }
     const submitted = new Map<number, number>();
     for (const item of payload.answers) {
-      if (!item || !Number.isInteger(item.id) || !Number.isInteger(item.choice) || item.choice < 0 || item.choice > 3 || submitted.has(item.id))
-        return NextResponse.json({error:"Invalid answer submission"},{status:400});
-      submitted.set(item.id,item.choice);
+      if (!item || !Number.isInteger(item.id) || !Number.isInteger(item.choice) ||
+          item.choice < 0 || item.choice > 3 || submitted.has(item.id)) {
+        return NextResponse.json({ error: "Invalid answer submission" }, { status: 400 });
+      }
+      submitted.set(item.id, item.choice);
     }
-    if (QUESTIONS.some(q=>!submitted.has(q.id))) return NextResponse.json({error:"Incomplete attempt"},{status:400});
-    const score=QUESTIONS.filter(q=>submitted.get(q.id)===q.answer).length;
-    return NextResponse.json({score,total:QUESTIONS.length,passed:score>=16,passingScore:16,review:QUESTIONS.map(q=>({id:q.id,correctChoice:q.answer,chosenChoice:submitted.get(q.id),explanation:q.explanation}))},{headers:{"Cache-Control":"private, no-store"}});
-  } catch(e){ return authErrorResponse(e); }
+    if (QUESTIONS.some(q => !submitted.has(q.id))) {
+      return NextResponse.json({ error: "Incomplete attempt" }, { status: 400 });
+    }
+    const score = QUESTIONS.filter(q => submitted.get(q.id) === q.answer).length;
+    const passed = score >= 16;
+    const record = await prisma.courseAttempt.create({
+      data: {
+        userId: user.id,
+        courseId: "trading-starter-v1",
+        score,
+        total: QUESTIONS.length,
+        passed,
+      },
+    });
+    return NextResponse.json({
+      attemptId: record.id,
+      score,
+      total: QUESTIONS.length,
+      passed,
+      passingScore: 16,
+      review: QUESTIONS.map(q => ({
+        id: q.id,
+        correctChoice: q.answer,
+        chosenChoice: submitted.get(q.id),
+        explanation: q.explanation,
+      })),
+    }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) { return authErrorResponse(error); }
 }
