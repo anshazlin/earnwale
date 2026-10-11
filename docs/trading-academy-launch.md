@@ -34,9 +34,9 @@ Use immutable, access-controlled sources. The current proxy accepts HTTPS asset 
 PDFs from this conversation are downloadable separately. The old PDF files and old download route are removed on this branch; the newer PDFs have NOT been uploaded to hosting.
 
 ## Quiz and UX
-- 20 questions; server-side answers only, grading at POST /api/trading/quiz.
-- Students must submit all questions; pass threshold 16/20; explanations shown after submission.
-- Assessment attempts and scores are now saved in the authenticated user's Firestore `courseAttempts` collection. The dashboard displays recent attempts. This is still **not** a professional certificate, and retakes use the same question bank.
+- 20-question bank; each authenticated attempt draws 8 random questions and excludes the preceding 8. New sets can be requested on the assessment page.
+- Eight questions appear one at a time, with Back/Next navigation; all must be answered before grading. Pass at 7/8. Answers remain server-side, with expiring signed question-set tokens and post-submission explanations.
+- Assessment attempts and scores are saved in the authenticated user's Firestore `courseAttempts` collection, including legacy 20-question results. Retakes rotate questions from the bank. This is still **not** a professional certificate.
 - Use preload="none" so only one chosen video may load at a time.
 - Access is verified using the existing Firebase/session + database plan (300 or 500).
 
