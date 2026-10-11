@@ -108,7 +108,7 @@ export async function GET(req: Request) {
 
     if (new URL(req.url).searchParams.get("history") === "1") {
       const attempts = await prisma.courseAttempt.findMany({
-        where: { userId: user.id },
+        where: { userId: user.id, courseId: "trading-starter-v1" },
         orderBy: { createdAt: "desc" },
         take: 5,
       });

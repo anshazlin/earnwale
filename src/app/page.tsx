@@ -103,22 +103,22 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm sm:ring-2 sm:ring-amber-200">
-              <div className="mb-4 rounded-xl bg-slate-100 p-5"><p className="text-xs font-bold tracking-[0.16em] text-slate-500">EARNWALE TRADING ACADEMY</p><p className="mt-2 text-xl font-bold text-slate-900">Pro: Practical Trading Education</p><p className="text-sm text-slate-600">Additional lessons in development</p></div>
+              <div className="mb-4 rounded-xl bg-slate-100 p-5"><p className="text-xs font-bold tracking-[0.16em] text-slate-500">EARNWALE TRADING ACADEMY</p><p className="mt-2 text-xl font-bold text-slate-900">Pro: Practical Trading Education</p><p className="text-sm text-slate-600">Six new Pro lesson scripts ready · video production underway</p></div>
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Pro planned</p>
               <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Pro Plan</h3>
               <p className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">₹500</p>
               <p className="mt-1 text-sm font-medium text-amber-700">
-                Planned deeper practice built on Starter. Final Pro benefits will be confirmed before enrollment.
+                Pro includes Starter plus six extra lessons, practical case studies and a separate 8-question rotating knowledge check. Video production and review are in progress.
               </p>
               <ul className="mt-5 space-y-2 text-sm text-gray-700 sm:mt-6 sm:space-y-3">
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Planned: Starter access plus additional case studies
+                  <span className="text-amber-500">✔</span> Planned: Starter access plus six new Pro video lessons
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Planned: guided exercises and a trading journal
+                  <span className="text-amber-500">✔</span> Planned: five Pro PDFs including workbook, case studies and journal
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Planned: further structured review activities
+                  <span className="text-amber-500">✔</span> Planned: rotating 8-question Pro assessment with saved scores
                 </li>
               </ul>
               <p aria-label="Pro course coming soon" className="mt-5 block w-full rounded-xl bg-slate-100 py-3 text-center text-sm font-semibold text-slate-600 sm:mt-6 sm:py-4">Pro enrollment coming soon</p>
