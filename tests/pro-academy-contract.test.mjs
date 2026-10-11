@@ -32,7 +32,7 @@ test("Pro quiz rotates 8 questions using a restricted 36-item server answer bank
   assert.match(quiz,/prisma\.courseAttempt\.findUnique/);
   assert.match(quiz,/history/);
   assert.doesNotMatch(quiz,/20-question assessment|Submit exactly 20 answers/);
-  assert.doesNotMatch(quiz,/\bget\(.*correctChoice.*\/);
+  assert.doesNotMatch(quiz,/return NextResponse\.json\(\{[^}]*correctChoice/);
 });
 
 test("Pro learner shows one quiz question at a time with Back/Next and saved results",async()=>{
