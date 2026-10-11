@@ -36,7 +36,7 @@ PDFs from this conversation are downloadable separately. The old PDF files and o
 ## Quiz and UX
 - 20 questions; server-side answers only, grading at POST /api/trading/quiz.
 - Students must submit all questions; pass threshold 16/20; explanations shown after submission.
-- Score is session-only in the browser; there is **no persistent database completion record or certificate**, and retakes use the same question bank.
+- Assessment attempts and scores are now saved in the authenticated user's Firestore `courseAttempts` collection. The dashboard displays recent attempts. This is still **not** a professional certificate, and retakes use the same question bank.
 - Use preload="none" so only one chosen video may load at a time.
 - Access is verified using the existing Firebase/session + database plan (300 or 500).
 
@@ -48,4 +48,4 @@ PDFs from this conversation are downloadable separately. The old PDF files and o
 5. Update homepage and checkout offer copy to state the **real 44:44 runtime** and exactly what ₹300 vs ₹500 buys. Pro-specific materials are not delivered in this branch. Avoid selling undisclosed Pro extras.
 6. Consider existing customers' rights: removing PDFs that customers previously purchased may require maintaining grandfathered access or providing suitable remedy. Confirm migration policy before releasing.
 7. Test logged-out, no-plan, ₹300 and ₹500 sessions; mobile playback, range seeking, quiz, and 403/410 responses.
-8. Run npm ci, npm run typecheck, npm run lint, npm run test and npm run build, and verify Vercel preview deployment.
+8. Run npm ci, npm run typecheck, focused course lint, npm run test and a production build; verify an actual Vercel preview deployment and authenticated playback. The baseline repository has unrelated lint debt; do not confuse course-only lint passes with a clean full-repository lint.\n9. The Vercel plugin currently returns 403 for project operations; the connected account must regain project access before videos can be uploaded, environment variables configured, or the production rollout verified.\n10. Do not merge this branch while videos and learner PDFs are unhosted, payment delivery cannot be verified, or Vercel builds are failing.
