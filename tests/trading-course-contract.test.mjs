@@ -60,3 +60,19 @@ test("retired ebook endpoint cannot serve old PDFs", async () => {
   assert.match(endpoint, /410/);
   assert.doesNotMatch(endpoint, /readFileSync/);
 });
+
+test("media uploads require verified admin, are fixed to eight assets and are stored", async () => {
+  const endpoint = await read("src/app/api/admin/trading-assets/route.ts");
+  assert.match(endpoint, /requireAdmin/);
+  assert.match(endpoint, /handleUpload/);
+  assert.match(endpoint, /onBeforeGenerateToken/);
+  assert.match(endpoint, /onUploadCompleted/);
+  for (let id = 1; id <= 6; id++) assert.match(endpoint, new RegExp('module-' + id));
+  assert.match(endpoint, /courseAsset\.create/);
+  assert.match(endpoint, /courseAsset\.update/);
+  const db = await read("src/lib/prisma.ts");
+  assert.match(db, /courseAsset: model\("courseAssets"\)/);
+  const pay = await read("src/app/api/payment/create-order/route.ts");
+  assert.match(pay, /prisma\.courseAsset\.findUnique/);
+  assert.match(pay, /EARNWALE_STARTER_ENROLLMENT_ENABLED/);
+});
