@@ -30,19 +30,43 @@ test("commerce advertises real Starter content and blocks unfinished Pro", async
   assert.match(order, /EARNWALE_STARTER_ENROLLMENT_ENABLED !== "true"/);
 });
 
-test("student never receives the assessment key before submission", async () => {
+test("quiz offers eight fresh signed questions, protects answer keys and saves each grade", async () => {
   const quiz = await read("src/app/api/trading/quiz/route.ts");
-  assert.match(quiz, /async function authorisedUser/);
-  assert.match(quiz, /QUESTIONS\.map\(\(\{ id, question, options \}\)/);
-  assert.match(quiz, /passingScore: 16/);
-  assert.match(quiz, /submitted\.has\(item\.id\)/);
+  assert.match(quiz, /const QUIZ_SIZE = 8;/);
+  assert.match(quiz, /const PASSING_SCORE = 7;/);
+  assert.match(quiz, /QUESTIONS\.filter\(question => !previousIds\.has\(question\.id\)\)/);
+  assert.match(quiz, /selection\.map\(\(\{ id, question, options \}\)/);
+  assert.match(quiz, /createHmac\("sha256"/);
+  assert.match(quiz, /timingSafeEqual/);
+  assert.match(quiz, /verifyTicket\(payload\.token, user\.id, "exam"\)/);
+  assert.match(quiz, /ticket\.ids\.some\(id => !submitted\.has\(id\)\)/);
+  assert.match(quiz, /prisma\.courseAttempt\.findUnique/);
   assert.match(quiz, /prisma\.courseAttempt\.create/);
+  assert.match(quiz, /purpose: "recent"/);
+  assert.match(quiz, /httpOnly: true/);
   assert.match(quiz, /history/);
+  assert.doesNotMatch(quiz, /passingScore:\s*16/);
+  assert.doesNotMatch(quiz, /Submit exactly 20 answers/);
   const db = await read("src/lib/prisma.ts");
   assert.match(db, /"courseAttempts"/);
   assert.match(db, /courseAttempt: model\("courseAttempts"\)/);
 });
 
+test("assessment uses one-question Next and Back flow with a fresh-set option", async () => {
+  const dashboard = await read("src/app/dashboard/my-courses/page.tsx");
+  assert.match(dashboard, /currentQuestion=exam\?\.questions\[step\]/);
+  assert.match(dashboard, /Next →/);
+  assert.match(dashboard, /← Back/);
+  assert.match(dashboard, /Finish & see result/);
+  assert.match(dashboard, /Refresh with 8 different questions/);
+  assert.match(dashboard, /token:exam\.token/);
+  assert.match(dashboard, /setStep\(0\)/);
+  assert.doesNotMatch(dashboard, /exam\.questions\.map\(\(q,i\)=>\<fieldset/);
+  const homepage = await read("src/app/page.tsx");
+  const signup = await read("src/app/signup/SignupContent.tsx");
+  assert.match(homepage, /8-question knowledge check/);
+  assert.match(signup, /8-question rotating knowledge check/);
+});
 test("media is enrollment-protected and does not auto-preload six videos", async () => {
   const endpoint = await read("src/app/api/trading/media/route.ts");
   assert.match(endpoint, /requireAuth\(req\)/);
