@@ -11,6 +11,10 @@ export async function POST(req: Request) {
     const { plan } = await req.json();
     const amount = PLAN_AMOUNTS[plan];
 
+    if (plan === "500") {
+      return NextResponse.json({ error: "Pro enrollment is coming soon" }, { status: 409 });
+    }
+
     if (!amount) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
