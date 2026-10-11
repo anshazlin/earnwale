@@ -21,6 +21,7 @@ export default function MyCoursesPage() {
   const [result,setResult]=useState<Result|null>(null);
   const [examBusy,setExamBusy]=useState(false);
   const [examError,setExamError]=useState("");
+  const [history,setHistory]=useState<{id:string;score:number;total:number;passed:boolean;createdAt:string}[]>([]);
 
   const bootstrap=useCallback(async()=>{
     try {
@@ -32,8 +33,12 @@ export default function MyCoursesPage() {
       const permitted=["300","500"].includes(String(user.plan??""));
       setAuthorised(permitted);
       if(permitted) {
-        const configRes=await fetch("/api/trading/media?config=1",{credentials:"include"});
+        const [configRes, historyRes]=await Promise.all([
+          fetch("/api/trading/media?config=1",{credentials:"include"}),
+          fetch("/api/trading/quiz?history=1",{credentials:"include"}),
+        ]);
         if(configRes.ok)setConfig(await configRes.json());
+        if(historyRes.ok){const data=await historyRes.json();setHistory(data.attempts??[]);}
       }
     } catch {setExamError("Unable to load the course. Try refreshing the page.");}
     finally {setLoading(false);}
@@ -59,6 +64,8 @@ export default function MyCoursesPage() {
       const data=await res.json();
       if(!res.ok) throw new Error(data.error??"Could not submit assessment.");
       setResult(data);
+      const historyRes=await fetch("/api/trading/quiz?history=1",{credentials:"include"});
+      if(historyRes.ok){const list=await historyRes.json();setHistory(list.attempts??[]);}
     }catch(e){setExamError(e instanceof Error?e.message:"Please try again.");}
     finally{setExamBusy(false);}
   }
@@ -119,6 +126,7 @@ export default function MyCoursesPage() {
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold text-slate-900">Final knowledge assessment</h2>
       <p className="mt-1 text-sm text-slate-600">20 multiple-choice questions · suggested 30 minutes · pass at 16/20. This is a learning check, not a professional qualification to trade.</p>
+      {history.length>0 && <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4"><p className="text-sm font-semibold text-blue-950">Your recent assessments</p><ul className="mt-2 space-y-1 text-sm text-blue-900">{history.map(attempt=><li key={attempt.id}>{new Date(attempt.createdAt).toLocaleDateString("en-IN")} · {attempt.score}/{attempt.total} · {attempt.passed?"Passed":"Review suggested"}</li>)}</ul></div>}
       {!exam && <button type="button" disabled={examBusy} onClick={startExam} className="mt-4 rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 disabled:opacity-60">{examBusy?"Loading…":"Start assessment"}</button>}
       {exam && <div className="mt-5 space-y-6">
         {exam.questions.map((q,i)=><fieldset key={q.id} disabled={Boolean(result)} className="space-y-2 border-t border-slate-100 pt-4">
