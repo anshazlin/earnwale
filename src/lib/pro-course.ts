@@ -21,5 +21,5 @@ export const PRO_RESOURCES=[
 export const PRO_VIDEO_COUNT=PRO_MODULES.length;
 export const PRO_QUIZ_BANK_SIZE=36;
 export function hasProAccess(plan:unknown):boolean{
-  return String(plan??"").trim()==="500";
+  return String(plan ?? "").trim() === "500";
 }
