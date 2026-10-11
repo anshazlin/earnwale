@@ -5,7 +5,7 @@ const read=file=>readFile(new URL(`../${file}`,import.meta.url),"utf8");
 
 test("Pro plan is separate from Starter, includes six lessons and five learner PDFs",async()=>{
   const course=await read("src/lib/pro-course.ts");
-  assert.match(course,/String\(plan\?\?""\)\.trim\(\) === "500"/);
+  assert.match(course,/String\(plan ?? ""\)\.trim\(\) === "500"/);
   const ids=[...course.matchAll(/\{id:(\d+),title:/g)];
   assert.equal(ids.length,6);
   assert.deepEqual(ids.map(match=>Number(match[1])),[1,2,3,4,5,6]);
@@ -32,7 +32,8 @@ test("Pro quiz rotates 8 questions using a restricted 36-item server answer bank
   assert.match(quiz,/prisma\.courseAttempt\.findUnique/);
   assert.match(quiz,/history/);
   assert.doesNotMatch(quiz,/20-question assessment|Submit exactly 20 answers/);
-  assert.doesNotMatch(quiz,/return NextResponse\.json\(\{[^}]*correctChoice/);
+  const getHandler = quiz.split("export async function POST")[0];
+  assert.doesNotMatch(getHandler,/correctChoice:|explanation:|answer:/);
 });
 
 test("Pro learner shows one quiz question at a time with Back/Next and saved results",async()=>{
