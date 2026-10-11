@@ -64,7 +64,7 @@ export default function SignupContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert("Failed to create order");
+        alert(data?.error || "Unable to start checkout");
         setLoading(false);
         return;
       }
