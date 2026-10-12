@@ -98,7 +98,7 @@ export async function POST(req: Request) {
       String(order.notes?.affiliateCode ?? "").trim().toUpperCase() || null;
     const paymentRecordId = `payment_${razorpay_payment_id}`;
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: typeof prisma) => {
       const duplicatePayment = await tx.transaction.findUnique({
         where: { id: paymentRecordId },
       });
@@ -159,8 +159,11 @@ export async function POST(req: Request) {
       success: true,
       plan,
     });
-  } catch (error: any) {
-    const message = String(error?.message ?? "");
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "";
+    const errorName =
+      error instanceof Error ? error.name : "";
     if (
       message === "Payment already processed" ||
       message === "Course access already exists"
@@ -171,7 +174,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: message }, { status: 404 });
     }
     if (
-      error?.name === "AuthError" ||
+      errorName === "AuthError" ||
       message === "Unauthorized" ||
       message === "Invalid or expired session" ||
       message === "Email verification required"
