@@ -127,8 +127,8 @@ export default function PersonalDashboardPage() {
         });
         return;
       }
-    } catch (shareError: any) {
-      if (shareError?.name === "AbortError") return;
+    } catch (shareError: unknown) {
+      if (shareError instanceof Error && shareError.name === "AbortError") return;
     }
 
     window.open(
