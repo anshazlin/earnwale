@@ -43,9 +43,13 @@ await userRef.set({
   plan: "500",
   referralCode,
   referredBy: null,
-  earnings: 900,
-  totalEarned: 1350,
-  referralCount: 3,
+  affiliateStatus: "active",
+  affiliateTermsVersion: "2026-10-12-v1",
+  affiliateTermsAcceptedAt: FieldValue.serverTimestamp(),
+  affiliateActivatedAt: FieldValue.serverTimestamp(),
+  earnings: 220,
+  totalEarned: 620,
+  referralCount: 2,
   hasReceivedReward: true,
   isTest: true,
   testDataLabel: "DEVELOPMENT_TEST_ONLY",
@@ -55,8 +59,8 @@ await userRef.set({
 
 const batch = db.batch();
 [
-  { id: `test_credit_1_${authUser.uid}`, amount: 450, type: "CREDIT", description: "TEST referral reward" },
-  { id: `test_credit_2_${authUser.uid}`, amount: 450, type: "CREDIT", description: "TEST referral reward" },
+  { id: `test_credit_1_${authUser.uid}`, amount: 220, type: "CREDIT", description: "TEST affiliate commission • ₹300 course sale" },
+  { id: `test_credit_2_${authUser.uid}`, amount: 400, type: "CREDIT", description: "TEST affiliate commission • ₹500 course sale" },
   { id: `test_payment_${authUser.uid}`, amount: 500, type: "PAYMENT", description: "TEST payment record — no real charge" },
 ].forEach((tx, index) => {
   batch.set(db.collection("transactions").doc(tx.id), {
@@ -66,7 +70,7 @@ const batch = db.batch();
 });
 
 batch.set(db.collection("withdrawals").doc(`test_withdrawal_${authUser.uid}`), {
-  id: `test_withdrawal_${authUser.uid}`, userId: userRef.id, amount: 450, status: "paid",
+  id: `test_withdrawal_${authUser.uid}`, userId: userRef.id, amount: 400, status: "paid",
   isTest: true, testDataLabel: "DEVELOPMENT_TEST_ONLY",
   createdAt: new Date(Date.now() - 4 * 86400000), updatedAt: new Date(),
 }, { merge: true });
@@ -75,8 +79,8 @@ for (let i = 1; i <= 3; i++) {
   const ref = db.collection("users").doc(`test_referral_${authUser.uid}_${i}`);
   batch.set(ref, {
     id: ref.id, name: `Test Referral ${i}`, email: `referral-${i}-${authUser.uid.slice(0,5)}@example.test`,
-    plan: i === 3 ? "500" : "300", referralCode: `TREF${i}${authUser.uid.slice(0,4).toUpperCase()}`,
-    referredBy: referralCode, earnings: 0, totalEarned: 0, referralCount: 0,
+    plan: i === 2 ? "500" : "300", referralCode: null, affiliateStatus: "inactive",
+    referredBy: i <= 2 ? referralCode : null, earnings: 0, totalEarned: 0, referralCount: 0,
     isTest: true, testDataLabel: "DEVELOPMENT_TEST_ONLY",
     createdAt: new Date(Date.now() - i * 86400000), updatedAt: new Date(),
   }, { merge: true });
