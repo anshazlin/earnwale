@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     // verification. The first verified sign-in activates the affiliate and only
     // then issues the unique tracked code.
     if (user && String(user.affiliateStatus ?? "").toLowerCase() === "pending_verification") {
-      user = await prisma.$transaction(async (tx: any) => {
+      user = await prisma.$transaction(async (tx: typeof prisma) => {
         const latest = await tx.user.findUnique({ where: { id: user!.id } });
         if (!latest) throw new Error("Account record not found");
         const accepted = latest.affiliateTermsAcceptedAt
