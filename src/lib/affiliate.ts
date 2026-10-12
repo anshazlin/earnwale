@@ -1,4 +1,14 @@
 import crypto from "crypto";
+import { prisma } from "@/lib/prisma";
+
+type FirestoreTx = typeof prisma;
+type AffiliateLike = {
+  id?: string | null;
+  email?: unknown;
+  affiliateStatus?: unknown;
+  referralCode?: unknown;
+  affiliateActivatedAt?: Date | string | null;
+};
 
 export const AFFILIATE_TERMS_VERSION = "2026-10-12-v1";
 
@@ -11,7 +21,7 @@ export function affiliateCommissionForPlan(plan: unknown): number {
   return AFFILIATE_COMMISSIONS[String(plan ?? "").trim()] ?? 0;
 }
 
-export function isAffiliateActive(user: any): boolean {
+export function isAffiliateActive(user: AffiliateLike | null | undefined): boolean {
   return (
     String(user?.affiliateStatus ?? "").toLowerCase() === "active" &&
     Boolean(String(user?.referralCode ?? "").trim())
@@ -22,7 +32,7 @@ function normalizeCode(value: unknown): string {
   return String(value ?? "").trim().toUpperCase();
 }
 
-async function generateUniqueAffiliateCode(tx: any): Promise<string> {
+async function generateUniqueAffiliateCode(tx: FirestoreTx): Promise<string> {
   for (let attempt = 0; attempt < 30; attempt++) {
     const code = `ERW${crypto.randomInt(10000000, 100000000)}`;
     const existing = await tx.user.findUnique({ where: { referralCode: code } });
@@ -32,8 +42,8 @@ async function generateUniqueAffiliateCode(tx: any): Promise<string> {
 }
 
 export async function activateAffiliate(
-  tx: any,
-  user: any,
+  tx: FirestoreTx,
+  user: AffiliateLike,
   acceptedAt: Date = new Date(),
 ) {
   if (!user?.id) throw new Error("Affiliate account not found");
