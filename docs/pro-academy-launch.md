@@ -54,3 +54,6 @@ This is educational material, not personal investment advice, trade signals, a p
 - [SEBI investor education](https://investor.sebi.gov.in/)
 - [SEBI learning materials](https://investor.sebi.gov.in/iematerial.html)
 - [SEBI video learning and fraud warnings](https://investor.sebi.gov.in/inv_aware_edu_videos.html)
+
+## Deployment validation note (12 October 2026)
+The Vercel private Blob store shows 19 total objects after the owner uploaded the Pro assets. The Pro checkout release safeguards have been merged to the main branch. This file records readiness only: private object checks and checkout remain fail-closed until the production enrollment flag is explicitly set and reviewed. Actual production deployment must report READY before considering the code rollout complete.
