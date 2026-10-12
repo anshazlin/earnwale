@@ -25,7 +25,6 @@ export async function POST(req: Request) {
     const email = String(formData?.email ?? "").trim().toLowerCase();
     const password = String(formData?.password ?? "");
     const plan = String(formData?.plan ?? "");
-    const referralCode = String(formData?.affiliateCode ?? formData?.referralCode ?? "").trim().toUpperCase() || null;
     const expectedAmount = PLAN_AMOUNTS[plan];
 
     if (!razorpay_order_id || !razorpay_payment_id || !email || !password || !expectedAmount) {
@@ -63,6 +62,11 @@ export async function POST(req: Request) {
     if (order.notes?.plan && String(order.notes.plan) !== plan) {
       return NextResponse.json({ error: "Order plan mismatch" }, { status: 400 });
     }
+
+    // Attribution is bound when the server creates the Razorpay order. Ignore
+    // any affiliate code supplied later by the browser during verification.
+    const referralCode =
+      String(order.notes?.affiliateCode ?? "").trim().toUpperCase() || null;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
