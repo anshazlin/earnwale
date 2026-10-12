@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import razorpay from "@/lib/razorpay";
 import { enrollmentFlagEnabled, verifiedCourseAssetsReady, type EnrollmentPlan } from "@/lib/course-enrollment";
+import { clientIp, isSameOriginRequest } from "@/lib/request-security";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 const PLAN_AMOUNTS: Record<string, number> = {
   "300": 30000,
@@ -9,7 +11,29 @@ const PLAN_AMOUNTS: Record<string, number> = {
 
 export async function POST(req: Request) {
   try {
-    const { plan } = await req.json();
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
+    const allowed = await consumeRateLimit({
+      namespace: "payment-order",
+      key: clientIp(req),
+      limit: 12,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many checkout attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
+
+    const body = await req.json();
+    const plan = String(body?.plan ?? "");
+    const affiliateCode = String(body?.affiliateCode ?? body?.referralCode ?? "")
+      .trim()
+      .toUpperCase()
+      .slice(0, 32);
     const amount = PLAN_AMOUNTS[plan];
 
     if (!amount) {
@@ -39,7 +63,7 @@ export async function POST(req: Request) {
       amount,
       currency: "INR",
       receipt: `earnwale_${Date.now()}`,
-      notes: { plan },
+      notes: { plan, affiliateCode },
     });
 
     return NextResponse.json(order);
