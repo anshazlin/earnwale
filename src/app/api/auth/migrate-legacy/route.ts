@@ -51,8 +51,12 @@ export async function POST(req: Request) {
       // Legacy password was just proven against bcrypt; synchronize the Firebase
       // credential during this controlled bridge without removing the bcrypt hash yet.
       await firebaseAdminAuth.updateUser(firebaseUser.uid, { password });
-    } catch (error: any) {
-      if (error?.code !== "auth/user-not-found") throw error;
+    } catch (error: unknown) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code?: unknown }).code ?? "")
+          : "";
+      if (code !== "auth/user-not-found") throw error;
       firebaseUser = await firebaseAdminAuth.createUser({ email, password, emailVerified: false });
     }
 
