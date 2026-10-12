@@ -6,13 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 type DashboardShellProps = { children: ReactNode };
-type IconName = "home" | "wallet" | "dashboard" | "course";
+type IconName = "home" | "wallet" | "dashboard";
 
 const NAV_ITEMS: Array<{ name: string; href: string; icon: IconName }> = [
   { name: "Home", href: "/dashboard", icon: "home" },
   { name: "Wallet", href: "/dashboard/wallet", icon: "wallet" },
   { name: "Dashboard", href: "/dashboard/personal", icon: "dashboard" },
-  { name: "Pro Course", href: "/dashboard/pro", icon: "course" },
 ];
 
 function cx(...values: Array<string | false | null | undefined>) {
@@ -20,7 +19,7 @@ function cx(...values: Array<string | false | null | undefined>) {
 }
 
 function activeFor(pathname: string, href: string) {
-  if (href === "/dashboard") return pathname === "/dashboard";
+  if (href === "/dashboard") return pathname === "/dashboard" || pathname.startsWith("/dashboard/pro") || pathname.startsWith("/dashboard/my-courses");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -41,10 +40,6 @@ function NavIcon({ name }: { name: IconName }) {
         <path d="M9 20v-6h6v6" />
       </svg>
     );
-  }
-
-  if (name === "course") {
-    return <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3V9Z"/></svg>;
   }
 
   if (name === "wallet") {
@@ -169,7 +164,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 function MobileNav({ pathname }: { pathname: string }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-amber-100 bg-white/98 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+      <div className="mx-auto grid max-w-md grid-cols-3 gap-1">
         {NAV_ITEMS.map((item) => {
           const active = activeFor(pathname, item.href);
           return (
