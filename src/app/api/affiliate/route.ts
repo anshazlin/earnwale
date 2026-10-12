@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const activated = await prisma.$transaction(async (tx: any) => {
+    const activated = await prisma.$transaction(async (tx: typeof prisma) => {
       const latest = await tx.user.findUnique({ where: { id: user.id } });
       if (!latest) throw new Error("Affiliate account not found");
 
@@ -62,9 +62,10 @@ export async function POST(req: Request) {
       affiliateCode: activated.referralCode,
       commissionSchedule: AFFILIATE_COMMISSIONS,
     });
-  } catch (error: any) {
-    if (error?.message === "Affiliate account is suspended") {
-      return NextResponse.json({ error: error.message }, { status: 403 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "";
+    if (message === "Affiliate account is suspended") {
+      return NextResponse.json({ error: message }, { status: 403 });
     }
     return authErrorResponse(error);
   }
