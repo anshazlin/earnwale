@@ -2,9 +2,18 @@ import {
   affiliateCommissionForPlan,
   isAffiliateActive,
 } from "@/lib/affiliate";
+import { prisma } from "@/lib/prisma";
+
+type FirestoreTx = typeof prisma;
+type AffiliateRecord = {
+  id: string;
+  email?: unknown;
+  referralCode?: unknown;
+  affiliateStatus?: unknown;
+};
 
 export async function resolveActiveAffiliate(
-  tx: any,
+  tx: FirestoreTx,
   code: unknown,
   buyer: { id?: string | null; email?: string | null },
 ) {
@@ -25,9 +34,9 @@ export async function resolveActiveAffiliate(
 }
 
 export async function creditAffiliateCommission(
-  tx: any,
+  tx: FirestoreTx,
   input: {
-    affiliate: any;
+    affiliate: AffiliateRecord;
     buyerUserId: string;
     plan: string;
     razorpayPaymentId: string;
