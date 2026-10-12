@@ -59,7 +59,12 @@ export async function POST(req: Request) {
     }
 
     const sessionCookie = await firebaseAdminAuth.createSessionCookie(idToken, { expiresIn: SESSION_MAX_AGE_MS });
-    const response = NextResponse.json({ success: true, isAdmin });
+    const response = NextResponse.json({
+      success: true,
+      isAdmin,
+      hasCourse: Boolean(String(user?.plan ?? "").trim()),
+      affiliateStatus: user?.affiliateStatus ?? null,
+    });
     response.cookies.set(SESSION_COOKIE, sessionCookie, {
       httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax",
       maxAge: Math.floor(SESSION_MAX_AGE_MS / 1000), path: "/",
