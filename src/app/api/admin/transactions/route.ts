@@ -22,7 +22,7 @@ export async function GET(req: Request) {
       where,
       orderBy: { createdAt: "desc" },
       select: {
-        id: true, type: true, amount: true, createdAt: true, userId: true,
+        id: true, type: true, amount: true, description: true, createdAt: true, userId: true,\n        sourcePaymentId: true, sourceOrderId: true, sourceUserId: true, sourcePlan: true, commissionStatus: true,
       },
     });
     const pageRows = matching.slice(skip, skip + PAGE_SIZE);
