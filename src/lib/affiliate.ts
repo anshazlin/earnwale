@@ -24,7 +24,7 @@ function normalizeCode(value: unknown): string {
 
 async function generateUniqueAffiliateCode(tx: any): Promise<string> {
   for (let attempt = 0; attempt < 30; attempt++) {
-    const code = `ERW${crypto.randomInt(10000, 100000)}`;
+    const code = `ERW${crypto.randomInt(10000000, 100000000)}`;
     const existing = await tx.user.findUnique({ where: { referralCode: code } });
     if (!existing) return code;
   }
