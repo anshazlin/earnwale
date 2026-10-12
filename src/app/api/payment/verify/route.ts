@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     const firebaseUser = await firebaseAdminAuth.createUser({ email, password, emailVerified: false });
     createdFirebaseUid = firebaseUser.uid;
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: typeof prisma) => {
       const duplicatePayment = await tx.transaction.findUnique({ where: { id: paymentRecordId } });
       if (duplicatePayment) throw new Error("Payment already processed");
 
@@ -159,14 +159,14 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, verificationRequired: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (createdFirebaseUid) {
       try {
         const linked = await prisma.user.findUnique({ where: { firebaseUid: createdFirebaseUid } });
         if (!linked) await firebaseAdminAuth.deleteUser(createdFirebaseUid);
       } catch {}
     }
-    const message = error?.message || "Payment verification failed";
+    const message = error instanceof Error ? error.message : "Payment verification failed";
     const expectedClientError =
       message === "Payment already processed" ||
       message === "User already exists";
