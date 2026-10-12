@@ -46,7 +46,7 @@ test("Pro learner shows one quiz question at a time with Back/Next and saved res
   assert.match(page,/token:exam\.token/);
   assert.match(page,/\/api\/pro\/quiz\?history=1/);
   assert.match(page,/\/api\/pro\/media/);
-  assert.match(page,/href="\/dashboard\/my-courses"/);
+  assert.match(page,/href="\/dashboard"/);
   assert.match(page,/preload="none"/);
 });
 

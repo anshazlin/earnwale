@@ -94,7 +94,7 @@ export default function ProLearningPage(){
         <span className="rounded-full bg-white/10 px-3 py-2 text-xs font-semibold">5 Pro PDFs</span>
         <span className="rounded-full bg-white/10 px-3 py-2 text-xs font-semibold">8-question Pro quiz</span>
       </div>
-      <Link href="/dashboard/my-courses" className="mt-4 inline-block text-sm font-semibold text-amber-200 underline underline-offset-4">Included: your Starter lessons →</Link>
+      <Link href="/dashboard" className="mt-4 inline-block text-sm font-semibold text-amber-200 underline underline-offset-4">← Back to Starter &amp; Pro choices</Link>
     </header>
 
     <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
