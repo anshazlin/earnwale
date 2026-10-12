@@ -85,6 +85,7 @@ export default function ProLearningPage(){
   </section>;
 
   return <div className="space-y-6 pb-10">
+    <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 underline-offset-4 hover:text-amber-700 hover:underline">← Back to my courses</Link>
     <header className="rounded-3xl bg-[#071B33] px-5 py-7 text-white sm:px-8 sm:py-9">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Earnwale Trading Academy · Pro</p>
       <h1 className="mt-3 text-2xl font-bold sm:text-3xl">Practical Trading Education</h1>
@@ -94,7 +95,7 @@ export default function ProLearningPage(){
         <span className="rounded-full bg-white/10 px-3 py-2 text-xs font-semibold">5 Pro PDFs</span>
         <span className="rounded-full bg-white/10 px-3 py-2 text-xs font-semibold">8-question Pro quiz</span>
       </div>
-      <Link href="/dashboard" className="mt-4 inline-block text-sm font-semibold text-amber-200 underline underline-offset-4">← Back to Starter &amp; Pro choices</Link>
+      
     </header>
 
     <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
