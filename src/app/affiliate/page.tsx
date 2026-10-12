@@ -71,14 +71,18 @@ export default function AffiliateProgramPage() {
         await signOut(firebaseAuth).catch(() => undefined);
         throw error;
       }
-    } catch (error: any) {
-      const code = String(error?.code ?? "");
+    } catch (error: unknown) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code?: unknown }).code ?? "")
+          : "";
+      const errorMessage = error instanceof Error ? error.message : "";
       setMessage({
         type: "error",
         text:
           code === "auth/email-already-in-use"
             ? "That email already has an Earnwale account. Sign in and join the Affiliate Program from your dashboard."
-            : error?.message || "Unable to create affiliate account.",
+            : errorMessage || "Unable to create affiliate account.",
       });
     } finally {
       setLoading(false);
