@@ -75,16 +75,19 @@ test("Pro media endpoints require Pro/admin access and use private storage",asyn
   assert.match(admin,/\/api\/admin\/pro-preview/);
 });
 
-test("Pro still cannot be purchased until videos are ready",async()=>{
+test("Pro can only open when the release flag and all private media are verified",async()=>{
   const homepage=await read("src/app/page.tsx");
   const signup=await read("src/app/signup/SignupContent.tsx");
   const payment=await read("src/app/api/payment/create-order/route.ts");
   assert.match(homepage,/six new Pro video lessons/);
-  assert.match(homepage,/Pro enrollment coming soon/);
-  assert.match(signup,/disabled=\{product\.id === "500"\}/);
-  assert.match(payment,/plan === "500"/);
-  assert.match(payment,/Pro enrollment is coming soon/);
-  assert.match(payment,/status: 409/);
+  assert.match(homepage,/Pro enrollment opening soon/);
+  assert.match(signup,/availability\.pro/);
+  assert.match(payment,/enrollmentFlagEnabled/);
+  assert.match(payment,/verifiedCourseAssetsReady/);
+  const gate = await read("src/lib/course-enrollment.ts");
+  assert.match(gate,/EARNWALE_PRO_ENROLLMENT_ENABLED/);
+  assert.match(gate,/PRO_REQUIRED_IDS/);
+  assert.match(gate,/head\(asset\.url\)/);
   const starterQuiz=await read("src/app/api/trading/quiz/route.ts");
   assert.match(starterQuiz,/courseId: "trading-starter-v1"/);
 });
