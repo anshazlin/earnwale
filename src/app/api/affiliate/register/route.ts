@@ -113,8 +113,12 @@ export async function POST(req: Request) {
       status: "pending_verification",
       verificationRequired: true,
     });
-  } catch (error: any) {
-    if (String(error?.code ?? "").startsWith("auth/")) {
+  } catch (error: unknown) {
+    const code =
+      typeof error === "object" && error !== null && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (code.startsWith("auth/")) {
       return NextResponse.json(
         { error: "Invalid or expired authentication token" },
         { status: 401 },
