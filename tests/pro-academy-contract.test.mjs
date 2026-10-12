@@ -79,7 +79,7 @@ test("Pro can only open when the release flag and all private media are verified
   const homepage=await read("src/app/page.tsx");
   const signup=await read("src/app/signup/SignupContent.tsx");
   const payment=await read("src/app/api/payment/create-order/route.ts");
-  assert.match(homepage,/six new Pro video lessons/);
+  assert.match(homepage,/six additional Pro video lessons/);
   assert.match(homepage,/Pro enrollment opening soon/);
   assert.match(signup,/availability\.pro/);
   assert.match(payment,/enrollmentFlagEnabled/);
