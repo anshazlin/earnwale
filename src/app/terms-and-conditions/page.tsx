@@ -26,7 +26,7 @@ export default function TermsAndConditionsPage() {
       </ul>
 
       <h2>3. Digital Course Licence</h2>
-      <p>After successful payment verification, Earnwale grants the purchaser a limited, personal, non-exclusive and non-transferable right to access the purchased digital course, subject to these Terms. Course material may not be unlawfully copied, resold, redistributed, scraped, publicly uploaded or shared using another person's account.</p>
+      <p>After successful payment verification, Earnwale grants the purchaser a limited, personal, non-exclusive and non-transferable right to access the purchased digital course, subject to these Terms. Course material may not be unlawfully copied, resold, redistributed, scraped, publicly uploaded or shared using another person&apos;s account.</p>
 
       <h2>4. Prices and Payments</h2>
       <p>Prices displayed at checkout are in INR unless stated otherwise. The price shown and accepted at checkout applies to that transaction. Payments are processed through the displayed payment provider. Earnwale will not intentionally store card numbers, CVV or banking passwords.</p>
@@ -73,7 +73,7 @@ export default function TermsAndConditionsPage() {
       <p>Earnwale may update these Terms prospectively for legal, security, operational or service changes. Material changes will be communicated reasonably. Changes will not retrospectively remove accrued mandatory consumer rights. Where fresh consent is legally required, Earnwale will seek it.</p>
 
       <h2>15. Governing Law and Disputes</h2>
-      <p>These Terms are governed by the laws of India. Parties should first attempt good-faith resolution through Earnwale's grievance channel. Nothing here restricts a consumer from approaching a competent Consumer Commission, regulator, court or other forum available under applicable law.</p>
+      <p>These Terms are governed by the laws of India. Parties should first attempt good-faith resolution through Earnwale&apos;s grievance channel. Nothing here restricts a consumer from approaching a competent Consumer Commission, regulator, court or other forum available under applicable law.</p>
 
       <h2>16. Grievance and Contact</h2>
       <p>Customer/legal support: support@earnwale.com</p>
