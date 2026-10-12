@@ -10,16 +10,16 @@ const faqs = [
     a: "No. Earnwale Trading Academy provides beginner financial education, not stock tips, personalized advice or guaranteed returns.",
   },
   {
-    q: "When do I get paid?",
-    a: "Earnings from referrals are credited only after a successful course purchase. Payments are processed as per our payout policy.",
+    q: "Do I have to buy a course to join the Affiliate Program?",
+    a: "No. The Affiliate Program is free and separate from course enrollment. Commission is earned only from qualifying verified course sales.",
   },
   {
     q: "Is there refund?",
     a: "Refunds are handled as per our Refund Policy. Please read the policy before purchasing.",
   },
   {
-    q: "Can I refer myself?",
-    a: "No. Self-referrals are not allowed. Only genuine referrals to other people qualify for rewards.",
+    q: "How do affiliate commissions work?",
+    a: "Active affiliates may earn ₹220 on a qualifying ₹300 Starter sale and ₹400 on a qualifying ₹500 Pro sale. Self-referrals, affiliate recruitment and guaranteed earnings are not allowed.",
   },
 ];
 
@@ -160,9 +160,9 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
               </div>
-              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Share With Friends (Optional)</h3>
+              <h3 className="mt-4 text-base font-semibold text-gray-900 sm:text-lg">Access Your Learning</h3>
               <p className="mt-2 text-sm text-gray-600">
-                Students who find value in the course may optionally share it with friends and receive promotional rewards.
+                Successful enrollment unlocks only the course content included in your selected plan.
               </p>
             </div>
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -177,6 +177,38 @@ export default function HomePage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-t border-amber-100 py-6 sm:py-10">
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 sm:p-7">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800">
+            Separate and optional
+          </p>
+          <h2 className="mt-2 text-xl font-bold text-slate-950 sm:text-2xl">
+            Earnwale Affiliate Program
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Joining the Affiliate Program is free and does not require a course purchase.
+            Affiliates earn only from genuine qualifying course sales through their tracked link.
+            There are no recruitment commissions, downlines or guaranteed earnings.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-xs font-semibold text-slate-500">₹300 Starter qualifying sale</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">₹220 commission</p>
+            </div>
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-xs font-semibold text-slate-500">₹500 Pro qualifying sale</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">₹400 commission</p>
+            </div>
+          </div>
+          <Link
+            href="/affiliate"
+            className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white sm:w-auto"
+          >
+            Learn about the Affiliate Program
+          </Link>
         </div>
       </section>
 
@@ -243,6 +275,9 @@ export default function HomePage() {
                 <li>
                   <Link href="/login" className="text-sm text-gray-600 hover:text-amber-600">Login</Link>
                 </li>
+                <li>
+                  <Link href="/affiliate" className="text-sm text-gray-600 hover:text-amber-600">Affiliate Program</Link>
+                </li>
               </ul>
             </div>
             <div>
@@ -256,6 +291,9 @@ export default function HomePage() {
                 </li>
                 <li>
                   <Link href="/refund-policy" className="text-sm text-gray-600 hover:text-amber-600">Refund Policy</Link>
+                </li>
+                <li>
+                  <Link href="/affiliate-terms" className="text-sm text-gray-600 hover:text-amber-600">Affiliate Terms</Link>
                 </li>
               </ul>
             </div>
