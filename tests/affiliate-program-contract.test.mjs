@@ -55,7 +55,7 @@ test("self-referral and inactive affiliate codes never create commission", async
 
   assert.match(commissions, /if \(!affiliate \|\| !isAffiliateActive\(affiliate\)\) return null/);
   assert.match(commissions, /affiliate\.id === buyer\.id/);
-  assert.match(commissions, /affiliateEmail === buyerEmail/);
+  assert.match(commissions, /buyerEmail === affiliateEmail/);
 });
 
 test("affiliate-only accounts can later buy a course on the same identity", async () => {
