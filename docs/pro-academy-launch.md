@@ -25,7 +25,7 @@ Pro learner: `/dashboard/pro`. Pro-only `/api/pro/media` streams private objects
 - The shared `src/lib/course-enrollment.ts` checks **all 19 objects** at checkout: six Starter videos, two Starter PDFs, six Pro videos and five Pro PDFs. Each record must refer to an existing, non-empty HTTPS object in the private Vercel Blob store.
 - New enrollment is **off by default** unless the appropriate production environment flag is explicitly set: `EARNWALE_STARTER_ENROLLMENT_ENABLED=true` for Starter and `EARNWALE_PRO_ENROLLMENT_ENABLED=true` for Pro. Deployment alone does not change these switches.
 - `GET /api/academy/enrollment-status` returns only public booleans for the plans; homepage and signup use it to hide unavailable paid checkout options. The POST order route independently re-checks the release flag and objects, and continues to charge ₹500 for Pro.
-- Existing payment/referral code pays an optional **₹450 referral reward** on a ₹500 Pro enrollment, leaving ₹50 before payment gateway fees, refunds, tax, and hosting. **Owner review of economics and payout terms remains necessary** before opening Pro sales.
+- The separate free Affiliate Program pays **₹400** on a qualifying ₹500 Pro sale to an active affiliate. Course purchase is not required to join the Affiliate Program. Owner review of margins, refunds, tax and payout terms remains necessary before opening Pro sales.
 - Production Vercel env updates generally require a fresh deployment for new runtimes to inherit them. Verify the status endpoint and perform a real provider sandbox purchase/verification before declaring checkout production-ready.
 
 ## Current release state
@@ -35,7 +35,7 @@ Pro learner: `/dashboard/pro`. Pro-only `/api/pro/media` streams private objects
 - `POST /api/payment/create-order` now blocks both plans unless their respective release flags are enabled AND all required Blob files pass readiness checks; unavailable plans receive HTTP 503.
 - Signup and homepage reflect server-calculated course enrollment availability; Pro is closed until the owner explicitly approves the release and enables its production flag.
 - Existing `500` plan users (if any) can access Pro learning routes; that is not permission to enable new sales.
-- Price and referral economics for ₹500 are **not approved**.
+- Price and affiliate economics for ₹500 require final owner, tax and legal review before real-money launch.
 
 ## Manual prelaunch gate
 1. Generate each module MP4 separately from its matching source PDF in NotebookLM.
@@ -44,8 +44,8 @@ Pro learner: `/dashboard/pro`. Pro-only `/api/pro/media` streams private objects
 4. Test Pro admin preview of six videos and PDFs, including mobile playback, seeking, file start and finish.
 5. Test a plan-500 learner and a plan-300 learner: Pro user can stream and take the rotating quiz; Starter-only must receive 403.
 6. Verify quiz 8/8 questions with each major topic represented, last-eight exclusions, Back/Next, after-submit reviews, saved courseId, retakes, and rejected duplicate/tampered submissions.
-7. Review actual video rights, consumer disclosures/refunds, tax/pricing, Indian securities-education compliance and referral margins.
-8. **Only after all of the above**, explicitly approve the ₹500 referral economics, payment test, education-compliance review and course playback. Then enable the Pro production flag and redeploy, verifying the status endpoint is true.
+7. Review actual video rights, consumer disclosures/refunds, tax/pricing, Indian securities-education compliance and affiliate margins.
+8. **Only after all of the above**, explicitly approve the ₹500 affiliate economics, payment test, education-compliance review and course playback. Then enable the Pro production flag and redeploy, verifying the status endpoint is true.
 
 ## Risk and references
 This is educational material, not personal investment advice, trade signals, a professional credential, or assured returns. All practice companies and prices are invented.
