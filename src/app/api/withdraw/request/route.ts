@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireAuth, authErrorResponse } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isSameOriginRequest } from "@/lib/request-security";
 
 const MIN_WITHDRAWAL = 250;
 const MAX_WITHDRAWAL = 4500;
 
 export async function POST(req: Request) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
     const { user: authenticatedUser } = await requireAuth(req);
     const user = await prisma.user.findUnique({ where: { id: authenticatedUser.id } });
 
