@@ -2,11 +2,30 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { firebaseAdminAuth } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
+import { clientIp, isSameOriginRequest } from "@/lib/request-security";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
     const { email: rawEmail, password } = await req.json();
     const email = String(rawEmail ?? "").trim().toLowerCase();
+
+    const allowed = await consumeRateLimit({
+      namespace: "legacy-auth",
+      key: `${clientIp(req)}:${email}`,
+      limit: 8,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many sign-in attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
     if (!email || !password) return NextResponse.json({ error: "Email and password required" }, { status: 400 });
 
     const user = await prisma.user.findUnique({ where: { email } });
