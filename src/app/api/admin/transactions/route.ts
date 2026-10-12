@@ -29,7 +29,7 @@ export async function GET(req: Request) {
     });
     const pageRows = matching.slice(skip, skip + PAGE_SIZE);
     const transactions = await Promise.all(
-      pageRows.map(async (row: any) => ({
+      pageRows.map(async (row) => ({
         ...row,
         user: row.userId
           ? await prisma.user.findUnique({
