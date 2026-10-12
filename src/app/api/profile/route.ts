@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth, authErrorResponse } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isSameOriginRequest } from "@/lib/request-security";
 
 function normalizeUpi(value: unknown) {
   return String(value ?? "").trim().toLowerCase();
@@ -28,6 +29,10 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
     const { user: authenticatedUser } = await requireAuth(req);
     const user = await prisma.user.findUnique({ where: { id: authenticatedUser.id } });
     if (!user) {
