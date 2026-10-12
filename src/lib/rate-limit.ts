@@ -22,7 +22,7 @@ export async function consumeRateLimit(options: {
     const now = new Date();
 
     try {
-      return await prisma.$transaction(async (tx: any) => {
+      return await prisma.$transaction(async (tx: typeof prisma) => {
         const existing = await tx.rateLimit.findUnique({ where: { id } });
         const windowStart = existing?.windowStart
           ? new Date(existing.windowStart)
@@ -68,8 +68,8 @@ export async function consumeRateLimit(options: {
         });
         return true;
       });
-    } catch (error: any) {
-      const message = String(error?.message ?? "");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "";
       const retryable =
         message.includes("(409)") ||
         message.includes("ABORTED") ||
