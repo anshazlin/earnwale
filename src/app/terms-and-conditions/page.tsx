@@ -67,7 +67,7 @@ export default function TermsAndConditionsPage() {
       <p>To the maximum extent permitted by applicable law, Earnwale is not responsible for losses caused solely by events outside its reasonable control. Nothing in these Terms excludes or limits liability or remedies where exclusion or limitation is prohibited by law, including rights arising from fraud, wilful misconduct, deficient services, unfair trade practices or other non-excludable consumer protections.</p>
 
       <h2>13. Privacy and Security</h2>
-      <p>Personal data is handled in accordance with the Privacy Policy and applicable Indian law. Users must not attempt to access another person's account or data. Earnwale may implement reasonable technical and organizational safeguards and fraud monitoring.</p>
+      <p>Personal data is handled in accordance with the Privacy Policy and applicable Indian law. Users must not attempt to access another person&apos;s account or data. Earnwale may implement reasonable technical and organizational safeguards and fraud monitoring.</p>
 
       <h2>14. Changes to Terms</h2>
       <p>Earnwale may update these Terms prospectively for legal, security, operational or service changes. Material changes will be communicated reasonably. Changes will not retrospectively remove accrued mandatory consumer rights. Where fresh consent is legally required, Earnwale will seek it.</p>
