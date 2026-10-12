@@ -5,6 +5,8 @@ import { firebaseAdminAuth } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
 import razorpay from "@/lib/razorpay";
 import { creditAffiliateCommission, resolveActiveAffiliate } from "@/lib/affiliate-commission";
+import { clientIp, isSameOriginRequest } from "@/lib/request-security";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 const PLAN_AMOUNTS: Record<string, number> = {
   "300": 30000,
@@ -20,6 +22,23 @@ function safeSignatureEqual(expected: string, received: unknown) {
 export async function POST(req: Request) {
   let createdFirebaseUid: string | null = null;
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
+    const allowed = await consumeRateLimit({
+      namespace: "payment-verify",
+      key: clientIp(req),
+      limit: 20,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many verification attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const body = await req.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, formData } = body ?? {};
     const email = String(formData?.email ?? "").trim().toLowerCase();
