@@ -34,11 +34,11 @@ export default function RefundPolicyPage() {
       <h2>4. Processing</h2>
       <p>Approved refunds will ordinarily be returned through the original payment method where technically and legally feasible. Banking/payment-network processing times may apply after Earnwale initiates the refund. Earnwale will not impose an undisclosed refund charge.</p>
 
-      <h2>5. Referral Reward Reversal</h2>
-      <p>If a qualifying purchase is validly refunded, reversed, duplicated, fraudulent or charged back, any referral reward generated solely by that transaction may be reversed. Earnwale will not confiscate unrelated, legitimately earned and undisputed rewards merely because another transaction is refunded.</p>
+      <h2>5. Affiliate Commission Reversal</h2>
+      <p>If a qualifying purchase is validly refunded, reversed, duplicated, fraudulent or charged back, an affiliate commission generated solely by that transaction may be withheld or reversed. Commission records are linked to the qualifying payment so the affected sale can be identified. Earnwale will not confiscate unrelated, legitimately earned and undisputed commissions merely because another transaction is refunded.</p>
 
       <h2>6. Chargebacks and Payment Disputes</h2>
-      <p>A chargeback will not automatically be treated as fraud. Earnwale may temporarily restrict the disputed transaction or associated reward while a genuine payment dispute is investigated. Deliberate chargeback abuse, use of stolen payment instruments or fabricated disputes may result in account restrictions and lawful recovery action.</p>
+      <p>A chargeback will not automatically be treated as fraud. Earnwale may temporarily restrict the disputed transaction or associated affiliate commission while a genuine payment dispute is investigated. Deliberate chargeback abuse, use of stolen payment instruments or fabricated disputes may result in account restrictions and lawful recovery action.</p>
 
       <h2>7. Cancellation</h2>
       <p>Before payment is completed, a user may abandon checkout without purchasing. After immediate digital access has been supplied, cancellation for convenience is ordinarily unavailable, subject to the exceptions and mandatory rights described above.</p>
