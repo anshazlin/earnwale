@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase-client";
 
 type User = {
   name?: string;
@@ -57,14 +55,35 @@ export default function ProfilePage() {
     setPasswordLoading(true);
     try {
       if (!user?.email) throw new Error("Account email unavailable");
-      const credential = await signInWithEmailAndPassword(firebaseAuth, user.email, passwordForm.currentPassword);
+      const [{ signInWithEmailAndPassword, signOut, updatePassword }, { firebaseAuth }] =
+        await Promise.all([
+          import("firebase/auth"),
+          import("@/lib/firebase-client"),
+        ]);
+      const credential = await signInWithEmailAndPassword(
+        firebaseAuth,
+        user.email,
+        passwordForm.currentPassword,
+      );
       await updatePassword(credential.user, passwordForm.newPassword);
       await signOut(firebaseAuth);
       setPasswordMessage({ type: "success", text: "Password updated." });
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (error: any) {
-      setPasswordMessage({ type: "error", text: error?.code === "auth/invalid-credential" ? "Current password is incorrect." : "Please sign in again before changing your password." });
-    } finally { setPasswordLoading(false); }
+    } catch (error: unknown) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code?: unknown }).code ?? "")
+          : "";
+      setPasswordMessage({
+        type: "error",
+        text:
+          code === "auth/invalid-credential"
+            ? "Current password is incorrect."
+            : "Please sign in again before changing your password.",
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   const handleLogout = async () => {
