@@ -14,13 +14,21 @@ export async function POST(req: Request) {
     const { email: rawEmail, password } = await req.json();
     const email = String(rawEmail ?? "").trim().toLowerCase();
 
-    const allowed = await consumeRateLimit({
-      namespace: "legacy-auth",
-      key: `${clientIp(req)}:${email}`,
-      limit: 8,
-      windowMs: 15 * 60 * 1000,
-    });
-    if (!allowed) {
+    const [ipAllowed, accountAllowed] = await Promise.all([
+      consumeRateLimit({
+        namespace: "legacy-auth-ip",
+        key: clientIp(req),
+        limit: 30,
+        windowMs: 15 * 60 * 1000,
+      }),
+      consumeRateLimit({
+        namespace: "legacy-auth-account",
+        key: email,
+        limit: 8,
+        windowMs: 15 * 60 * 1000,
+      }),
+    ]);
+    if (!ipAllowed || !accountAllowed) {
       return NextResponse.json(
         { error: "Too many sign-in attempts. Please try again later." },
         { status: 429 },
