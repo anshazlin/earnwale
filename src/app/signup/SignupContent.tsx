@@ -27,10 +27,26 @@ export default function SignupContent() {
   const [mounted, setMounted] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [refundAgreed, setRefundAgreed] = useState(false);
+  const [availability, setAvailability] = useState({starter:false,pro:false,loading:true});
 
   useEffect(() => {
     setMounted(true);
+    let alive=true;
+    fetch("/api/academy/enrollment-status",{cache:"no-store"}).then(async res=>{
+      if(!res.ok)throw Error("Enrollment temporarily unavailable");
+      const data=await res.json();
+      if(alive)setAvailability({starter:data.starter===true,pro:data.pro===true,loading:false});
+    }).catch(()=>{
+      if(alive)setAvailability({starter:false,pro:false,loading:false});
+    });
+    return ()=>{alive=false;};
   }, []);
+
+  useEffect(()=>{
+    const requested=searchParams.get("plan");
+    if(requested==="500" && availability.pro)
+      setForm(current=>({...current,plan:"500"}));
+  },[searchParams,availability.pro]);
 
   useEffect(() => {
     if (referralFromUrl) {
@@ -46,6 +62,10 @@ export default function SignupContent() {
   };
 
   const handlePayment = async () => {
+    if ((form.plan==="500" && !availability.pro) || (form.plan==="300" && !availability.starter)) {
+      alert("This course is not open for new enrollment yet.");
+      return;
+    }
     if (!form.email || !form.password) {
       alert("Fill all required fields");
       return;
@@ -147,14 +167,15 @@ export default function SignupContent() {
     },
     {
       id: "500",
-      title: "Earnwale Trading Academy — Pro (Coming Soon)",
-      description: "Planned: Starter plus six new Pro lessons, five PDFs and an 8-question rotating Pro assessment. Videos are being produced; enrollment is not open.",
+      title: "Earnwale Trading Academy — Pro",
+      description: "Includes Starter plus six additional Pro lessons, five practical PDFs and a separate rotating 8-question Pro assessment. Enrollment opens after final release approval.",
       price: "₹500",
     },
   ];
 
   const selectedProduct = products.find((p) => p.id === form.plan) ?? products[0];
-  const canSubmit = termsAgreed && refundAgreed;
+  const selectedAvailable=form.plan==="500"?availability.pro:availability.starter;
+  const canSubmit = termsAgreed && refundAgreed && selectedAvailable && !availability.loading;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gray-50">
@@ -204,8 +225,8 @@ export default function SignupContent() {
                       <button
                         key={product.id}
                         type="button"
-                        disabled={product.id === "500"}
-                        onClick={() => { if (product.id === "300") setForm({ ...form, plan: product.id }); }}
+                        disabled={availability.loading || !(product.id==="500"?availability.pro:availability.starter)}
+                        onClick={() => setForm(current=>({...current,plan:product.id}))}
                         className={`rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-colors ${
                           selected
                             ? "border-amber-500 bg-amber-50 text-amber-800"
@@ -214,7 +235,7 @@ export default function SignupContent() {
                       >
                         {product.price}
                         <span className="mt-0.5 block text-xs font-medium text-gray-500">
-                          {product.id === "300" ? "Available" : "Coming soon"}
+                          {availability.loading?"Checking...":(product.id==="500"?availability.pro:availability.starter)?"Available":"Coming soon"}
                         </span>
                       </button>
                     );
@@ -316,12 +337,12 @@ export default function SignupContent() {
                   Processing…
                 </span>
               ) : (
-                "Complete Secure Payment"
+                selectedAvailable ? "Complete Secure Payment" : "Enrollment coming soon"
               )}
             </button>
 
             <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
-              Starter is a one-time educational purchase. Access is granted after successful payment once the course is launched. Referral rewards, if applicable, are
+              Course purchases are one-time educational enrollments. Access is granted after successful payment and account verification. Referral rewards, if applicable, are
               promotional incentives and not guaranteed income.
             </p>
           </div>
