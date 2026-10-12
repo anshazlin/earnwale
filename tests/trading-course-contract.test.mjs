@@ -17,17 +17,17 @@ test("corrected six-module Starter offer matches uploaded lesson duration", asyn
   assert.match(modules[5][2], /Trading Psychology/i);
 });
 
-test("commerce advertises real Starter content and blocks unfinished Pro", async () => {
+test("commerce accurately describes plans and keeps payments gated until launch approval", async () => {
   const homepage = await read("src/app/page.tsx");
   const signup = await read("src/app/signup/SignupContent.tsx");
   const order = await read("src/app/api/payment/create-order/route.ts");
   for (const page of [homepage, signup]) {
     assert.doesNotMatch(page, /Scholar's Protocol|Capital Compounder|Instant access to ebook/i);
     assert.match(page, /Trading Academy/i);
-    assert.match(page, /Coming Soon|coming soon/i);
+    assert.match(page, /enrollment|Enrollment/i);
   }
-  assert.match(order, /plan === "500"/);
-  assert.match(order, /EARNWALE_STARTER_ENROLLMENT_ENABLED !== "true"/);
+  assert.match(order, /enrollmentFlagEnabled/);
+  assert.match(order, /verifiedCourseAssetsReady/);
 });
 
 test("quiz offers eight fresh signed questions, protects answer keys and saves each grade", async () => {
@@ -97,6 +97,8 @@ test("media uploads require verified admin, are fixed to eight assets and are st
   const db = await read("src/lib/prisma.ts");
   assert.match(db, /courseAsset: model\("courseAssets"\)/);
   const pay = await read("src/app/api/payment/create-order/route.ts");
-  assert.match(pay, /prisma\.courseAsset\.findUnique/);
-  assert.match(pay, /EARNWALE_STARTER_ENROLLMENT_ENABLED/);
+  assert.match(pay, /verifiedCourseAssetsReady/);
+  const readiness = await read("src/lib/course-enrollment.ts");
+  assert.match(readiness, /prisma\.courseAsset\.findUnique/);
+  assert.match(readiness, /EARNWALE_STARTER_ENROLLMENT_ENABLED/);
 });

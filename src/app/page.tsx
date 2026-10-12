@@ -25,6 +25,7 @@ const faqs = [
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [enrollment, setEnrollment] = useState<{ starter:boolean; pro:boolean } | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -33,6 +34,15 @@ export default function HomePage() {
       document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
     });
   }, []);
+
+  useEffect(()=>{
+    let active=true;
+    fetch("/api/academy/enrollment-status",{cache:"no-store"})
+      .then(async response=>{if(!response.ok)throw Error("Unavailable");return response.json();})
+      .then(data=>{if(active)setEnrollment({starter:data.starter===true,pro:data.pro===true});})
+      .catch(()=>{if(active)setEnrollment({starter:false,pro:false});});
+    return ()=>{active=false;};
+  },[]);
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -51,10 +61,10 @@ export default function HomePage() {
             </p>
             <div className="mt-6 flex w-full max-w-sm flex-col gap-3 sm:mx-auto sm:max-w-none sm:flex-row sm:justify-center">
               <Link
-                href="/signup"
+                href={enrollment?.pro?"/signup?plan=500":enrollment?.starter?"/signup?plan=300":"/#courses"}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-base font-semibold text-white shadow-md transition-colors hover:bg-amber-600 sm:w-auto sm:px-6"
               >
-                Enroll Now
+                {enrollment?.pro||enrollment?.starter?"Enroll Now":"Explore courses"}
               </Link>
               <Link
                 href="/login"
@@ -74,7 +84,7 @@ export default function HomePage() {
             Choose Your Plan
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-center text-sm text-gray-600 sm:text-base">
-            Starter is a one-time educational purchase. Pro is planned and is not available to enroll in yet.
+            Starter and Pro are one-time educational courses. Enrollment opens only after the learning materials and checkout are approved.
           </p>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -95,33 +105,32 @@ export default function HomePage() {
                   <span className="text-amber-500">✔</span> 8-question knowledge check with fresh questions each attempt
                 </li>
               </ul>
-              <Link
-                href="/signup"
-                className="mt-5 block w-full rounded-xl border-2 border-amber-500 bg-white py-3 text-center text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50 sm:mt-6 sm:py-4"
-              >
-                Enroll in Starter
-              </Link>
+              {enrollment?.starter
+                ? <Link href="/signup?plan=300" className="mt-5 block w-full rounded-xl border-2 border-amber-500 bg-white py-3 text-center text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50 sm:mt-6 sm:py-4">Enroll in Starter</Link>
+                : <p className="mt-5 block w-full rounded-xl bg-slate-100 py-3 text-center text-sm font-semibold text-slate-600 sm:mt-6 sm:py-4">Starter enrollment opening soon</p>}
             </div>
             <div className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm sm:ring-2 sm:ring-amber-200">
-              <div className="mb-4 rounded-xl bg-slate-100 p-5"><p className="text-xs font-bold tracking-[0.16em] text-slate-500">EARNWALE TRADING ACADEMY</p><p className="mt-2 text-xl font-bold text-slate-900">Pro: Practical Trading Education</p><p className="text-sm text-slate-600">Six new Pro lesson scripts ready · video production underway</p></div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Pro planned</p>
+              <div className="mb-4 rounded-xl bg-slate-100 p-5"><p className="text-xs font-bold tracking-[0.16em] text-slate-500">EARNWALE TRADING ACADEMY</p><p className="mt-2 text-xl font-bold text-slate-900">Pro: Practical Trading Education</p><p className="text-sm text-slate-600">Six new Pro lessons and five PDFs uploaded to private storage</p></div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">{enrollment?.pro?"Pro enrollment open":"Pro launch checks"}</p>
               <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">Pro Plan</h3>
               <p className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">₹500</p>
               <p className="mt-1 text-sm font-medium text-amber-700">
-                Pro includes Starter plus six extra lessons, practical case studies and a separate 8-question rotating knowledge check. Video production and review are in progress.
+                Pro includes Starter plus six extra lessons, practical case studies and a separate 8-question rotating knowledge check. Media has been uploaded; purchase access opens after final review.
               </p>
               <ul className="mt-5 space-y-2 text-sm text-gray-700 sm:mt-6 sm:space-y-3">
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Planned: Starter access plus six new Pro video lessons
+                  <span className="text-amber-500">✔</span> Starter access plus six additional Pro video lessons
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Planned: five Pro PDFs including workbook, case studies and journal
+                  <span className="text-amber-500">✔</span> Five Pro PDFs including workbook, case studies and journal
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-amber-500">✔</span> Planned: rotating 8-question Pro assessment with saved scores
+                  <span className="text-amber-500">✔</span> Rotating 8-question Pro assessment with saved scores
                 </li>
               </ul>
-              <p aria-label="Pro course coming soon" className="mt-5 block w-full rounded-xl bg-slate-100 py-3 text-center text-sm font-semibold text-slate-600 sm:mt-6 sm:py-4">Pro enrollment coming soon</p>
+              {enrollment?.pro
+                ? <Link href="/signup?plan=500" className="mt-5 block w-full rounded-xl border-2 border-amber-500 bg-white py-3 text-center text-sm font-semibold text-amber-700 hover:bg-amber-50 sm:mt-6 sm:py-4">Enroll in Pro — ₹500</Link>
+                : <p aria-label="Pro enrollment pending approval" className="mt-5 block w-full rounded-xl bg-slate-100 py-3 text-center text-sm font-semibold text-slate-600 sm:mt-6 sm:py-4">Pro enrollment opening soon</p>}
             </div>
           </div>
         </div>
