@@ -19,7 +19,7 @@ Total video runtime approximately 44:44, **not 120 minutes**.
 - Per founder's report, there are no real customers. This removes the production customer-data migration need, but do not assume seeded/test accounts are nonexistent.
 - Draft catalog now advertises Starter as 44:44 of video plus a handbook, worksheets and a quiz. Pro remains shown at ₹500 as a future offering, but new Pro orders are denied server-side.
 - **Do not accept Starter payments until delivery works**. The order endpoint now requires `EARNWALE_STARTER_ENROLLMENT_ENABLED=true` (unset/false defaults to closed). Set this only after assets are deployed and purchase-to-dashboard delivery is tested.
-- The existing business logic credits ₹250 referral reward for a ₹300 purchase and ₹450 for ₹500; each leaves ₹50 before fees, taxes, refunds and overhead. Review/refactor referral economics and refund reversal before launch.
+- Course purchase and Affiliate Program membership are separate. The optional free Affiliate Program pays ₹220 for a qualifying ₹300 sale and ₹400 for a qualifying ₹500 sale, only to an active affiliate and only after verified payment. No purchase is required to join the Affiliate Program.
 - Current Pro payment verification remains able to verify any previously issued/paid order, if one exists, but new Pro order creation is blocked.
 - The website checkout descriptions no longer refer to the retired eBooks.
 
