@@ -19,11 +19,14 @@ const PAGE_SIZE = 10;
 
 function accountType(user: AdminUser) {
   const customer = Boolean(String(user.plan ?? "").trim());
-  const affiliate =
-    String(user.affiliateStatus ?? "").toLowerCase() === "active";
+  const status = String(user.affiliateStatus ?? "").toLowerCase();
+  const affiliate = status === "active";
+  const pending = status === "pending_verification";
   if (customer && affiliate) return "Customer + Affiliate";
+  if (customer && pending) return "Customer + Pending Affiliate";
   if (customer) return "Customer";
   if (affiliate) return "Affiliate";
+  if (pending) return "Affiliate pending verification";
   return "Member";
 }
 
