@@ -17,52 +17,66 @@ export async function consumeRateLimit(options: {
 }): Promise<boolean> {
   const { namespace, key, limit, windowMs } = options;
   const id = limiterId(namespace, key || "unknown");
-  const now = new Date();
 
-  return prisma.$transaction(async (tx: any) => {
-    const existing = await tx.rateLimit.findUnique({ where: { id } });
-    const windowStart = existing?.windowStart
-      ? new Date(existing.windowStart)
-      : null;
-    const withinWindow =
-      windowStart &&
-      now.getTime() - windowStart.getTime() < windowMs;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const now = new Date();
 
-    if (!existing) {
-      await tx.rateLimit.create({
-        data: {
-          id,
-          namespace,
-          count: 1,
-          windowStart: now,
-          updatedAt: now,
-        },
+    try {
+      return await prisma.$transaction(async (tx: any) => {
+        const existing = await tx.rateLimit.findUnique({ where: { id } });
+        const windowStart = existing?.windowStart
+          ? new Date(existing.windowStart)
+          : null;
+        const withinWindow =
+          windowStart &&
+          now.getTime() - windowStart.getTime() < windowMs;
+
+        if (!existing) {
+          await tx.rateLimit.create({
+            data: {
+              id,
+              namespace,
+              count: 1,
+              windowStart: now,
+              updatedAt: now,
+            },
+          });
+          return true;
+        }
+
+        if (!withinWindow) {
+          await tx.rateLimit.update({
+            where: { id },
+            data: {
+              count: 1,
+              windowStart: now,
+              updatedAt: now,
+            },
+          });
+          return true;
+        }
+
+        const count = Number(existing.count ?? 0);
+        if (count >= limit) return false;
+
+        await tx.rateLimit.update({
+          where: { id },
+          data: {
+            count: { increment: 1 },
+            updatedAt: now,
+          },
+        });
+        return true;
       });
-      return true;
+    } catch (error: any) {
+      const message = String(error?.message ?? "");
+      const retryable =
+        message.includes("(409)") ||
+        message.includes("ABORTED") ||
+        message.includes("transaction");
+      if (!retryable || attempt === 2) throw error;
     }
+  }
 
-    if (!withinWindow) {
-      await tx.rateLimit.update({
-        where: { id },
-        data: {
-          count: 1,
-          windowStart: now,
-          updatedAt: now,
-        },
-      });
-      return true;
-    }
-
-    const count = Number(existing.count ?? 0);
-    if (count >= limit) return false;
-
-    await tx.rateLimit.update({
-      where: { id },
-      data: {
-        count: { increment: 1 },
-        updatedAt: now,
-      },
-    });
-    return true;
-  });
+  return false;
 }
