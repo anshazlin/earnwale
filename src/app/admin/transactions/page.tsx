@@ -6,6 +6,12 @@ type AdminTransaction = {
   type: string;
   amount: number;
   createdAt: string;
+  description?: string | null;
+  sourcePaymentId?: string | null;
+  sourceOrderId?: string | null;
+  sourceUserId?: string | null;
+  sourcePlan?: string | null;
+  commissionStatus?: string | null;
   user: {
     name: string;
     email: string;
@@ -197,9 +203,21 @@ export default function AdminTransactionsPage() {
                         <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-slate-900 sm:px-6">
                           {formatCurrency(tx.amount)}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700 sm:px-6">
-                          {/* Description not stored in schema; keep placeholder for future use */}
-                          —
+                        <td className="px-4 py-3 text-xs text-slate-700 sm:px-6">
+                          <p className="max-w-xs whitespace-normal">
+                            {tx.description ?? "—"}
+                          </p>
+                          {tx.sourcePaymentId && (
+                            <p className="mt-1 max-w-xs break-all font-mono text-[10px] text-slate-400">
+                              Payment: {tx.sourcePaymentId}
+                              {tx.sourcePlan ? ` · Plan ₹${tx.sourcePlan}` : ""}
+                            </p>
+                          )}
+                          {tx.commissionStatus && (
+                            <span className="mt-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                              {tx.commissionStatus}
+                            </span>
+                          )}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500 sm:px-6 sm:text-sm">
                           {formatDate(tx.createdAt)}

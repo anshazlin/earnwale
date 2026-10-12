@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, authErrorResponse } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isSameOriginRequest } from "@/lib/request-security";
 
 /**
  * Manual payout workflow.
@@ -13,6 +14,10 @@ import { prisma } from "@/lib/prisma";
  */
 export async function POST(req: Request) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
     await requireAdmin(req);
 
     const body = await req.json();

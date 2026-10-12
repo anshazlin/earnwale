@@ -4,16 +4,20 @@ import { readFile } from "node:fs/promises";
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("logged-in Home contains two course cards linking to different pages rather than embedded players", async () => {
+test("logged-in Home keeps Starter and Pro separate and enforces entitlement-aware links", async () => {
   const home = await read("src/app/dashboard/page.tsx");
   assert.match(home, /import Link from "next\/link"/);
-  assert.match(home, /href="\/dashboard\/my-courses"/);
-  assert.match(home, /href="\/dashboard\/pro"/);
-  assert.match(home, /Choose a course to open its own learning page/);
+  assert.match(home, /"\/dashboard\/my-courses"/);
+  assert.match(home, /"\/dashboard\/pro"/);
+  assert.match(home, /"\/signup\?plan=300"/);
+  assert.match(home, /"\/signup\?plan=500"/);
+  assert.match(home, /const hasStarter = plan === "300" \|\| plan === "500"/);
+  assert.match(home, /const hasPro = plan === "500"/);
+  assert.match(home, /Affiliate Program membership does not unlock paid learning content/);
   assert.match(home, /Starter · ₹300/);
   assert.match(home, /Pro · ₹500/);
-  assert.match(home, /Open Starter course/);
-  assert.match(home, /Open Pro course/);
+  assert.match(home, /Open course/);
+  assert.match(home, /View enrollment/);
   assert.match(home, /sm:grid-cols-2/);
   assert.ok(home.indexOf("Starter · ₹300") < home.indexOf("Pro · ₹500"));
   assert.doesNotMatch(home, /<StarterCourse\s*\/>|<ProCourse\s*\/>/);

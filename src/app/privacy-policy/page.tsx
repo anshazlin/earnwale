@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function PrivacyPolicyPage() {
   return (
     <LegalLayout title="Privacy Policy">
-      <p className="text-sm text-gray-500">Last Updated: March 2026</p>
+      <p className="text-sm text-gray-500">Last Updated: October 2026</p>
       <p className="mt-4">
         Earnwale respects your privacy and is committed to protecting your personal information.
       </p>
@@ -28,8 +28,8 @@ export default function PrivacyPolicyPage() {
       <h3>Account Information</h3>
       <ul>
         <li>Login credentials</li>
-        <li>Referral data</li>
-        <li>Wallet earnings</li>
+        <li>Affiliate status, tracked attribution and qualifying-sale data</li>
+        <li>Affiliate commission and wallet records</li>
         <li>Transaction history</li>
       </ul>
       <h3>Technical Information</h3>
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
       <ul>
         <li>Create and manage user accounts</li>
         <li>Process payments</li>
-        <li>Credit referral rewards</li>
+        <li>Attribute qualifying course sales and credit affiliate commissions</li>
         <li>Process payouts</li>
         <li>Prevent fraud</li>
         <li>Improve platform performance</li>
@@ -60,7 +60,7 @@ export default function PrivacyPolicyPage() {
       <p>We implement reasonable security measures to protect your data. However, no system is 100% secure. Use of the platform is at your own risk.</p>
 
       <h2>5. Cookies & Tracking</h2>
-      <p>We may use cookies to improve user experience, track login sessions, and monitor referral attribution. You can disable cookies through your browser settings.</p>
+      <p>We may use cookies to improve user experience, track login sessions, and monitor affiliate attribution and prevent duplicate or fraudulent commission claims. You can disable cookies through your browser settings.</p>
 
       <h2>6. Data Sharing</h2>
       <p>We may share data only with payment processors, with legal authorities when required by law, and to prevent fraud or abuse. We do not sell or rent user information.</p>

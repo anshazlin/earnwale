@@ -52,7 +52,11 @@ export default function LoginPage() {
       const data = await session.json().catch(() => ({}));
       if (!session.ok) throw new Error(data?.error || "Login failed");
       await signOut(firebaseAuth);
-      window.location.href = data?.isAdmin ? "/admin" : "/dashboard";
+      window.location.href = data?.isAdmin
+        ? "/admin"
+        : data?.hasCourse
+          ? "/dashboard"
+          : "/dashboard/personal";
     } catch (err: any) {
       setError(err?.message === "Login failed" ? err.message : "Invalid email or password");
     } finally {

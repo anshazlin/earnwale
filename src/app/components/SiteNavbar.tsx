@@ -53,6 +53,9 @@ export default function SiteNavbar() {
             About
           </Link>
           <CoursesNavLink />
+          <Link href="/affiliate" className={linkClass}>
+            Affiliate Program
+          </Link>
           <Link href="/contact" className={linkClass}>
             Contact
           </Link>
@@ -72,7 +75,7 @@ export default function SiteNavbar() {
             Login
           </Link>
           <Link href="/signup" className={joinClass} onClick={closeMenu}>
-            Join Now
+            Enroll
           </Link>
         </div>
       </div>
@@ -86,6 +89,9 @@ export default function SiteNavbar() {
             About
           </Link>
           <CoursesNavLink onNavigate={closeMenu} />
+          <Link href="/affiliate" className={linkClass} onClick={closeMenu}>
+            Affiliate Program
+          </Link>
           <Link href="/contact" className={linkClass} onClick={closeMenu}>
             Contact
           </Link>

@@ -22,12 +22,14 @@ export async function GET(req: Request) {
       where,
       orderBy: { createdAt: "desc" },
       select: {
-        id: true, type: true, amount: true, createdAt: true, userId: true,
+        id: true, type: true, amount: true, description: true, createdAt: true, userId: true,
+        sourcePaymentId: true, sourceOrderId: true, sourceUserId: true,
+        sourcePlan: true, commissionStatus: true,
       },
     });
     const pageRows = matching.slice(skip, skip + PAGE_SIZE);
     const transactions = await Promise.all(
-      pageRows.map(async (row: any) => ({
+      pageRows.map(async (row) => ({
         ...row,
         user: row.userId
           ? await prisma.user.findUnique({

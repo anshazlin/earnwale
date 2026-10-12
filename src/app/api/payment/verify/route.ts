@@ -4,16 +4,14 @@ import bcrypt from "bcryptjs";
 import { firebaseAdminAuth } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
 import razorpay from "@/lib/razorpay";
+import { creditAffiliateCommission, resolveActiveAffiliate } from "@/lib/affiliate-commission";
+import { clientIp, isSameOriginRequest } from "@/lib/request-security";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 const PLAN_AMOUNTS: Record<string, number> = {
   "300": 30000,
   "500": 50000,
 };
-const PLAN_REWARDS: Record<string, number> = {
-  "300": 250,
-  "500": 450,
-};
-
 function safeSignatureEqual(expected: string, received: unknown) {
   if (typeof received !== "string") return false;
   const a = Buffer.from(expected, "utf8");
@@ -24,12 +22,28 @@ function safeSignatureEqual(expected: string, received: unknown) {
 export async function POST(req: Request) {
   let createdFirebaseUid: string | null = null;
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
+    const allowed = await consumeRateLimit({
+      namespace: "payment-verify",
+      key: clientIp(req),
+      limit: 20,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many verification attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const body = await req.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, formData } = body ?? {};
     const email = String(formData?.email ?? "").trim().toLowerCase();
     const password = String(formData?.password ?? "");
     const plan = String(formData?.plan ?? "");
-    const referralCode = String(formData?.referralCode ?? "").trim().toUpperCase() || null;
     const expectedAmount = PLAN_AMOUNTS[plan];
 
     if (!razorpay_order_id || !razorpay_payment_id || !email || !password || !expectedAmount) {
@@ -68,6 +82,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Order plan mismatch" }, { status: 400 });
     }
 
+    // Attribution is bound when the server creates the Razorpay order. Ignore
+    // any affiliate code supplied later by the browser during verification.
+    const referralCode =
+      String(order.notes?.affiliateCode ?? "").trim().toUpperCase() || null;
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json({ error: "User already exists" }, { status: 409 });
@@ -84,32 +103,16 @@ export async function POST(req: Request) {
     const firebaseUser = await firebaseAdminAuth.createUser({ email, password, emailVerified: false });
     createdFirebaseUid = firebaseUser.uid;
 
-    async function generateUniqueReferralCode(tx: any) {
-      for (let attempt = 0; attempt < 20; attempt++) {
-        const code = `ERW${crypto.randomInt(10000, 100000)}`;
-        const existing = await tx.user.findUnique({ where: { referralCode: code } });
-        if (!existing) return code;
-      }
-      throw new Error("Unable to generate referral code");
-    }
-
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: typeof prisma) => {
       const duplicatePayment = await tx.transaction.findUnique({ where: { id: paymentRecordId } });
       if (duplicatePayment) throw new Error("Payment already processed");
 
       const duplicateUser = await tx.user.findUnique({ where: { email } });
       if (duplicateUser) throw new Error("User already exists");
 
-      let referrer = null;
-      if (referralCode) {
-        referrer = await tx.user.findUnique({ where: { referralCode } });
-        if (!referrer) throw new Error("Invalid referral code");
-        if (String(referrer.email).toLowerCase() === email) {
-          throw new Error("Self referral not allowed");
-        }
-      }
-
-      const myReferralCode = await generateUniqueReferralCode(tx);
+      // Attribution never decides whether a paid customer receives the course.
+      // Invalid, inactive or self affiliate codes simply do not earn commission.
+      const referrer = await resolveActiveAffiliate(tx, referralCode, { email });
       const createdUser = await tx.user.create({
         data: {
           name: email.split("@")[0] || "Member",
@@ -117,8 +120,9 @@ export async function POST(req: Request) {
           firebaseUid: firebaseUser.uid,
           password: hashedPassword,
           plan,
-          referralCode: myReferralCode,
+          referralCode: null,
           referredBy: referrer ? referrer.referralCode : null,
+          affiliateStatus: "inactive",
           earnings: 0,
           totalEarned: 0,
           referralCount: 0,
@@ -136,24 +140,13 @@ export async function POST(req: Request) {
         },
       });
 
-      const rewardAmount = PLAN_REWARDS[plan] ?? 0;
-      if (referrer && rewardAmount > 0) {
-        await tx.user.update({
-          where: { id: referrer.id },
-          data: {
-            earnings: { increment: rewardAmount },
-            totalEarned: { increment: rewardAmount },
-            referralCount: { increment: 1 },
-          },
-        });
-
-        await tx.transaction.create({
-          data: {
-            userId: referrer.id,
-            amount: rewardAmount,
-            type: "CREDIT",
-            fromUser: createdUser.id,
-          },
+      if (referrer) {
+        await creditAffiliateCommission(tx, {
+          affiliate: referrer,
+          buyerUserId: createdUser.id,
+          plan,
+          razorpayPaymentId: razorpay_payment_id,
+          razorpayOrderId: razorpay_order_id,
         });
 
         await tx.user.update({
@@ -166,19 +159,17 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, verificationRequired: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (createdFirebaseUid) {
       try {
         const linked = await prisma.user.findUnique({ where: { firebaseUid: createdFirebaseUid } });
         if (!linked) await firebaseAdminAuth.deleteUser(createdFirebaseUid);
       } catch {}
     }
-    const message = error?.message || "Payment verification failed";
+    const message = error instanceof Error ? error.message : "Payment verification failed";
     const expectedClientError =
       message === "Payment already processed" ||
-      message === "User already exists" ||
-      message === "Invalid referral code" ||
-      message === "Self referral not allowed";
+      message === "User already exists";
 
     if (!expectedClientError) console.error("Payment verification failed", error);
     return NextResponse.json(

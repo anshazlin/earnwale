@@ -2,11 +2,38 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { firebaseAdminAuth } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
+import { clientIp, isSameOriginRequest } from "@/lib/request-security";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
     const { email: rawEmail, password } = await req.json();
     const email = String(rawEmail ?? "").trim().toLowerCase();
+
+    const [ipAllowed, accountAllowed] = await Promise.all([
+      consumeRateLimit({
+        namespace: "legacy-auth-ip",
+        key: clientIp(req),
+        limit: 30,
+        windowMs: 15 * 60 * 1000,
+      }),
+      consumeRateLimit({
+        namespace: "legacy-auth-account",
+        key: email,
+        limit: 8,
+        windowMs: 15 * 60 * 1000,
+      }),
+    ]);
+    if (!ipAllowed || !accountAllowed) {
+      return NextResponse.json(
+        { error: "Too many sign-in attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
     if (!email || !password) return NextResponse.json({ error: "Email and password required" }, { status: 400 });
 
     const user = await prisma.user.findUnique({ where: { email } });
@@ -24,8 +51,12 @@ export async function POST(req: Request) {
       // Legacy password was just proven against bcrypt; synchronize the Firebase
       // credential during this controlled bridge without removing the bcrypt hash yet.
       await firebaseAdminAuth.updateUser(firebaseUser.uid, { password });
-    } catch (error: any) {
-      if (error?.code !== "auth/user-not-found") throw error;
+    } catch (error: unknown) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code?: unknown }).code ?? "")
+          : "";
+      if (code !== "auth/user-not-found") throw error;
       firebaseUser = await firebaseAdminAuth.createUser({ email, password, emailVerified: false });
     }
 

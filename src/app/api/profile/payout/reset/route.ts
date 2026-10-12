@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { requireAuth, authErrorResponse } from "@/lib/auth";
 import { firebaseAdminAuth } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
+import { isSameOriginRequest } from "@/lib/request-security";
 
 const RECENT_AUTH_SECONDS = 5 * 60;
 const PAYOUT_CHANGE_HOLD_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(req: Request) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
     const { decoded: sessionUser, user: authenticatedUser } = await requireAuth(req);
     const { idToken } = await req.json();
 
@@ -83,8 +88,12 @@ export async function POST(req: Request) {
       success: true,
       holdUntil: holdUntil.toISOString(),
     });
-  } catch (error: any) {
-    if (String(error?.code ?? "").startsWith("auth/")) {
+  } catch (error: unknown) {
+    const code =
+      typeof error === "object" && error !== null && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (code.startsWith("auth/")) {
       return NextResponse.json(
         { error: "Password confirmation failed" },
         { status: 401 },

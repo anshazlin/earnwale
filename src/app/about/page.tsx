@@ -9,7 +9,7 @@ export default function About() {
         <header className="mb-4">
           <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">About Earnwale</h1>
           <p className="mt-2 text-sm text-gray-600">
-            We create practical courses and tools that help learners level up their careers.
+            We create affordable digital education focused on trading fundamentals, market literacy and responsible risk awareness.
           </p>
         </header>
 
@@ -33,7 +33,7 @@ export default function About() {
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900">Get In Touch</h2>
           <p className="text-sm text-gray-700">
-            Have questions about courses, partnerships, or careers?{" "}
+            Have questions about courses, the Affiliate Program, or support?{" "}
             <Link href="/contact" className="font-medium text-amber-600 hover:text-amber-700">
               Contact us
             </Link>

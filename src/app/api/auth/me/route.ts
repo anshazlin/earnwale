@@ -10,6 +10,11 @@ export async function GET(req: Request) {
         name: user.name,
         email: user.email,
         plan: user.plan,
+        affiliateStatus: user.affiliateStatus ?? "inactive",
+        affiliateCode:
+          String(user.affiliateStatus ?? "").toLowerCase() === "active"
+            ? user.referralCode ?? null
+            : null,
         referralCode: user.referralCode,
         earnings: user.earnings,
         totalEarned: user.totalEarned,
