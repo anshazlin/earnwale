@@ -77,6 +77,7 @@ export default function MyCoursesPage() {
   if(loading) return <div className="flex min-h-[40vh] items-center justify-center"><span className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" aria-label="Loading courses" /></div>;
   if(!authorised) return <section className="rounded-2xl border border-amber-200 bg-white p-7"><h1 className="text-2xl font-bold text-slate-900">My Courses</h1><p className="mt-3 text-slate-600">Enroll in Earnwale Trading Academy to access the lessons.</p><Link href="/#courses" className="mt-5 inline-block rounded-xl bg-amber-500 px-5 py-3 font-semibold text-white">View plans</Link></section>;
   return <div className="space-y-6 pb-8">
+    <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 underline-offset-4 hover:text-amber-700 hover:underline">← Back to my courses</Link>
     <section className="overflow-hidden rounded-3xl bg-[#071B33] px-5 py-7 text-white sm:px-8 sm:py-9">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Earnwale Trading Academy · Starter</p>
       <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Trading Fundamentals</h1>
