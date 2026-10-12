@@ -88,8 +88,12 @@ export async function POST(req: Request) {
       success: true,
       holdUntil: holdUntil.toISOString(),
     });
-  } catch (error: any) {
-    if (String(error?.code ?? "").startsWith("auth/")) {
+  } catch (error: unknown) {
+    const code =
+      typeof error === "object" && error !== null && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (code.startsWith("auth/")) {
       return NextResponse.json(
         { error: "Password confirmation failed" },
         { status: 401 },
