@@ -91,7 +91,7 @@ export default function AdminFriendInvitesPage() {
     <form onSubmit={create} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div>
         <label htmlFor="friend-email" className="block text-sm font-semibold text-slate-900">
-          Friend's account email
+          Friend&apos;s account email
         </label>
         <p className="mt-1 text-xs leading-5 text-slate-600">
           The invite works only for this exact email. A registered friend must sign in using the same account.
