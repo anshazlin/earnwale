@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import IdleSessionGuard from "@/app/components/IdleSessionGuard";
 
 type DashboardShellProps = { children: ReactNode };
 type IconName = "home" | "wallet" | "dashboard";
@@ -73,6 +74,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     } finally {
+      window.localStorage.removeItem("earnwale:lastActivity");
       router.replace("/login");
       router.refresh();
       setLogoutLoading(false);
@@ -81,6 +83,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50">
+      <IdleSessionGuard />
       <div className="flex min-h-screen">
         <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 border-r border-amber-100 bg-white md:flex md:flex-col">
           <div className="flex h-20 items-center gap-3 px-5">
