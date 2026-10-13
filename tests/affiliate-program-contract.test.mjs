@@ -94,7 +94,7 @@ test("logged-in free accounts can later buy a course on the same identity", asyn
   assert.match(createOrder, /requireAuth\(req\)/);
   assert.match(createOrder, /existingAccount: "true"/);
   assert.match(createOrder, /userId: String\(user\.id\)/);
-  assert.match(createOrder, /if \(currentPlan\)/);
+  assert.match(createOrder, /if \(currentPlan && !\(friendInvite && currentPlan === "300"\)\)/);
 
   assert.match(verify, /requireAuth\(req\)/);
   assert.match(verify, /timingSafeEqual/);
