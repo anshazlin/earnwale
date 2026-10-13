@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Script from "next/script";
 import SiteNavbar from "@/app/components/SiteNavbar";
 import { useSearchParams } from "next/navigation";
@@ -17,7 +17,6 @@ type AccountSummary = {
   email: string;
   name?: string;
   plan?: string | number | null;
-  affiliateStatus?: string;
 };
 
 export default function SignupContent() {
@@ -294,15 +293,6 @@ export default function SignupContent() {
   const inputBase =
     "w-full max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 box-border";
 
-  const accountLabel = useMemo(() => {
-    if (!account) return "";
-    const role =
-      String(account.affiliateStatus ?? "").toLowerCase() === "active"
-        ? "affiliate account"
-        : "Earnwale account";
-    return `Signed in as ${account.email} · ${role}`;
-  }, [account]);
-
   return (
     <div className="min-h-screen overflow-x-hidden bg-gray-50">
       <Script
@@ -320,9 +310,8 @@ export default function SignupContent() {
             Buy the course for the learning product itself.
           </h1>
           <p className="mt-1 text-sm text-gray-600">
-            Earnwale provides educational content only. Course purchase is not
-            required to join the separate Affiliate Program, and affiliate
-            earnings are never guaranteed.
+            Earnwale provides educational content only. Choose the course you
+            want to study and complete secure enrollment below.
           </p>
 
           <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -402,7 +391,7 @@ export default function SignupContent() {
             ) : isExistingAccount ? (
               <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">
-                  {accountLabel}
+                  {`Signed in as ${account?.email ?? ""}`}
                 </p>
                 {existingPlan ? (
                   <p className="mt-2 text-xs leading-5 text-slate-600">
@@ -412,8 +401,7 @@ export default function SignupContent() {
                 ) : (
                   <p className="mt-2 text-xs leading-5 text-slate-600">
                     No paid course is attached to this account. You can enroll
-                    now without creating a second account or changing your
-                    affiliate status.
+                    now without creating a second account.
                   </p>
                 )}
               </div>
@@ -537,9 +525,8 @@ export default function SignupContent() {
             )}
 
             <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
-              Course purchases are one-time educational enrollments. Affiliate
-              participation is separate, free and optional. No purchase creates
-              a right to guaranteed earnings.
+              Course purchases are one-time educational enrollments. Access is
+              granted only after successful payment verification.
             </p>
           </div>
         </div>

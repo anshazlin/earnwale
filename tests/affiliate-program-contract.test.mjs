@@ -4,34 +4,61 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("affiliate program is free, explicit and uses the approved commission schedule", async () => {
+test("affiliate program remains free and uses the approved commission schedule", async () => {
   const affiliate = await read("src/lib/affiliate.ts");
-  const registration = await read("src/app/api/affiliate/register/route.ts");
-  const page = await read("src/app/affiliate/page.tsx");
+  const affiliatePage = await read("src/app/affiliate/page.tsx");
+  const dashboard = await read("src/app/dashboard/personal/page.tsx");
 
   assert.match(affiliate, /"300": 220/);
   assert.match(affiliate, /"500": 400/);
   assert.match(affiliate, /affiliateStatus: "active"/);
-  assert.match(registration, /plan: null/);
-  assert.match(registration, /affiliateStatus: "pending_verification"/);
-  assert.doesNotMatch(registration, /password\s*:/);
-  assert.match(page, /Joining is free/);
-  assert.match(page, /do not need to buy a course/i);
-  assert.match(page, /No joining bonus, recruitment commission, downline/);
+
+  assert.match(affiliatePage, /registration is handled only inside[\s\S]*logged-in Earnwale[\s\S]*dashboard/i);
+  assert.match(affiliatePage, /Create free account/);
+  assert.doesNotMatch(affiliatePage, /createUserWithEmailAndPassword/);
+  assert.doesNotMatch(affiliatePage, /\/api\/affiliate\/register/);
+
+  assert.match(dashboard, /Join Affiliate Program — Free/);
+  assert.match(dashboard, /fetch\("\/api\/affiliate"/);
 });
 
-test("verified sign-in activates pending affiliates instead of course purchase", async () => {
-  const session = await read("src/app/api/auth/session/route.ts");
-  const verify = await read("src/app/api/payment/verify/route.ts");
+test("free account creation does not activate affiliate status or course access", async () => {
+  const registerApi = await read("src/app/api/auth/register/route.ts");
+  const registerPage = await read("src/app/register/page.tsx");
 
-  assert.match(session, /pending_verification/);
-  assert.match(session, /activateAffiliate/);
-  assert.match(session, /email_verified/);
+  assert.match(registerApi, /plan: null/);
+  assert.match(registerApi, /affiliateStatus: "inactive"/);
+  assert.match(registerApi, /referralCode: null/);
+  assert.doesNotMatch(registerApi, /affiliateStatus: "active"/);
+  assert.doesNotMatch(registerApi, /password\s*:/);
+
+  assert.match(registerPage, /Create free account/);
+  assert.match(registerPage, /join the Affiliate Program from your dashboard after login/i);
+});
+
+test("affiliate activation happens only through authenticated dashboard API", async () => {
+  const affiliateApi = await read("src/app/api/affiliate/route.ts");
+  const session = await read("src/app/api/auth/session/route.ts");
+
+  assert.match(affiliateApi, /requireAuth\(req\)/);
+  assert.match(affiliateApi, /activateAffiliate/);
+  assert.match(affiliateApi, /acceptTerms/);
+
+  assert.doesNotMatch(session, /pending_verification/);
+  assert.doesNotMatch(session, /activateAffiliate/);
+});
+
+test("course purchase does not automatically activate affiliate status", async () => {
+  const verify = await read("src/app/api/payment/verify/route.ts");
+  const dashboardApi = await read("src/app/api/dashboard/route.ts");
 
   assert.match(verify, /affiliateStatus: "inactive"/);
   assert.match(verify, /referralCode: null/);
   assert.doesNotMatch(verify, /PLAN_REWARDS/);
   assert.doesNotMatch(verify, /generateUniqueReferralCode/);
+
+  assert.doesNotMatch(dashboardApi, /ensureReferralCode/);
+  assert.doesNotMatch(dashboardApi, /randomInt/);
 });
 
 test("affiliate attribution is active-only, server-bound and payment-idempotent", async () => {
@@ -39,7 +66,8 @@ test("affiliate attribution is active-only, server-bound and payment-idempotent"
   const verify = await read("src/app/api/payment/verify/route.ts");
   const commissions = await read("src/lib/affiliate-commission.ts");
 
-  assert.match(order, /notes: \{ plan, affiliateCode \}/);
+  assert.match(order, /affiliateCode/);
+  assert.match(order, /notes:/);
   assert.match(verify, /order\.notes\?\.affiliateCode/);
   assert.match(verify, /resolveActiveAffiliate/);
   assert.match(commissions, /isAffiliateActive/);
@@ -58,7 +86,7 @@ test("self-referral and inactive affiliate codes never create commission", async
   assert.match(commissions, /buyerEmail === affiliateEmail/);
 });
 
-test("affiliate-only accounts can later buy a course on the same identity", async () => {
+test("logged-in free accounts can later buy a course on the same identity", async () => {
   const createOrder = await read("src/app/api/payment/existing/create-order/route.ts");
   const verify = await read("src/app/api/payment/existing/verify/route.ts");
   const signup = await read("src/app/signup/SignupContent.tsx");
@@ -77,7 +105,7 @@ test("affiliate-only accounts can later buy a course on the same identity", asyn
 
   assert.match(signup, /\/api\/payment\/existing\/create-order/);
   assert.match(signup, /\/api\/payment\/existing\/verify/);
-  assert.match(signup, /No paid course is attached to this account/);
+  assert.doesNotMatch(signup, /affiliate account/);
 });
 
 test("course access remains separate from affiliate membership", async () => {
@@ -90,17 +118,6 @@ test("course access remains separate from affiliate membership", async () => {
   assert.match(pro, /requireAuth\(req\)/);
   assert.match(pro, /hasProAccess/);
   assert.match(dashboard, /Affiliate Program membership does not unlock paid learning content/);
-});
-
-test("dashboard no longer auto-generates referral codes for customers", async () => {
-  const dashboardApi = await read("src/app/api/dashboard/route.ts");
-  const dashboard = await read("src/app/dashboard/personal/page.tsx");
-
-  assert.doesNotMatch(dashboardApi, /ensureReferralCode/);
-  assert.doesNotMatch(dashboardApi, /randomInt/);
-  assert.match(dashboardApi, /affiliateStatus/);
-  assert.match(dashboard, /Join Affiliate Program — Free/);
-  assert.match(dashboard, /\/signup\?aff=/);
 });
 
 test("money mutations keep auth, origin checks and withdrawal floor", async () => {
@@ -123,7 +140,7 @@ test("money mutations keep auth, origin checks and withdrawal floor", async () =
   assert.match(legacy, /legacy-auth-account/);
 });
 
-test("production test-credit and obsolete payout mutation endpoints are removed", async () => {
+test("production test-credit and obsolete public affiliate/payout endpoints are removed", async () => {
   await assert.rejects(
     read("src/app/api/admin/users/test-referral/route.ts"),
     /ENOENT/,
@@ -132,9 +149,13 @@ test("production test-credit and obsolete payout mutation endpoints are removed"
     read("src/app/api/admin/withdraw/update/route.ts"),
     /ENOENT/,
   );
+  await assert.rejects(
+    read("src/app/api/affiliate/register/route.ts"),
+    /ENOENT/,
+  );
 });
 
-test("public positioning separates education purchase from affiliate participation", async () => {
+test("public positioning separates education purchase from dashboard affiliate enrollment", async () => {
   const home = await read("src/app/page.tsx");
   const terms = await read("src/app/terms-and-conditions/page.tsx");
   const affiliateTerms = await read("src/app/affiliate-terms/page.tsx");
@@ -147,8 +168,7 @@ test("public positioning separates education purchase from affiliate participati
   assert.match(affiliateTerms, /₹400/);
 });
 
-
-test("one-rupee checkout is restricted to Razorpay test preview or development", async () => {
+test("Starter alone becomes ₹1 with Razorpay Test Mode while Pro remains ₹500", async () => {
   const amounts = await read("src/lib/payment-amounts.ts");
   const createOrder = await read("src/app/api/payment/create-order/route.ts");
   const verify = await read("src/app/api/payment/verify/route.ts");
@@ -158,13 +178,29 @@ test("one-rupee checkout is restricted to Razorpay test preview or development",
   assert.match(amounts, /"300": 30000/);
   assert.match(amounts, /"500": 50000/);
   assert.match(amounts, /razorpayKey\.startsWith\("rzp_test_"\)/);
-  assert.match(amounts, /vercelEnv === "preview"/);
-  assert.match(amounts, /process\.env\.NODE_ENV !== "production"/);
-  assert.match(amounts, /return isOneRupeeTestCheckout\(\) \? 100 : catalogAmount/);
+  assert.match(amounts, /normalizedPlan === "300" && isOneRupeeTestCheckout\(\)/);
+  assert.match(amounts, /return 100/);
+  assert.match(amounts, /return catalogAmount/);
 
   assert.match(createOrder, /checkoutAmountForPlan/);
-  assert.match(createOrder, /one-rupee-preview/);
+  assert.match(createOrder, /plan === "300" && isOneRupeeTestCheckout\(\)/);
   assert.match(verify, /checkoutAmountForPlan/);
   assert.match(existingCreate, /checkoutAmountForPlan/);
+  assert.match(existingCreate, /plan === "300" && isOneRupeeTestCheckout\(\)/);
   assert.match(existingVerify, /checkoutAmountForPlan/);
+});
+
+test("customer and admin sessions auto logout after ten minutes of inactivity", async () => {
+  const guard = await read("src/app/components/IdleSessionGuard.tsx");
+  const dashboardShell = await read("src/app/dashboard/_components/dashboard-shell.tsx");
+  const adminShell = await read("src/app/admin/_components/admin-shell.tsx");
+  const login = await read("src/app/login/page.tsx");
+
+  assert.match(guard, /IDLE_TIMEOUT_MS = 10 \* 60 \* 1000/);
+  assert.match(guard, /\/api\/auth\/logout/);
+  assert.match(guard, /visibilitychange/);
+  assert.match(guard, /earnwale:lastActivity/);
+  assert.match(dashboardShell, /IdleSessionGuard/);
+  assert.match(adminShell, /IdleSessionGuard/);
+  assert.match(login, /earnwale:lastActivity/);
 });

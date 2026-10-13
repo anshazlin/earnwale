@@ -88,7 +88,7 @@ export async function POST(req: Request) {
         affiliateCode,
         existingAccount: "true",
         userId: String(user.id),
-        testCheckout: isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
+        testCheckout: plan === "300" && isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
       },
     });
 

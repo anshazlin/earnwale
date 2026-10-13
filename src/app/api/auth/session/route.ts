@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { firebaseAdminAuth } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
 import { SESSION_COOKIE, SESSION_MAX_AGE_MS } from "@/lib/auth";
-import { activateAffiliate } from "@/lib/affiliate";
 
 export async function POST(req: Request) {
   try {
@@ -44,19 +43,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Account record not found" }, { status: 403 });
     }
 
-    // Free affiliate registration creates a pending account before email
-    // verification. The first verified sign-in activates the affiliate and only
-    // then issues the unique tracked code.
-    if (user && String(user.affiliateStatus ?? "").toLowerCase() === "pending_verification") {
-      user = await prisma.$transaction(async (tx: typeof prisma) => {
-        const latest = await tx.user.findUnique({ where: { id: user!.id } });
-        if (!latest) throw new Error("Account record not found");
-        const accepted = latest.affiliateTermsAcceptedAt
-          ? new Date(latest.affiliateTermsAcceptedAt)
-          : new Date();
-        return activateAffiliate(tx, latest, accepted);
-      });
-    }
 
     const sessionCookie = await firebaseAdminAuth.createSessionCookie(idToken, { expiresIn: SESSION_MAX_AGE_MS });
     const response = NextResponse.json({

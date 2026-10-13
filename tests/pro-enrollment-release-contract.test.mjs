@@ -12,8 +12,9 @@ test("both plans are disabled unless explicitly enabled with their own release f
   assert.match(order,/if \(!enrollmentFlagEnabled\(selectedPlan\)\)/);
   assert.match(order,/if \(!\(await verifiedCourseAssetsReady\(selectedPlan\)\)\)/);
   assert.match(order,/status: 503/);
-  assert.match(order,/"500": 50000/);
-  assert.match(order,/"300": 30000/);
+  const amounts=await read("src/lib/payment-amounts.ts");
+  assert.match(amounts,/"500": 50000/);
+  assert.match(amounts,/"300": 30000/);
 });
 
 test("the Pro purchase gate verifies all 19 resources, including the 8 Starter resources",async()=>{
