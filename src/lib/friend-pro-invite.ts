@@ -70,7 +70,10 @@ export async function findAvailableFriendInvite(token: unknown, recipientEmail?:
   const id = friendInviteId(token);
   if (!id) return null;
   const invite = await prisma.friendInvite.findUnique({ where: { id } }) as FriendInviteRecord | null;
-  if (!activeFriendInvite(invite)) return null;
+  if (!invite || invite.status !== "pending" ||
+      invite.plan !== FRIEND_PRO_PLAN ||
+      Number(invite.amount) !== FRIEND_PRO_PRICE_PAISE ||
+      !expiresInFuture(invite.expiresAt)) return null;
   if (recipientEmail !== undefined) {
     const normalized = normalizedInviteEmail(recipientEmail);
     if (!normalized || normalized !== invite!.email) return null;
