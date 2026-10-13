@@ -391,7 +391,7 @@ export default function SignupContent() {
             ) : isExistingAccount ? (
               <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">
-                  {`Signed in as ${account.email}`}
+                  {`Signed in as ${account?.email ?? ""}`}
                 </p>
                 {existingPlan ? (
                   <p className="mt-2 text-xs leading-5 text-slate-600">
