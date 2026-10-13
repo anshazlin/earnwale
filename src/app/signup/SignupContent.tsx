@@ -445,27 +445,6 @@ export default function SignupContent() {
               </div>
             )}
 
-            <div className="mt-4">
-              <label
-                htmlFor="affiliateCode"
-                className="mb-1 block text-xs font-medium text-gray-700"
-              >
-                Affiliate code <span className="text-gray-400">(optional)</span>
-              </label>
-              <input
-                id="affiliateCode"
-                name="affiliateCode"
-                placeholder="Affiliate Code (Optional)"
-                value={form.affiliateCode}
-                onChange={handleChange}
-                className={inputBase}
-              />
-              <p className="mt-1 text-[11px] leading-5 text-gray-500">
-                This only attributes a genuine course sale to an active
-                affiliate. It does not change your price or course access.
-              </p>
-            </div>
-
             <div className="mt-4 space-y-3 rounded-xl border border-gray-100 bg-gray-50/50 p-3">
               <label className="flex cursor-pointer items-start gap-2">
                 <input

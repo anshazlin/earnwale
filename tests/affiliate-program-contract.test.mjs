@@ -106,6 +106,9 @@ test("logged-in free accounts can later buy a course on the same identity", asyn
   assert.match(signup, /\/api\/payment\/existing\/create-order/);
   assert.match(signup, /\/api\/payment\/existing\/verify/);
   assert.doesNotMatch(signup, /affiliate account/);
+  assert.doesNotMatch(signup, /htmlFor="affiliateCode"/);
+  assert.doesNotMatch(signup, /Affiliate Code \(Optional\)/);
+  assert.match(signup, /searchParams\.get\("aff"\)/);
 });
 
 test("course access remains separate from affiliate membership", async () => {
