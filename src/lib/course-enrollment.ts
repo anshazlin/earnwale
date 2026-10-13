@@ -2,6 +2,7 @@ import { head } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
 import { PRO_MODULES, PRO_RESOURCES } from "@/lib/pro-course";
 import { COURSE_MODULES } from "@/lib/trading-course";
+import { isOneRupeeTestCheckout } from "@/lib/payment-amounts";
 
 export type EnrollmentPlan = "300" | "500";
 
@@ -16,9 +17,17 @@ export const PRO_REQUIRED_IDS = [
 ];
 
 export function enrollmentFlagEnabled(plan: EnrollmentPlan): boolean {
-  return plan === "500"
-    ? process.env.EARNWALE_PRO_ENROLLMENT_ENABLED === "true"
-    : process.env.EARNWALE_STARTER_ENROLLMENT_ENABLED === "true";
+  if (plan === "500") {
+    return process.env.EARNWALE_PRO_ENROLLMENT_ENABLED === "true";
+  }
+
+  // Starter may be exercised on the production domain while Razorpay is still
+  // configured with a Test Mode key. The ₹1 override is already restricted to
+  // rzp_test_* keys, so a live key still requires the explicit release flag.
+  return (
+    isOneRupeeTestCheckout() ||
+    process.env.EARNWALE_STARTER_ENROLLMENT_ENABLED === "true"
+  );
 }
 
 export async function verifiedCourseAssetsReady(plan: EnrollmentPlan): Promise<boolean> {
