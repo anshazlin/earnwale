@@ -52,6 +52,7 @@ export default function LoginPage() {
       const data = await session.json().catch(() => ({}));
       if (!session.ok) throw new Error(data?.error || "Login failed");
       await signOut(firebaseAuth);
+      window.localStorage.setItem("earnwale:lastActivity", String(Date.now()));
       window.location.href = data?.isAdmin
         ? "/admin"
         : data?.hasCourse
@@ -160,12 +161,20 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-medium text-amber-600 hover:text-amber-700">
-              Enroll now
-            </Link>
-          </p>
+          <div className="mt-6 space-y-2 text-center text-sm text-gray-500">
+            <p>
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="font-medium text-amber-600 hover:text-amber-700">
+                Create free account
+              </Link>
+            </p>
+            <p>
+              Want a course?{" "}
+              <Link href="/signup" className="font-medium text-amber-600 hover:text-amber-700">
+                Enroll now
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
