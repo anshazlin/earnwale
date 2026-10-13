@@ -7,11 +7,7 @@ import razorpay from "@/lib/razorpay";
 import { creditAffiliateCommission, resolveActiveAffiliate } from "@/lib/affiliate-commission";
 import { clientIp, isSameOriginRequest } from "@/lib/request-security";
 import { consumeRateLimit } from "@/lib/rate-limit";
-
-const PLAN_AMOUNTS: Record<string, number> = {
-  "300": 30000,
-  "500": 50000,
-};
+import { checkoutAmountForPlan } from "@/lib/payment-amounts";
 function safeSignatureEqual(expected: string, received: unknown) {
   if (typeof received !== "string") return false;
   const a = Buffer.from(expected, "utf8");
@@ -44,7 +40,7 @@ export async function POST(req: Request) {
     const email = String(formData?.email ?? "").trim().toLowerCase();
     const password = String(formData?.password ?? "");
     const plan = String(formData?.plan ?? "");
-    const expectedAmount = PLAN_AMOUNTS[plan];
+    const expectedAmount = checkoutAmountForPlan(plan);
 
     if (!razorpay_order_id || !razorpay_payment_id || !email || !password || !expectedAmount) {
       return NextResponse.json({ error: "Invalid signup or payment data" }, { status: 400 });
@@ -137,6 +133,7 @@ export async function POST(req: Request) {
           amount: expectedAmount / 100,
           type: "PAYMENT",
           fromUser: razorpay_order_id,
+          testCheckout: String(order.notes?.testCheckout ?? "") === "one-rupee-preview",
         },
       });
 
