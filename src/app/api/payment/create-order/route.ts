@@ -3,11 +3,10 @@ import razorpay from "@/lib/razorpay";
 import { enrollmentFlagEnabled, verifiedCourseAssetsReady, type EnrollmentPlan } from "@/lib/course-enrollment";
 import { clientIp, isSameOriginRequest } from "@/lib/request-security";
 import { consumeRateLimit } from "@/lib/rate-limit";
-
-const PLAN_AMOUNTS: Record<string, number> = {
-  "300": 30000,
-  "500": 50000,
-};
+import {
+  checkoutAmountForPlan,
+  isOneRupeeTestCheckout,
+} from "@/lib/payment-amounts";
 
 export async function POST(req: Request) {
   try {
@@ -34,7 +33,7 @@ export async function POST(req: Request) {
       .trim()
       .toUpperCase()
       .slice(0, 32);
-    const amount = PLAN_AMOUNTS[plan];
+    const amount = checkoutAmountForPlan(plan);
 
     if (!amount) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
@@ -63,7 +62,11 @@ export async function POST(req: Request) {
       amount,
       currency: "INR",
       receipt: `earnwale_${Date.now()}`,
-      notes: { plan, affiliateCode },
+      notes: {
+        plan,
+        affiliateCode,
+        testCheckout: isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
+      },
     });
 
     return NextResponse.json(order);
