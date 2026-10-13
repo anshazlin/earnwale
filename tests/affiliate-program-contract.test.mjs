@@ -146,3 +146,25 @@ test("public positioning separates education purchase from affiliate participati
   assert.match(affiliateTerms, /₹220/);
   assert.match(affiliateTerms, /₹400/);
 });
+
+
+test("one-rupee checkout is restricted to Razorpay test preview or development", async () => {
+  const amounts = await read("src/lib/payment-amounts.ts");
+  const createOrder = await read("src/app/api/payment/create-order/route.ts");
+  const verify = await read("src/app/api/payment/verify/route.ts");
+  const existingCreate = await read("src/app/api/payment/existing/create-order/route.ts");
+  const existingVerify = await read("src/app/api/payment/existing/verify/route.ts");
+
+  assert.match(amounts, /"300": 30000/);
+  assert.match(amounts, /"500": 50000/);
+  assert.match(amounts, /razorpayKey\.startsWith\("rzp_test_"\)/);
+  assert.match(amounts, /vercelEnv === "preview"/);
+  assert.match(amounts, /process\.env\.NODE_ENV !== "production"/);
+  assert.match(amounts, /return isOneRupeeTestCheckout\(\) \? 100 : catalogAmount/);
+
+  assert.match(createOrder, /checkoutAmountForPlan/);
+  assert.match(createOrder, /one-rupee-preview/);
+  assert.match(verify, /checkoutAmountForPlan/);
+  assert.match(existingCreate, /checkoutAmountForPlan/);
+  assert.match(existingVerify, /checkoutAmountForPlan/);
+});

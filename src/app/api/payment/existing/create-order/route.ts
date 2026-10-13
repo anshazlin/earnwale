@@ -8,11 +8,10 @@ import {
 } from "@/lib/course-enrollment";
 import { clientIp, isSameOriginRequest } from "@/lib/request-security";
 import { consumeRateLimit } from "@/lib/rate-limit";
-
-const PLAN_AMOUNTS: Record<string, number> = {
-  "300": 30000,
-  "500": 50000,
-};
+import {
+  checkoutAmountForPlan,
+  isOneRupeeTestCheckout,
+} from "@/lib/payment-amounts";
 
 export async function POST(req: Request) {
   try {
@@ -37,7 +36,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const plan = String(body?.plan ?? "");
-    const amount = PLAN_AMOUNTS[plan];
+    const amount = checkoutAmountForPlan(plan);
     if (!amount) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
@@ -89,6 +88,7 @@ export async function POST(req: Request) {
         affiliateCode,
         existingAccount: "true",
         userId: String(user.id),
+        testCheckout: isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
       },
     });
 
