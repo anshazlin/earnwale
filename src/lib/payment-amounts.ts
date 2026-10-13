@@ -5,14 +5,7 @@ export const PLAN_AMOUNTS: Record<string, number> = {
 
 export function isOneRupeeTestCheckout(): boolean {
   const razorpayKey = String(process.env.RAZORPAY_KEY_ID ?? "");
-  const vercelEnv = String(process.env.VERCEL_ENV ?? "").toLowerCase();
-
-  const nonProduction =
-    vercelEnv === "preview" ||
-    vercelEnv === "development" ||
-    (vercelEnv === "" && process.env.NODE_ENV !== "production");
-
-  return nonProduction && razorpayKey.startsWith("rzp_test_");
+  return razorpayKey.startsWith("rzp_test_");
 }
 
 export function checkoutAmountForPlan(plan: unknown): number | undefined {
