@@ -16,8 +16,12 @@ export function isOneRupeeTestCheckout(): boolean {
 }
 
 export function checkoutAmountForPlan(plan: unknown): number | undefined {
-  const catalogAmount = PLAN_AMOUNTS[String(plan ?? "").trim()];
+  const normalizedPlan = String(plan ?? "").trim();
+  const catalogAmount = PLAN_AMOUNTS[normalizedPlan];
   if (!catalogAmount) return undefined;
 
-  return isOneRupeeTestCheckout() ? 100 : catalogAmount;
+  // Temporary Razorpay test convenience: only the ₹300 Starter checkout is ₹1.
+  // Pro remains ₹500 even in preview/test mode.
+  if (normalizedPlan === "300" && isOneRupeeTestCheckout()) return 100;
+  return catalogAmount;
 }
