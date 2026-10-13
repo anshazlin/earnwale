@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 const read = p => readFile(new URL(`../${p}`,import.meta.url),"utf8");
 
-test("both plans are disabled unless explicitly enabled with their own release flags",async()=>{
+test("Pro requires its release flag while Starter can open automatically in Razorpay Test Mode",async()=>{
   const source=await read("src/lib/course-enrollment.ts");
   assert.match(source,/EARNWALE_STARTER_ENROLLMENT_ENABLED === "true"/);
   assert.match(source,/EARNWALE_PRO_ENROLLMENT_ENABLED === "true"/);
+  assert.match(source,/isOneRupeeTestCheckout\(\)/);
   assert.match(source,/enrollmentFlagEnabled\(plan\) && await verifiedCourseAssetsReady\(plan\)/);
   const order=await read("src/app/api/payment/create-order/route.ts");
   assert.match(order,/if \(!enrollmentFlagEnabled\(selectedPlan\)\)/);
