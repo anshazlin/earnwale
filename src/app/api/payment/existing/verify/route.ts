@@ -8,11 +8,7 @@ import {
   resolveActiveAffiliate,
 } from "@/lib/affiliate-commission";
 import { isSameOriginRequest } from "@/lib/request-security";
-
-const PLAN_AMOUNTS: Record<string, number> = {
-  "300": 30000,
-  "500": 50000,
-};
+import { checkoutAmountForPlan } from "@/lib/payment-amounts";
 
 function safeSignatureEqual(expected: string, received: unknown) {
   if (typeof received !== "string") return false;
@@ -37,7 +33,7 @@ export async function POST(req: Request) {
     } = body ?? {};
 
     const plan = String(rawPlan ?? "");
-    const expectedAmount = PLAN_AMOUNTS[plan];
+    const expectedAmount = checkoutAmountForPlan(plan);
     if (
       !razorpay_order_id ||
       !razorpay_payment_id ||
@@ -141,6 +137,7 @@ export async function POST(req: Request) {
           sourcePaymentId: razorpay_payment_id,
           sourceOrderId: razorpay_order_id,
           sourcePlan: plan,
+          testCheckout: String(order.notes?.testCheckout ?? "") === "one-rupee-preview",
         },
       });
 
