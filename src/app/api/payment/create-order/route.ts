@@ -3,6 +3,7 @@ import razorpay from "@/lib/razorpay";
 import { enrollmentFlagEnabled, verifiedCourseAssetsReady, type EnrollmentPlan } from "@/lib/course-enrollment";
 import { clientIp, isSameOriginRequest } from "@/lib/request-security";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import { findAvailableFriendInvite, reserveFriendInvite, normalizedInviteEmail } from "@/lib/friend-pro-invite";
 import {
   checkoutAmountForPlan,
   isOneRupeeTestCheckout,
@@ -29,20 +30,23 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const plan = String(body?.plan ?? "");
-    const affiliateCode = String(body?.affiliateCode ?? body?.referralCode ?? "")
-      .trim()
-      .toUpperCase()
-      .slice(0, 32);
-    const amount = checkoutAmountForPlan(plan);
+    const token = typeof body?.invite === "string" ? body.invite : null;
+    const recipientEmail = normalizedInviteEmail(body?.email);
+    const friendInvite = token
+      ? await findAvailableFriendInvite(token, recipientEmail)
+      : null;
 
+    // An invitation cannot fall back to a public order on invalid email/token.
+    if (token && (!friendInvite || plan !== "500" || !recipientEmail)) {
+      return NextResponse.json({ error: "This ₹1 Pro invitation is invalid, expired, or belongs to a different email" }, { status: 403 });
+    }
+    const amount = friendInvite ? 100 : checkoutAmountForPlan(plan);
     if (!amount) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    // Enrollment must be explicitly activated for each plan. Uploading content
-    // alone must never make payment available to the public.
     const selectedPlan = plan as EnrollmentPlan;
-    if (!enrollmentFlagEnabled(selectedPlan)) {
+    if (!friendInvite && !enrollmentFlagEnabled(selectedPlan)) {
       return NextResponse.json({
         error: selectedPlan === "500"
           ? "Pro enrollment is not open yet"
@@ -50,13 +54,14 @@ export async function POST(req: Request) {
       }, { status: 503 });
     }
 
-    // Fail closed if any required private file is missing or empty. Pro
-    // enrollment needs six Starter and six Pro videos plus all seven PDFs.
+    // Friend invitations do NOT bypass course readiness or learner protection.
     if (!(await verifiedCourseAssetsReady(selectedPlan))) {
-      return NextResponse.json({
-        error: "Course resources are not ready for enrollment",
-      }, { status: 503 });
+      return NextResponse.json({ error: "Course resources are not ready for enrollment" }, { status: 503 });
     }
+
+    const affiliateCode = friendInvite ? "" : String(
+      body?.affiliateCode ?? body?.referralCode ?? ""
+    ).trim().toUpperCase().slice(0, 32);
 
     const order = await razorpay.orders.create({
       amount,
@@ -65,12 +70,22 @@ export async function POST(req: Request) {
       notes: {
         plan,
         affiliateCode,
-        testCheckout: plan === "300" && isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
+        friendInvite: friendInvite ? "true" : "false",
+        friendInviteId: friendInvite?.id ?? "",
+        recipientEmail: friendInvite?.email ?? "",
+        testCheckout: !friendInvite && plan === "300" && isOneRupeeTestCheckout()
+          ? "one-rupee-preview" : "false",
       },
     });
 
+    if (friendInvite && recipientEmail) {
+      await reserveFriendInvite(friendInvite.id, order.id, recipientEmail);
+    }
     return NextResponse.json(order);
-  } catch {
+  } catch (error: unknown) {
+    if (error instanceof Error && /Friend invite already used or expired/.test(error.message)) {
+      return NextResponse.json({ error: "This ₹1 invite already has a checkout or has expired. Ask the administrator for assistance." }, { status: 409 });
+    }
     return NextResponse.json(
       { error: "Order creation failed" },
       { status: 500 }
