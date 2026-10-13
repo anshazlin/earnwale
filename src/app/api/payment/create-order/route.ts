@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       notes: {
         plan,
         affiliateCode,
-        testCheckout: isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
+        testCheckout: plan === "300" && isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
       },
     });
 
