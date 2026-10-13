@@ -23,6 +23,7 @@ export default function SignupContent() {
   const searchParams = useSearchParams();
   const affiliateFromUrl =
     searchParams.get("aff") ?? searchParams.get("ref") ?? "";
+  const friendInviteToken = searchParams.get("invite") ?? "";
 
   const [form, setForm] = useState({
     email: "",
@@ -36,6 +37,7 @@ export default function SignupContent() {
   const [mounted, setMounted] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [refundAgreed, setRefundAgreed] = useState(false);
+  const [friendInvite, setFriendInvite] = useState({ valid: false, loading: false });
   const [availability, setAvailability] = useState({
     starter: false,
     pro: false,
@@ -93,13 +95,31 @@ export default function SignupContent() {
   }, []);
 
   useEffect(() => {
+    if (!friendInviteToken) {
+      setFriendInvite({ valid: false, loading: false });
+      return;
+    }
+    let active = true;
+    setFriendInvite({ valid: false, loading: true });
+    fetch(`/api/academy/friend-invite?invite=${encodeURIComponent(friendInviteToken)}`, { cache: "no-store" })
+      .then(async response => response.ok ? response.json() : { valid: false })
+      .then(data => {
+        if (active) setFriendInvite({ valid: data.valid === true && data.plan === "500" && data.amount === 100, loading: false });
+      })
+      .catch(() => {
+        if (active) setFriendInvite({ valid: false, loading: false });
+      });
+    return () => { active = false; };
+  }, [friendInviteToken]);
+
+  useEffect(() => {
     const requested = searchParams.get("plan");
-    if (requested === "500" && availability.pro) {
+    if (friendInviteToken || (requested === "500" && availability.pro)) {
       setForm((current) => ({ ...current, plan: "500" }));
     } else if (requested === "300" && availability.starter) {
       setForm((current) => ({ ...current, plan: "300" }));
     }
-  }, [searchParams, availability.pro, availability.starter]);
+  }, [searchParams, friendInviteToken, availability.pro, availability.starter]);
 
   useEffect(() => {
     if (affiliateFromUrl) {
@@ -112,15 +132,19 @@ export default function SignupContent() {
 
   const existingPlan = String(account?.plan ?? "").trim();
   const isExistingAccount = Boolean(account);
-  const selectedAvailable =
-    form.plan === "500" ? availability.pro : availability.starter;
+  const invitedPro = Boolean(friendInviteToken) && friendInvite.valid;
+  const selectedAvailable = friendInviteToken
+    ? invitedPro && form.plan === "500"
+    : form.plan === "500" ? availability.pro : availability.starter;
+  const friendUpgrade = invitedPro && existingPlan === "300";
   const canSubmit =
     accountChecked &&
     termsAgreed &&
     refundAgreed &&
     selectedAvailable &&
     !availability.loading &&
-    !existingPlan;
+    !friendInvite.loading &&
+    (!existingPlan || friendUpgrade);
 
   const products = [
     {
@@ -154,7 +178,7 @@ export default function SignupContent() {
       alert("This course is not open for new enrollment yet.");
       return;
     }
-    if (existingPlan) {
+    if (existingPlan && !friendUpgrade) {
       alert("This account already owns a course.");
       return;
     }
@@ -176,7 +200,9 @@ export default function SignupContent() {
         credentials: "include",
         body: JSON.stringify({
           plan: form.plan,
-          affiliateCode: form.affiliateCode.trim().toUpperCase(),
+          email: isExistingAccount ? account?.email : form.email.trim().toLowerCase(),
+          invite: friendInviteToken || undefined,
+          affiliateCode: invitedPro ? "" : form.affiliateCode.trim().toUpperCase(),
         }),
       });
       const order = await orderRes.json();
@@ -191,7 +217,7 @@ export default function SignupContent() {
         amount: order.amount,
         currency: "INR",
         name: "Earnwale Learning",
-        description: "Digital Course Enrollment",
+        description: invitedPro ? "Private ₹1 Pro enrollment" : "Digital Course Enrollment",
         order_id: order.id,
         prefill: {
           email: account?.email ?? form.email.trim().toLowerCase(),
@@ -314,6 +340,12 @@ export default function SignupContent() {
             want to study and complete secure enrollment below.
           </p>
 
+          {friendInviteToken && <div className={`mt-5 rounded-xl border px-4 py-4 text-sm leading-6 ${invitedPro ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+            {friendInvite.loading ? "Checking your private ₹1 Pro invitation…"
+              : invitedPro ? "Your private ₹1 Pro invitation is valid. Use the invited email for this one-time Razorpay payment. After email verification, you get Starter and Pro learning access."
+              : "This private invitation is invalid, expired or already used. Ask Earnwale admin for a new link."}
+          </div>}
+
           <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
               Selected course
@@ -336,21 +368,20 @@ export default function SignupContent() {
                   {selectedProduct.description}
                 </p>
                 <p className="mt-4 text-2xl font-bold text-gray-900">
-                  {selectedProduct.price}
+                  {invitedPro && form.plan === "500" ? "₹1" : selectedProduct.price}
                 </p>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   {products.map((product) => {
                     const selected = form.plan === product.id;
-                    const available =
-                      product.id === "500"
-                        ? availability.pro
-                        : availability.starter;
+                    const available = friendInviteToken
+                      ? product.id === "500" && invitedPro
+                      : product.id === "500" ? availability.pro : availability.starter;
                     return (
                       <button
                         key={product.id}
                         type="button"
-                        disabled={availability.loading || !available}
+                        disabled={availability.loading || friendInvite.loading || !available}
                         onClick={() =>
                           setForm((current) => ({
                             ...current,
@@ -363,13 +394,11 @@ export default function SignupContent() {
                             : "border-gray-200 bg-white text-gray-800 hover:bg-gray-50"
                         }`}
                       >
-                        {product.price}
+                        {invitedPro && product.id === "500" ? "₹1" : product.price}
                         <span className="mt-0.5 block text-xs font-medium text-gray-500">
-                          {availability.loading
-                            ? "Checking…"
-                            : available
-                              ? "Available"
-                              : "Coming soon"}
+                          {friendInviteToken
+                            ? friendInvite.loading ? "Checking invite…" : invitedPro && product.id === "500" ? "Private invitation" : "Unavailable"
+                            : availability.loading ? "Checking…" : available ? "Available" : "Coming soon"}
                         </span>
                       </button>
                     );
@@ -393,7 +422,7 @@ export default function SignupContent() {
                 <p className="text-sm font-semibold text-slate-900">
                   {`Signed in as ${account?.email ?? ""}`}
                 </p>
-                {existingPlan ? (
+                {existingPlan && !friendUpgrade ? (
                   <p className="mt-2 text-xs leading-5 text-slate-600">
                     This account already has course access for plan ₹{existingPlan}.
                     Course upgrades are not handled by this checkout.
@@ -482,7 +511,7 @@ export default function SignupContent() {
               </label>
             </div>
 
-            {existingPlan ? (
+            {existingPlan && !friendUpgrade ? (
               <a
                 href="/dashboard"
                 className="mt-4 flex w-full items-center justify-center rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm font-semibold text-amber-800"
@@ -498,8 +527,8 @@ export default function SignupContent() {
                 {loading
                   ? "Processing…"
                   : selectedAvailable
-                    ? "Complete Secure Payment"
-                    : "Enrollment coming soon"}
+                    ? invitedPro ? "Pay ₹1 and activate Pro" : "Complete Secure Payment"
+                    : friendInviteToken ? "Invalid or expired private invite" : "Enrollment coming soon"}
               </button>
             )}
 
