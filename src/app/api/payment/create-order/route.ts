@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import razorpay from "@/lib/razorpay";
+import { prisma } from "@/lib/prisma";
 import { enrollmentFlagEnabled, verifiedCourseAssetsReady, type EnrollmentPlan } from "@/lib/course-enrollment";
 import { clientIp, isSameOriginRequest } from "@/lib/request-security";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -52,6 +53,17 @@ export async function POST(req: Request) {
           ? "Pro enrollment is not open yet"
           : "Starter enrollment is not open yet",
       }, { status: 503 });
+    }
+
+    // A registered recipient must use the existing-account flow. Otherwise
+    // payment could succeed before signup detects a duplicate email.
+    if (friendInvite && recipientEmail) {
+      const registered = await prisma.user.findUnique({ where: { email: recipientEmail } });
+      if (registered) {
+        return NextResponse.json({
+          error: "This email already has an Earnwale account. Please sign in first, then open your private invitation link.",
+        }, { status: 409 });
+      }
     }
 
     // Friend invitations do NOT bypass course readiness or learner protection.
