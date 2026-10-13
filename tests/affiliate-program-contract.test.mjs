@@ -13,7 +13,7 @@ test("affiliate program remains free and uses the approved commission schedule",
   assert.match(affiliate, /"500": 400/);
   assert.match(affiliate, /affiliateStatus: "active"/);
 
-  assert.match(affiliatePage, /registration is handled only inside[\\s\\S]*logged-in Earnwale[\\s\\S]*dashboard/i);
+  assert.match(affiliatePage, /registration is handled only inside[\s\S]*logged-in Earnwale[\s\S]*dashboard/i);
   assert.match(affiliatePage, /Create free account/);
   assert.doesNotMatch(affiliatePage, /createUserWithEmailAndPassword/);
   assert.doesNotMatch(affiliatePage, /\/api\/affiliate\/register/);
