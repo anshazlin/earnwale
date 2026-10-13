@@ -59,6 +59,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Course resources are not ready for enrollment" }, { status: 503 });
     }
 
+    // A private invitation reserves a single Razorpay order. A friend who
+    // closed the popup can retry that SAME order without paying twice.
+    if (friendInvite?.orderId) {
+      const previous = await razorpay.orders.fetch(friendInvite.orderId);
+      if (Number(previous.amount) !== 100 ||
+          String(previous.currency).toUpperCase() !== "INR" ||
+          String(previous.notes?.friendInviteId ?? "") !== friendInvite.id ||
+          String(previous.notes?.recipientEmail ?? "") !== friendInvite.email ||
+          String(previous.notes?.plan ?? "") !== "500" ||
+          String(previous.notes?.existingAccount ?? "") === "true" ||
+          !["created", "attempted"].includes(String(previous.status))) {
+        return NextResponse.json({
+          error: "This private checkout is already completed or requires support.",
+        }, { status: 409 });
+      }
+      return NextResponse.json(previous, { headers: { "Cache-Control": "no-store" } });
+    }
+
     const affiliateCode = friendInvite ? "" : String(
       body?.affiliateCode ?? body?.referralCode ?? ""
     ).trim().toUpperCase().slice(0, 32);
