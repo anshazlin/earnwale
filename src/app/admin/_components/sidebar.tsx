@@ -11,6 +11,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "Users", href: "/admin/users", icon: "◎", hint: "Accounts & plans" },
   { label: "Trading Academy", href: "/admin/trading-assets", icon: "▶", hint: "Starter uploads & previews" },
   { label: "Pro Academy", href: "/admin/pro-assets", icon: "◆", hint: "Six Pro videos & PDFs" },
+  { label: "Friend Invites", href: "/admin/friend-invites", icon: "✉", hint: "Private ₹1 Pro links" },
   { label: "Withdrawals", href: "/admin/withdraw", icon: "↗", hint: "Review payouts" },
   { label: "Transactions", href: "/admin/transactions", icon: "⇄", hint: "Money activity" },
 ];

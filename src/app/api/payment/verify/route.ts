@@ -8,6 +8,7 @@ import { creditAffiliateCommission, resolveActiveAffiliate } from "@/lib/affilia
 import { clientIp, isSameOriginRequest } from "@/lib/request-security";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { checkoutAmountForPlan } from "@/lib/payment-amounts";
+import { friendInviteFromOrder, redeemFriendInviteInTransaction } from "@/lib/friend-pro-invite";
 function safeSignatureEqual(expected: string, received: unknown) {
   if (typeof received !== "string") return false;
   const a = Buffer.from(expected, "utf8");
@@ -40,9 +41,9 @@ export async function POST(req: Request) {
     const email = String(formData?.email ?? "").trim().toLowerCase();
     const password = String(formData?.password ?? "");
     const plan = String(formData?.plan ?? "");
-    const expectedAmount = checkoutAmountForPlan(plan);
+    const catalogAmount = checkoutAmountForPlan(plan);
 
-    if (!razorpay_order_id || !razorpay_payment_id || !email || !password || !expectedAmount) {
+    if (!razorpay_order_id || !razorpay_payment_id || !email || !password || !catalogAmount) {
       return NextResponse.json({ error: "Invalid signup or payment data" }, { status: 400 });
     }
 
@@ -63,6 +64,9 @@ export async function POST(req: Request) {
       razorpay.payments.fetch(razorpay_payment_id),
     ]);
 
+    const friendInvite = await friendInviteFromOrder(order, email, plan);
+    const expectedAmount = friendInvite ? 100 : catalogAmount;
+
     if (
       String(payment.order_id) !== razorpay_order_id ||
       Number(order.amount) !== expectedAmount ||
@@ -80,7 +84,7 @@ export async function POST(req: Request) {
 
     // Attribution is bound when the server creates the Razorpay order. Ignore
     // any affiliate code supplied later by the browser during verification.
-    const referralCode =
+    const referralCode = friendInvite ? null :
       String(order.notes?.affiliateCode ?? "").trim().toUpperCase() || null;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -108,7 +112,7 @@ export async function POST(req: Request) {
 
       // Attribution never decides whether a paid customer receives the course.
       // Invalid, inactive or self affiliate codes simply do not earn commission.
-      const referrer = await resolveActiveAffiliate(tx, referralCode, { email });
+      const referrer = friendInvite ? null : await resolveActiveAffiliate(tx, referralCode, { email });
       const createdUser = await tx.user.create({
         data: {
           name: email.split("@")[0] || "Member",
@@ -134,8 +138,14 @@ export async function POST(req: Request) {
           type: "PAYMENT",
           fromUser: razorpay_order_id,
           testCheckout: String(order.notes?.testCheckout ?? "") === "one-rupee-preview",
+          friendDiscount: Boolean(friendInvite),
+          friendInviteId: friendInvite?.id ?? null,
         },
       });
+
+      if (friendInvite) {
+        await redeemFriendInviteInTransaction(tx, friendInvite, razorpay_order_id, createdUser.id);
+      }
 
       if (referrer) {
         await creditAffiliateCommission(tx, {
@@ -166,7 +176,10 @@ export async function POST(req: Request) {
     const message = error instanceof Error ? error.message : "Payment verification failed";
     const expectedClientError =
       message === "Payment already processed" ||
-      message === "User already exists";
+      message === "User already exists" ||
+      message === "Friend invitation already redeemed" ||
+      message.includes("Friend invitation already used") ||
+      message.includes("Friend checkout does not match");
 
     if (!expectedClientError) console.error("Payment verification failed", error);
     return NextResponse.json(

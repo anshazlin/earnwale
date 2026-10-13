@@ -10,7 +10,7 @@ test("Pro requires its release flag while Starter can open automatically in Razo
   assert.match(source,/isOneRupeeTestCheckout\(\)/);
   assert.match(source,/enrollmentFlagEnabled\(plan\) && await verifiedCourseAssetsReady\(plan\)/);
   const order=await read("src/app/api/payment/create-order/route.ts");
-  assert.match(order,/if \(!enrollmentFlagEnabled\(selectedPlan\)\)/);
+  assert.match(order,/if \(!friendInvite && !enrollmentFlagEnabled\(selectedPlan\)\)/);
   assert.match(order,/if \(!\(await verifiedCourseAssetsReady\(selectedPlan\)\)\)/);
   assert.match(order,/status: 503/);
   const amounts=await read("src/lib/payment-amounts.ts");

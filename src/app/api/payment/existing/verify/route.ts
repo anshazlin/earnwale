@@ -9,6 +9,7 @@ import {
 } from "@/lib/affiliate-commission";
 import { isSameOriginRequest } from "@/lib/request-security";
 import { checkoutAmountForPlan } from "@/lib/payment-amounts";
+import { friendInviteFromOrder, redeemFriendInviteInTransaction } from "@/lib/friend-pro-invite";
 
 function safeSignatureEqual(expected: string, received: unknown) {
   if (typeof received !== "string") return false;
@@ -33,11 +34,11 @@ export async function POST(req: Request) {
     } = body ?? {};
 
     const plan = String(rawPlan ?? "");
-    const expectedAmount = checkoutAmountForPlan(plan);
+    const catalogAmount = checkoutAmountForPlan(plan);
     if (
       !razorpay_order_id ||
       !razorpay_payment_id ||
-      !expectedAmount
+      !catalogAmount
     ) {
       return NextResponse.json(
         { error: "Invalid payment data" },
@@ -65,6 +66,9 @@ export async function POST(req: Request) {
       razorpay.payments.fetch(razorpay_payment_id),
     ]);
 
+    const friendInvite = await friendInviteFromOrder(order, authenticatedUser.email, plan);
+    const expectedAmount = friendInvite ? 100 : catalogAmount;
+
     if (
       String(payment.order_id) !== razorpay_order_id ||
       Number(order.amount) !== expectedAmount ||
@@ -90,7 +94,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const affiliateCode =
+    const affiliateCode = friendInvite ? null :
       String(order.notes?.affiliateCode ?? "").trim().toUpperCase() || null;
     const paymentRecordId = `payment_${razorpay_payment_id}`;
 
@@ -105,17 +109,13 @@ export async function POST(req: Request) {
       });
       if (!user) throw new Error("Account record not found");
 
-      if (String(user.plan ?? "").trim()) {
+      const currentPlan = String(user.plan ?? "").trim();
+      if (currentPlan && !(friendInvite && currentPlan === "300")) {
         throw new Error("Course access already exists");
       }
 
-      const affiliate = await resolveActiveAffiliate(
-        tx,
-        affiliateCode,
-        {
-          id: user.id,
-          email: user.email,
-        },
+      const affiliate = friendInvite ? null : await resolveActiveAffiliate(
+        tx, affiliateCode, { id: user.id, email: user.email },
       );
 
       await tx.user.update({
@@ -138,8 +138,14 @@ export async function POST(req: Request) {
           sourceOrderId: razorpay_order_id,
           sourcePlan: plan,
           testCheckout: String(order.notes?.testCheckout ?? "") === "one-rupee-preview",
+          friendDiscount: Boolean(friendInvite),
+          friendInviteId: friendInvite?.id ?? null,
         },
       });
+
+      if (friendInvite) {
+        await redeemFriendInviteInTransaction(tx, friendInvite, razorpay_order_id, user.id);
+      }
 
       if (affiliate) {
         await creditAffiliateCommission(tx, {
@@ -163,7 +169,9 @@ export async function POST(req: Request) {
       error instanceof Error ? error.name : "";
     if (
       message === "Payment already processed" ||
-      message === "Course access already exists"
+      message === "Course access already exists" ||
+      message === "Friend invitation already redeemed" ||
+      message.includes("Friend invitation already used")
     ) {
       return NextResponse.json({ error: message }, { status: 409 });
     }

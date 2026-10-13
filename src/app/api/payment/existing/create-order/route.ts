@@ -8,6 +8,7 @@ import {
 } from "@/lib/course-enrollment";
 import { clientIp, isSameOriginRequest } from "@/lib/request-security";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import { findAvailableFriendInvite, reserveFriendInvite } from "@/lib/friend-pro-invite";
 import {
   checkoutAmountForPlan,
   isOneRupeeTestCheckout,
@@ -36,48 +37,59 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const plan = String(body?.plan ?? "");
-    const amount = checkoutAmountForPlan(plan);
+    const token = typeof body?.invite === "string" ? body.invite : null;
+    const friendInvite = token ? await findAvailableFriendInvite(token, user.email) : null;
+    if (token && (!friendInvite || plan !== "500")) {
+      return NextResponse.json({ error: "This ₹1 Pro invite is not valid for your signed-in email" }, { status: 403 });
+    }
+
+    const amount = friendInvite ? 100 : checkoutAmountForPlan(plan);
     if (!amount) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
     const currentPlan = String(user.plan ?? "").trim();
-    if (currentPlan) {
-      return NextResponse.json(
-        {
-          error:
-            "This account already owns a course. Contact support before changing course access.",
-        },
-        { status: 409 },
-      );
+    if (currentPlan && !(friendInvite && currentPlan === "300")) {
+      return NextResponse.json({
+        error: "This account already has course access. Contact support for plan changes.",
+      }, { status: 409 });
     }
 
     const selectedPlan = plan as EnrollmentPlan;
-    if (!enrollmentFlagEnabled(selectedPlan)) {
-      return NextResponse.json(
-        {
-          error:
-            selectedPlan === "500"
-              ? "Pro enrollment is not open yet"
-              : "Starter enrollment is not open yet",
-        },
-        { status: 503 },
-      );
+    if (!friendInvite && !enrollmentFlagEnabled(selectedPlan)) {
+      return NextResponse.json({
+        error: selectedPlan === "500"
+          ? "Pro enrollment is not open yet"
+          : "Starter enrollment is not open yet",
+      }, { status: 503 });
     }
 
     if (!(await verifiedCourseAssetsReady(selectedPlan))) {
-      return NextResponse.json(
-        { error: "Course resources are not ready for enrollment" },
-        { status: 503 },
-      );
+      return NextResponse.json({ error: "Course resources are not ready for enrollment" }, { status: 503 });
     }
 
-    const affiliateCode = String(
-      body?.affiliateCode ?? body?.referralCode ?? "",
-    )
-      .trim()
-      .toUpperCase()
-      .slice(0, 32);
+    // A private invitation reserves a single Razorpay order. A friend who
+    // closed the popup can retry that SAME order without paying twice.
+    if (friendInvite?.orderId) {
+      const previous = await razorpay.orders.fetch(friendInvite.orderId);
+      if (Number(previous.amount) !== 100 ||
+          String(previous.currency).toUpperCase() !== "INR" ||
+          String(previous.notes?.friendInviteId ?? "") !== friendInvite.id ||
+          String(previous.notes?.recipientEmail ?? "") !== friendInvite.email ||
+          String(previous.notes?.plan ?? "") !== "500" ||
+          String(previous.notes?.existingAccount ?? "") !== "true" ||
+          String(previous.notes?.userId ?? "") !== String(user.id) ||
+          !["created", "attempted"].includes(String(previous.status))) {
+        return NextResponse.json({
+          error: "This private checkout is already completed or requires support.",
+        }, { status: 409 });
+      }
+      return NextResponse.json(previous, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    const affiliateCode = friendInvite ? "" : String(
+      body?.affiliateCode ?? body?.referralCode ?? ""
+    ).trim().toUpperCase().slice(0, 32);
 
     const order = await razorpay.orders.create({
       amount,
@@ -88,12 +100,22 @@ export async function POST(req: Request) {
         affiliateCode,
         existingAccount: "true",
         userId: String(user.id),
-        testCheckout: plan === "300" && isOneRupeeTestCheckout() ? "one-rupee-preview" : "false",
+        friendInvite: friendInvite ? "true" : "false",
+        friendInviteId: friendInvite?.id ?? "",
+        recipientEmail: friendInvite?.email ?? "",
+        testCheckout: !friendInvite && plan === "300" && isOneRupeeTestCheckout()
+          ? "one-rupee-preview" : "false",
       },
     });
 
+    if (friendInvite) {
+      await reserveFriendInvite(friendInvite.id, order.id, friendInvite.email);
+    }
     return NextResponse.json(order);
   } catch (error) {
+    if (error instanceof Error && error.message.includes("Friend invite already used or expired")) {
+      return NextResponse.json({ error: "This friend invite has already started checkout or expired." }, { status: 409 });
+    }
     return authErrorResponse(error);
   }
 }
