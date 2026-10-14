@@ -33,7 +33,7 @@ export default function TermsAndConditionsPage() {
       <p>A payment confirmation does not validate fraud, a duplicate charge, an unauthorized transaction or a technical error. Such matters will be handled under the Refund Policy and applicable law.</p>
 
       <h2>5. Affiliate Program and Commissions</h2>
-      <p>Participation is free and optional and is governed by the separate Affiliate Program Terms accepted by an affiliate. Buying a course is not required to join. The current commission schedule is ₹220 for a qualifying ₹300 Starter sale and ₹400 for a qualifying ₹500 Pro sale. No commission is paid for registering or recruiting an affiliate, and there are no multi-level or downline commissions. Affiliate commissions are not guaranteed income, interest, investment returns or wages.</p>
+      <p>Participation is free and optional and is governed by the separate Affiliate Program Terms accepted by an affiliate. Buying a course is not required to join. The current commission schedule is no commission on a ₹1 Starter sale and ₹400 on a qualifying ₹500 Pro sale. No commission is paid for registering or recruiting an affiliate, and there are no multi-level or downline commissions. Affiliate commissions are not guaranteed income, interest, investment returns or wages.</p>
       <p>Users must not:</p>
       <ul>
         <li>self-refer, create fake/duplicate accounts, fabricate transactions or collude to generate rewards;</li>
