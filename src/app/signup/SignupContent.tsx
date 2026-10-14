@@ -152,7 +152,7 @@ export default function SignupContent() {
       title: "Earnwale Trading Academy — Starter",
       description:
         "Six video lessons (44:44), beginner handbook, worksheets and an 8-question rotating knowledge check.",
-      price: "₹300",
+      price: "₹1",
     },
     {
       id: "500",
@@ -527,8 +527,8 @@ export default function SignupContent() {
                 {loading
                   ? "Processing…"
                   : selectedAvailable
-                    ? invitedPro ? "Pay ₹1 and activate Pro" : "Complete Secure Payment"
-                    : friendInviteToken ? "Invalid or expired private invite" : "Enrollment coming soon"}
+                    ? invitedPro ? "Pay ₹1 and activate Pro" : form.plan === "300" ? "Pay ₹1 and enroll in Starter" : "Pay ₹500 and enroll in Pro"
+                    : friendInviteToken ? "Invalid or expired private invite" : "Course resources temporarily unavailable"}
               </button>
             )}
 
