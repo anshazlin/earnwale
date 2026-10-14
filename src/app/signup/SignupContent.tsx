@@ -152,7 +152,7 @@ export default function SignupContent() {
       title: "Earnwale Trading Academy — Starter",
       description:
         "Six video lessons (44:44), beginner handbook, worksheets and an 8-question rotating knowledge check.",
-      price: "₹300",
+      price: "₹1",
     },
     {
       id: "500",
@@ -398,7 +398,7 @@ export default function SignupContent() {
                         <span className="mt-0.5 block text-xs font-medium text-gray-500">
                           {friendInviteToken
                             ? friendInvite.loading ? "Checking invite…" : invitedPro && product.id === "500" ? "Private invitation" : "Unavailable"
-                            : availability.loading ? "Checking…" : available ? "Available" : "Coming soon"}
+                            : availability.loading ? "Checking…" : available ? "Available" : "Temporarily unavailable"}
                         </span>
                       </button>
                     );
@@ -424,7 +424,7 @@ export default function SignupContent() {
                 </p>
                 {existingPlan && !friendUpgrade ? (
                   <p className="mt-2 text-xs leading-5 text-slate-600">
-                    This account already has course access for plan ₹{existingPlan}.
+                    This account already has {existingPlan === "300" ? "Starter" : "Pro"} course access.
                     Course upgrades are not handled by this checkout.
                   </p>
                 ) : (
@@ -527,8 +527,8 @@ export default function SignupContent() {
                 {loading
                   ? "Processing…"
                   : selectedAvailable
-                    ? invitedPro ? "Pay ₹1 and activate Pro" : "Complete Secure Payment"
-                    : friendInviteToken ? "Invalid or expired private invite" : "Enrollment coming soon"}
+                    ? invitedPro ? "Pay ₹1 and activate Pro" : form.plan === "300" ? "Pay ₹1 and enroll in Starter" : "Pay ₹500 and enroll in Pro"
+                    : friendInviteToken ? "Invalid or expired private invite" : "Course resources temporarily unavailable"}
               </button>
             )}
 

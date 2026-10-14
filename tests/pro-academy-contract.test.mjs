@@ -75,17 +75,17 @@ test("Pro media endpoints require Pro/admin access and use private storage",asyn
   assert.match(admin,/\/api\/admin\/pro-preview/);
 });
 
-test("Pro can only open when the release flag and all private media are verified",async()=>{
+test("Pro is open for enrollment, charging ₹500 after private media checks",async()=>{
   const homepage=await read("src/app/page.tsx");
   const signup=await read("src/app/signup/SignupContent.tsx");
   const payment=await read("src/app/api/payment/create-order/route.ts");
   assert.match(homepage,/six additional Pro video lessons/);
-  assert.match(homepage,/Pro enrollment opening soon/);
+  assert.match(homepage,/Enroll in Pro — ₹500/);
   assert.match(signup,/availability\.pro/);
   assert.match(payment,/enrollmentFlagEnabled/);
   assert.match(payment,/verifiedCourseAssetsReady/);
   const gate = await read("src/lib/course-enrollment.ts");
-  assert.match(gate,/EARNWALE_PRO_ENROLLMENT_ENABLED/);
+  assert.match(gate,/return plan === "300" \|\| plan === "500"/);
   assert.match(gate,/PRO_REQUIRED_IDS/);
   assert.match(gate,/head\(asset\.url\)/);
   const starterQuiz=await read("src/app/api/trading/quiz/route.ts");

@@ -100,5 +100,5 @@ test("media uploads require verified admin, are fixed to eight assets and are st
   assert.match(pay, /verifiedCourseAssetsReady/);
   const readiness = await read("src/lib/course-enrollment.ts");
   assert.match(readiness, /prisma\.courseAsset\.findUnique/);
-  assert.match(readiness, /EARNWALE_STARTER_ENROLLMENT_ENABLED/);
+  assert.match(readiness, /return plan === "300" \|\| plan === "500"/);
 });

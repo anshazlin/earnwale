@@ -273,7 +273,7 @@ export default function PersonalDashboardPage() {
           </div>
 
           <p className="mt-3 text-[11px] leading-5 text-slate-500">
-            Current schedule: ₹220 for a qualifying ₹300 Starter sale and ₹400
+            Current schedule: no commission on ₹1 Starter sales; ₹400
             for a qualifying ₹500 Pro sale. Earnings are not guaranteed.
           </p>
         </section>

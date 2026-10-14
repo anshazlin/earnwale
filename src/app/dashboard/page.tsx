@@ -73,7 +73,7 @@ export default function DashboardHomePage() {
         aria-label="Earnwale trading courses"
       >
         <CourseCard
-          eyebrow="Starter · ₹300"
+          eyebrow="Starter · ₹1"
           title="Trading Fundamentals"
           description="Six beginner video lessons, two learning PDFs and a rotating eight-question Starter assessment."
           dark

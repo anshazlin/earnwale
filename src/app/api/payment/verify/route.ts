@@ -84,7 +84,7 @@ export async function POST(req: Request) {
 
     // Attribution is bound when the server creates the Razorpay order. Ignore
     // any affiliate code supplied later by the browser during verification.
-    const referralCode = friendInvite ? null :
+    const referralCode = friendInvite || plan === "300" ? null :
       String(order.notes?.affiliateCode ?? "").trim().toUpperCase() || null;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });

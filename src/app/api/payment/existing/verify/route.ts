@@ -94,7 +94,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const affiliateCode = friendInvite ? null :
+    const affiliateCode = friendInvite || plan === "300" ? null :
       String(order.notes?.affiliateCode ?? "").trim().toUpperCase() || null;
     const paymentRecordId = `payment_${razorpay_payment_id}`;
 

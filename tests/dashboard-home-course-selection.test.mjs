@@ -14,7 +14,7 @@ test("logged-in Home keeps Starter and Pro separate and enforces entitlement-awa
   assert.match(home, /const hasStarter = plan === "300" \|\| plan === "500"/);
   assert.match(home, /const hasPro = plan === "500"/);
   assert.match(home, /Affiliate Program membership does not unlock paid learning content/);
-  assert.match(home, /Starter · ₹300/);
+  assert.match(home, /Starter · ₹1/);
   assert.match(home, /Pro · ₹500/);
   assert.match(home, /Open course/);
   assert.match(home, /View enrollment/);

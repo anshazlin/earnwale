@@ -80,8 +80,8 @@ export default function ProLearningPage(){
   if(loading)return <div className="flex min-h-[40vh] items-center justify-center"><span className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" aria-label="Loading Pro course"/></div>;
   if(!eligible)return <section className="rounded-2xl border border-amber-200 bg-white p-7">
     <h1 className="text-2xl font-bold text-slate-900">Earnwale Trading Academy — Pro</h1>
-    <p className="mt-3 text-sm leading-6 text-slate-600">Pro is currently in production. The ₹500 course is not available for new enrollment yet. Existing Pro plan accounts can access the course when materials are hosted.</p>
-    <Link href="/#courses" className="mt-4 inline-block rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold">View Academy plans</Link>
+    <p className="mt-3 text-sm leading-6 text-slate-600">The Pro course costs ₹500 and includes additional videos, PDFs and its own quiz. Enroll in Pro to unlock this content.</p>
+    <Link href="/signup?plan=500" className="mt-4 inline-block rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold">Enroll in Pro</Link>
   </section>;
 
   return <div className="space-y-6 pb-10">

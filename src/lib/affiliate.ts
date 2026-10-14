@@ -13,7 +13,7 @@ type AffiliateLike = {
 export const AFFILIATE_TERMS_VERSION = "2026-10-12-v1";
 
 export const AFFILIATE_COMMISSIONS: Record<string, number> = {
-  "300": 220,
+  "300": 0, // ₹1 Starter sale cannot generate an oversized commission.
   "500": 400,
 };
 
