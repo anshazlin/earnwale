@@ -9,7 +9,7 @@ test("affiliate program remains free and uses the approved commission schedule",
   const affiliatePage = await read("src/app/affiliate/page.tsx");
   const dashboard = await read("src/app/dashboard/personal/page.tsx");
 
-  assert.match(affiliate, /"300": 220/);
+  assert.match(affiliate, /"300": 0/);
   assert.match(affiliate, /"500": 400/);
   assert.match(affiliate, /affiliateStatus: "active"/);
 
@@ -167,22 +167,21 @@ test("public positioning separates education purchase from dashboard affiliate e
   assert.match(home, /no recruitment commissions, downlines or guaranteed earnings/i);
   assert.match(terms, /Buying a course is not required to join/);
   assert.match(affiliateTerms, /No commission is paid for recruiting another affiliate/);
-  assert.match(affiliateTerms, /₹220/);
+  assert.match(affiliateTerms, /No commission is paid on a ₹1 Starter/);
   assert.match(affiliateTerms, /₹400/);
 });
 
-test("Starter alone becomes ₹1 with Razorpay Test Mode while Pro remains ₹500", async () => {
+test("Starter costs ₹1 in live and test mode; Pro stays ₹500", async () => {
   const amounts = await read("src/lib/payment-amounts.ts");
   const createOrder = await read("src/app/api/payment/create-order/route.ts");
   const verify = await read("src/app/api/payment/verify/route.ts");
   const existingCreate = await read("src/app/api/payment/existing/create-order/route.ts");
   const existingVerify = await read("src/app/api/payment/existing/verify/route.ts");
 
-  assert.match(amounts, /"300": 30000/);
+  assert.match(amounts, /"300": 100/);
   assert.match(amounts, /"500": 50000/);
   assert.match(amounts, /razorpayKey\.startsWith\("rzp_test_"\)/);
-  assert.match(amounts, /normalizedPlan === "300" && isOneRupeeTestCheckout\(\)/);
-  assert.match(amounts, /return 100/);
+  assert.doesNotMatch(amounts, /normalizedPlan === "300" && isOneRupeeTestCheckout\(\)/);
   assert.match(amounts, /return catalogAmount/);
 
   assert.match(createOrder, /checkoutAmountForPlan/);
