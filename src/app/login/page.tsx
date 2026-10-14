@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -10,6 +10,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showVerificationReminder, setShowVerificationReminder] = useState(false);
+
+  useEffect(() => {
+    setShowVerificationReminder(new URLSearchParams(window.location.search).get("verify") === "1");
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,9 +43,19 @@ export default function LoginPage() {
       }
 
       if (!credential.user.emailVerified) {
-        await sendEmailVerification(credential.user);
-        await signOut(firebaseAuth);
-        setError("Please verify your email. We sent you a verification link.");
+        let emailSent = false;
+        try {
+          await sendEmailVerification(credential.user);
+          emailSent = true;
+        } catch (emailError) {
+          console.warn("Verification email resend was unavailable:", emailError);
+        } finally {
+          await signOut(firebaseAuth).catch(() => undefined);
+        }
+        setShowVerificationReminder(true);
+        setError(emailSent
+          ? "Your email is not verified yet. Another verification email was requested. Check Inbox, Spam, Junk and Promotions."
+          : "Your email is not verified yet. Check Inbox, Spam, Junk and Promotions for an existing link. If needed, try again in a few minutes.");
         return;
       }
 
@@ -89,6 +104,20 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-gray-500">
             Sign in to your account
           </p>
+
+          {showVerificationReminder && (
+            <div role="status" className="mt-5 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+              <p className="text-base font-bold">Payment completed? Verify your email first.</p>
+              <p className="mt-2">
+                Open the verification link sent to the email used at checkout, then log in.
+                If you cannot find it, check your <strong>Spam, Junk and Promotions</strong> folders.
+                Email delivery may take a few minutes.
+              </p>
+              <p className="mt-2">
+                If the link has not arrived, try logging in below to request another verification email.
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {error && (
