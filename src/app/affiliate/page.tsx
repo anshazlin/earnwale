@@ -26,9 +26,9 @@ export default function AffiliateProgramPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
                 Starter sale
               </p>
-              <p className="mt-1 text-2xl font-bold text-slate-950">₹220</p>
+              <p className="mt-1 text-2xl font-bold text-slate-950">₹0</p>
               <p className="mt-1 text-xs leading-5 text-slate-600">
-                Commission on a qualifying ₹300 course sale.
+                No commission on ₹1 Starter sales.
               </p>
             </div>
             <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
