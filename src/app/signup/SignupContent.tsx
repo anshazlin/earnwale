@@ -4,6 +4,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import Script from "next/script";
 import SiteNavbar from "@/app/components/SiteNavbar";
+import PurchaseStatusDialog, { type PurchaseStep, type VerificationEmailStatus } from "./_components/PurchaseStatusDialog";
 import { useSearchParams } from "next/navigation";
 
 type RazorpaySuccessResponse = {
@@ -34,6 +35,9 @@ export default function SignupContent() {
   const [account, setAccount] = useState<AccountSummary | null>(null);
   const [accountChecked, setAccountChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [purchaseStep, setPurchaseStep] = useState<PurchaseStep>("idle");
+  const [verificationEmailStatus, setVerificationEmailStatus] = useState<VerificationEmailStatus>("sending");
+  const [purchaseEmail, setPurchaseEmail] = useState("");
   const [mounted, setMounted] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [refundAgreed, setRefundAgreed] = useState(false);
@@ -223,6 +227,13 @@ export default function SignupContent() {
           email: account?.email ?? form.email.trim().toLowerCase(),
         },
         handler: async (response: RazorpaySuccessResponse) => {
+          const purchaserEmail = (account?.email ?? form.email).trim().toLowerCase();
+          setPurchaseEmail(purchaserEmail);
+          // Show immediate progress after Razorpay returns payment information.
+          // Never claim success until server verification has finished.
+          setPurchaseStep("confirming");
+          setVerificationEmailStatus("sending");
+
           try {
             const verifyEndpoint = isExistingAccount
               ? "/api/payment/existing/verify"
@@ -240,7 +251,7 @@ export default function SignupContent() {
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
                   formData: {
-                    email: form.email.trim().toLowerCase(),
+                    email: purchaserEmail,
                     password: form.password,
                     plan: form.plan,
                     affiliateCode: form.affiliateCode.trim().toUpperCase(),
@@ -253,19 +264,23 @@ export default function SignupContent() {
               credentials: "include",
               body: JSON.stringify(verifyBody),
             });
-            const verifyData = await verifyRes.json();
 
             if (!verifyRes.ok) {
-              alert(verifyData?.error || "Payment verification failed");
-              setLoading(false);
+              // Money might already have been deducted. Tell the buyer NOT to
+              // pay again; an admin can reconcile the Razorpay reference.
+              setPurchaseStep("payment-error");
               return;
             }
 
             if (isExistingAccount) {
-              window.location.href = "/dashboard";
+              setPurchaseStep("existing-complete");
+              window.setTimeout(() => window.location.replace("/dashboard"), 1200);
               return;
             }
 
+            // Show the success message and inbox/spam instructions BEFORE
+            // waiting for Firebase sign-in or email delivery.
+            setPurchaseStep("completed");
             try {
               const {
                 signInWithEmailAndPassword,
@@ -275,21 +290,32 @@ export default function SignupContent() {
               const { firebaseAuth } = await import("@/lib/firebase-client");
               const credential = await signInWithEmailAndPassword(
                 firebaseAuth,
-                form.email.trim().toLowerCase(),
+                purchaserEmail,
                 form.password,
               );
-              if (!credential.user.emailVerified) {
-                await sendEmailVerification(credential.user);
+              try {
+                if (!credential.user.emailVerified) {
+                  await sendEmailVerification(credential.user);
+                }
+                setVerificationEmailStatus("sent");
+              } finally {
+                await signOut(firebaseAuth).catch(() => undefined);
               }
-              await signOut(firebaseAuth);
+
+              // Brief pause for the visible confirmation; login retains an
+              // explicit reminder that inbox and spam verification is needed.
+              window.setTimeout(() => window.location.replace("/login?verify=1"), 2200);
             } catch (authError) {
               console.error("Verification email setup failed:", authError);
+              setVerificationEmailStatus("failed");
+              setPurchaseStep("email-warning");
+              // Keep the login button available rather than making a buyer wait
+              // indefinitely. Login can issue another verification email.
             }
-
-            window.location.href = "/login?verify=1";
           } catch (error) {
-            console.error("Verification error:", error);
-            alert("Something went wrong during payment verification.");
+            console.error("Post-payment verification error:", error);
+            setPurchaseStep("payment-error");
+          } finally {
             setLoading(false);
           }
         },
@@ -326,6 +352,13 @@ export default function SignupContent() {
         strategy="afterInteractive"
       />
       <SiteNavbar />
+      <PurchaseStatusDialog
+        step={purchaseStep}
+        email={purchaseEmail}
+        emailStatus={verificationEmailStatus}
+        onLogin={() => window.location.replace("/login?verify=1")}
+        onDashboard={() => window.location.replace("/dashboard")}
+      />
 
       <div className={mounted ? "opacity-100" : "opacity-0"}>
         <div className="mx-auto w-full max-w-screen-md px-4 py-6">
