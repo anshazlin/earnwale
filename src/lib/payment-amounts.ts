@@ -1,5 +1,5 @@
 export const PLAN_AMOUNTS: Record<string, number> = {
-  "300": 30000,
+  "300": 100,
   "500": 50000,
 };
 
@@ -13,8 +13,8 @@ export function checkoutAmountForPlan(plan: unknown): number | undefined {
   const catalogAmount = PLAN_AMOUNTS[normalizedPlan];
   if (!catalogAmount) return undefined;
 
-  // Temporary Razorpay test convenience: only the ₹300 Starter checkout is ₹1.
-  // Pro remains ₹500 even in preview/test mode.
-  if (normalizedPlan === "300" && isOneRupeeTestCheckout()) return 100;
+  // "300" is the stable Starter entitlement ID, not the live price.
+  // The public Starter course costs ₹1 (100 paise) in BOTH live and test mode.
+  // Pro remains ₹500 and both prices are independently verified after payment.
   return catalogAmount;
 }
