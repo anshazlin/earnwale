@@ -31,8 +31,10 @@ export default function LoginPage() {
       let credential;
       try {
         credential = await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, password);
-      } catch (firebaseError: any) {
-        if (["auth/user-not-found", "auth/invalid-credential", "auth/invalid-login-credentials"].includes(firebaseError?.code)) {
+      } catch (firebaseError: unknown) {
+        const code = firebaseError && typeof firebaseError === "object" && "code" in firebaseError
+          ? String(firebaseError.code) : "";
+        if (["auth/user-not-found", "auth/invalid-credential", "auth/invalid-login-credentials"].includes(code)) {
           const migration = await fetch("/api/auth/migrate-legacy", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: normalizedEmail, password }),
@@ -73,8 +75,9 @@ export default function LoginPage() {
         : data?.hasCourse
           ? "/dashboard"
           : "/dashboard/personal";
-    } catch (err: any) {
-      setError(err?.message === "Login failed" ? err.message : "Invalid email or password");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "";
+      setError(message === "Login failed" ? message : "Invalid email or password");
     } finally {
       setLoading(false);
     }
