@@ -182,8 +182,8 @@ export default function HomePage() {
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-white p-4">
-              <p className="text-xs font-semibold text-slate-500">₹300 Starter qualifying sale</p>
-              <p className="mt-1 text-xl font-bold text-slate-950">₹220 commission</p>
+              <p className="text-xs font-semibold text-slate-500">₹1 Starter sale</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">No affiliate commission</p>
             </div>
             <div className="rounded-2xl bg-white p-4">
               <p className="text-xs font-semibold text-slate-500">₹500 Pro qualifying sale</p>
