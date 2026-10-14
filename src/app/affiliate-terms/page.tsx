@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function AffiliateTermsPage() {
   return (
     <LegalLayout title="Affiliate Program Terms">
-      <p className="text-sm text-gray-500">Version: 12 October 2026</p>
+      <p className="text-sm text-gray-500">Version: 14 October 2026</p>
       <p className="mt-4">
         These terms govern participation in the optional Earnwale Affiliate Program.
         The Affiliate Program is separate from purchasing an Earnwale course.
@@ -29,7 +29,7 @@ export default function AffiliateTermsPage() {
         successfully verified by Earnwale&apos;s payment system.
       </p>
       <ul>
-        <li>₹220 for a qualifying ₹300 Starter course sale.</li>
+        <li>No commission is paid on a ₹1 Starter course sale.</li>
         <li>₹400 for a qualifying ₹500 Pro course sale.</li>
         <li>No commission is paid for registering an affiliate or creating an account.</li>
         <li>No commission is paid for recruiting another affiliate.</li>
